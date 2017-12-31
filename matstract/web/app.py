@@ -18,6 +18,7 @@ COLORSCALE = [[0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,1
               [0.5, "rgb(37,180,167)"], [0.65, "rgb(17,123,215)"], [1, "rgb(54,50,153)"]]
 
 external_css = ["https://codepen.io/chriddyp/pen/bWLwgP.css",
+                "https://codepen.io/chriddyp/pen/brPBPO.css",
                 "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",
                 "//fonts.googleapis.com/css?family=Raleway:400,300,600",
                 "//fonts.googleapis.com/css?family=Dosis:Medium",
@@ -137,7 +138,6 @@ def update_num_results_label(n_clicks, search, material):
 
 ### Extract App Callbacks ###
 
-@cache.memoize(timeout=600)
 @app.callback(
     Output('extract-results', 'value'),
     [Input('extract-button', 'n_clicks')],
@@ -149,7 +149,6 @@ def update_extract(n_clicks, text):
     materials = [m for m in materials if len(m) > 0]
     # return [{"name": m, "value": m} for m in materials]
     return ", ".join(materials)
-
 
 ### Trends App Callbacks ###
 

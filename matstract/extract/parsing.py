@@ -1,6 +1,9 @@
 import re
 import collections
 from chemdataextractor.doc import Document, Paragraph, Title
+import os
+import json
+from pymongo import MongoClient
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.composition import Composition, CompositionError
 
@@ -348,6 +351,12 @@ def extract_materials(text):
         newnames = []
         for name in material_names:
             print("Trying ", name)
+            # handle ions
+            if name[-1] in ['-', '+']:
+                if name[-2] == " ":
+                    name = name[0:-2]
+                newnames.append(name)
+                continue
             possible_material = M.make_pretty(M.parse_formula(name))
             if possible_material == '':
                 possible_material = name
@@ -358,7 +367,7 @@ def extract_materials(text):
             newnames.append(possible_material)
         newname = "{}{}".format(newnames[0], " " + str(newnames[1:] if len(newnames) > 1 else ""))
         extracted_materials.append(newname)
-    # print("extracted:", extracted_materials)
+    print("extracted:", extracted_materials)
     return extracted_materials
 
 
