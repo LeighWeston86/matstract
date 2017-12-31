@@ -10,6 +10,7 @@ from matstract.web.utils import open_db_connection
 app = dash.Dash()
 server = app.server
 app.config.suppress_callback_exceptions = True
+app.title = "Matstract"
 cache = Cache(app.server, config={"CACHE_TYPE": "simple"})
 
 ### CSS settings ###
