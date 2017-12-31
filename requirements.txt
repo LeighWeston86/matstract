@@ -1,0 +1,12 @@
+flask
+pymongo
+plotly
+dash
+dash-renderer
+dash-html-components
+dash-core-components
+pandas
+pymatgen
+gunicorn
+Flask-Caching
+-e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
