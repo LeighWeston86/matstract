@@ -28,6 +28,8 @@ external_css = ["https://codepen.io/chriddyp/pen/bWLwgP.css",
 for css in external_css:
     app.css.append_css({"external_url": css})
 
+# Adding Google Analytics
+app.scripts.append_script({"external_url":"https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
 
 #### App Layout ####
 
