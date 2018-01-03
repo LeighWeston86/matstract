@@ -1,14 +1,17 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import operator
-from matstract.web.search_app import search_for_material
+from matstract.web.search_app import search_for_material, search_for_topic
 
 def generate_trends_graph(search='', material=''):
     if search is None:
         search = ''
     if material is None:
         material = ''
-    results = search_for_material(material=material, search=search)
+    if len(search) and not len(material):
+        results = search_for_topic(search)
+    else:
+        results = search_for_material(material=material, search=search)
 
     if len(results) > 0:
         histdata = {}

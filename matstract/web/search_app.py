@@ -54,6 +54,15 @@ def search_for_material(material, search):
         results = db.abstracts.find({"chem_mentions.names": material}, ["year"])
     return list(results)
 
+def search_for_topic(search):
+    db = open_db_connection()
+    if search:
+        results = db.abstracts.find({"$or":[{"title":{"$regex" : ".*{}.*".format(search)}},
+                                            {"abstract":{"$regex" : ".*{}.*".format(search)}}]}, ["year"])
+    print(results.count())
+    return list(results)
+
+
 def get_search_results(search="", material="", max_results=10000):
     if material is None:
         material = ''
