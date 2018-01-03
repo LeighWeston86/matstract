@@ -62,7 +62,7 @@ layout = html.Div([
                   value='',
                   type='text'),
         dcc.Input(id='trends-search-box',
-                  placeholder='optional search criteria',
+                  placeholder='Topic/appication',
                   type='text'),
         html.Button('Submit', id='trends-button'),
         html.Div([
