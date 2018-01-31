@@ -121,7 +121,9 @@ layout = html.Div([
                      autoFocus=True,
                      spellCheck=True,
                      wrap=True,
-                     placeholder='Search: e.g. "Li-ion battery"'), ]),
+                     placeholder='Search: e.g. "Li-ion battery"'),
+    ]),
+
     html.Div([
         dcc.Input(id='material-box',
                   placeholder='Material: e.g. "LiFePO4"',
