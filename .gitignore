@@ -4,3 +4,7 @@ db_atlas.json
 *.pyc
 extract_data.py
 data_extraction.ipynb
+
+# pycharm files #
+*/.idea/**
+.idea/**
