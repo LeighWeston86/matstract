@@ -5,6 +5,11 @@ db_atlas.json
 extract_data.py
 data_extraction.ipynb
 
+
+# mac specific #
+.DS_store
+**/.DS_store
+
 # pycharm files #
 */.idea/**
 .idea/**
