@@ -2,10 +2,12 @@ import dash
 from flask_caching import Cache
 import dash_core_components as dcc
 import dash_html_components as html
-from matstract.web import search_app, trends_app, extract_app, similar_app
+from matstract.web import search_app, trends_app, extract_app, similar_app, annotate_app
 from dash.dependencies import Input, Output, State
 from matstract.extract.parsing import extract_materials, materials_extract
 from matstract.web.utils import open_db_connection
+import os
+from flask import send_from_directory
 
 app = dash.Dash()
 server = app.server
@@ -23,7 +25,9 @@ external_css = ["https://codepen.io/chriddyp/pen/bWLwgP.css",
                 "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",
                 "//fonts.googleapis.com/css?family=Raleway:400,300,600",
                 "//fonts.googleapis.com/css?family=Dosis:Medium",
-                "https://s3-us-west-1.amazonaws.com/webstract/webstract.css"]
+                "https://s3-us-west-1.amazonaws.com/webstract/webstract.css",
+                "https://s3-us-west-1.amazonaws.com/matstract/annotation_styles.css",
+                ]
 
 for css in external_css:
     app.css.append_css({"external_url": css})
@@ -72,7 +76,9 @@ header = html.Div([
             html.Span(' • '),
             dcc.Link("Extract", href="/extract"),
             html.Span(' • '),
-            dcc.Link("Similar Abstracts", href="/similar")
+            dcc.Link("Similar Abstracts", href="/similar"),
+            html.Span(' • '),
+            dcc.Link("Annotate", href="/annotate")
         ],
         id="nav_bar"),
     html.Br()
@@ -100,6 +106,8 @@ def display_page(path):
         return extract_app.layout
     elif path == "/similar":
         return similar_app.layout
+    elif path == "/annotate":
+        return annotate_app.serve_layout()
     else:
         return search_app.layout
 
@@ -202,3 +210,9 @@ def update_title(n_clicks, material, search):
             return "Number of papers related to '{}' mentioning {} per year:".format(search, material)
 
     return ''
+
+@app.callback(
+    Output('annotation_container', 'children'),
+    [Input('annotate_next', 'n_clicks')])
+def load_next_abstract(n_clicks):
+    return annotate_app.serve_abstract()
