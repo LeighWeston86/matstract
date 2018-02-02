@@ -194,6 +194,6 @@ def update_title(n_clicks, material, search):
 
 @app.callback(
     Output('annotation_container', 'children'),
-    [Input('annotate_next', 'n_clicks')])
+    [Input('annotate_skip', 'n_clicks')])
 def load_next_abstract(n_clicks):
     return annotate_app.serve_abstract()
