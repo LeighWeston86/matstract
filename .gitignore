@@ -5,6 +5,10 @@ db_atlas.json
 extract_data.py
 data_extraction.ipynb
 
+notebooks/
+.idea/
+matstract/bin/
+
 # mac specific #
 .DS_store
 

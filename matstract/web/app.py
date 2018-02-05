@@ -4,7 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from matstract.web import search_app, trends_app, extract_app, similar_app, annotate_app
 from dash.dependencies import Input, Output, State
-from matstract.extract.parsing import extract_materials
+from matstract.extract.parsing import extract_materials, materials_extract
 from matstract.web.utils import open_db_connection
 import os
 from flask import send_from_directory
@@ -160,6 +160,25 @@ def update_extract(n_clicks, text):
     materials = [m for m in materials if len(m) > 0]
     # return [{"name": m, "value": m} for m in materials]
     return ", ".join(materials)
+
+@app.callback(
+    Output('extract-highlighted', 'children'),
+    [Input('extract-button', 'n_clicks')],
+    [State('extract-textarea', 'value')])
+def highlight_extracted(n_clicks, text):
+    parsed, missed = materials_extract(text)
+    highlighted = extract_app.highlighter(text, parsed, missed)
+    return highlighted
+
+@app.callback(
+    Output('highlight-random', 'children'),
+    [Input('random-abstract', 'n_clicks')])
+def highlight_random(n_clicks):
+    text = extract_app.random_abstract()
+    parsed, missed = materials_extract(text)
+    highlighted = extract_app.highlighter(text, parsed, missed)
+    return highlighted
+
 
 ### Trends App Callbacks ###
 

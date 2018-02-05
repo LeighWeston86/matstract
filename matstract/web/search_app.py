@@ -144,5 +144,3 @@ layout = html.Div([
         html.Table(generate_table(''), id='table-element')
     ], className='row')
 ])
-
-
