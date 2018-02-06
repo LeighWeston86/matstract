@@ -78,8 +78,9 @@ def get_search_results(search="", material="", max_results=10000):
             parser = parsing.SimpleParser()
             results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
     else:
-        results = db.abstracts_leigh.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
+        results = db.abstracts.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
                                           ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
+        print('test working')
     return list(results)
 
 
@@ -118,9 +119,9 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
             [html.Tr([
-                html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight']),
+                html.Td(html.A(hm(str(df.iloc[i][col]), search),
                                href=df.iloc[i]["html_link"])) if col == "title"
-                else html.Td(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'])) if col == "abstract"
+                else html.Td(hm(str(df.iloc[i][col]), search)) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))]
         )
