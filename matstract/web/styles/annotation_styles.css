@@ -1,0 +1,30 @@
+.abs-token:hover {
+    filter: brightness(150%);
+}
+
+.abs-token {
+    cursor: pointer;
+}
+
+.highlighted {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 1px 5px;
+}
+
+.highlighted.label {
+    margin: 2px;
+}
+
+#annotation_container .row {
+    margin: 0 15px;
+    padding: 10px 0;
+}
+
+#abstract_container {
+    border-bottom: 2px solid #999;
+}
+
+#label_container {
+    border-bottom: 2px solid #999;
+}
