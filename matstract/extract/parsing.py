@@ -415,23 +415,29 @@ class SimpleParser:
 
     >>> parser = SimpleParser()
     >>> parser.parse(Li2(FePO4)2)
-    defaultdict(<class 'float'>, {'Li': 1.0, 'Fe': 2.0, 'P': 2.0, 'O': 8.0})
+    'FeLiO4P'
     >>> parser.parse(Sr(Zr0.5Ti0.5)O3)
-    defaultdict(<class 'float'>, {'Sr': 2.0, 'Zr': 1.0, 'Ti': 1.0, 'O': 6.0})
+    'O6Sr2TiZr'
     '''
 
     def __init__(self):
-        self.name = "SimpleParser"
+        self.name = "ImprovedMaterialParser"
 
     def is_element(self, element):
         '''
-        Checks for chemical symbol using pymatgen.
+        Checks if element is a chemical symbol.
         '''
         try:
             Element(element)
             return True
         except:
             return False
+
+    def alphabetize(self, formula):
+        '''
+        Take a chemical formula such as SrZrO3 and returns alphabetized version O3SrZr.
+        '''
+        return ''.join(sorted(re.findall(r'[A-Z][a-z]?\d*', formula)))
 
     def matgen_parser(self, formula):
         '''
@@ -445,7 +451,9 @@ class SimpleParser:
             if any([not self.is_element(key) for key in composition.keys()]):
                 return False
             else:
-                return composition.to_reduced_dict
+                reduced = composition.get_reduced_formula_and_factor()[0]
+                ordered = self.alphabetize(reduced)
+                return ordered
         except:
             return False
 
