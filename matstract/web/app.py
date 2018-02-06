@@ -15,22 +15,26 @@ app.config.suppress_callback_exceptions = True
 app.title = "Matstract"
 cache = Cache(app.server, config={"CACHE_TYPE": "simple"})
 
+# To include local css and js files
+app.css.config.serve_locally = True
+# app.scripts.config.serve_locally = True
+
 ### CSS settings ###
 BACKGROUND = 'rgb(230, 230, 230)'
 COLORSCALE = [[0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,191,118)"],
               [0.5, "rgb(37,180,167)"], [0.65, "rgb(17,123,215)"], [1, "rgb(54,50,153)"]]
 
-external_css = ["https://codepen.io/chriddyp/pen/bWLwgP.css",
-                "https://codepen.io/chriddyp/pen/brPBPO.css",
-                "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css",
-                "//fonts.googleapis.com/css?family=Raleway:400,300,600",
-                "//fonts.googleapis.com/css?family=Dosis:Medium",
-                "https://s3-us-west-1.amazonaws.com/webstract/webstract.css",
-                "https://s3-us-west-1.amazonaws.com/matstract/annotation_styles.css",
-                ]
+# loading css files
+css_files = ["dash_styles.css", "dash_extra.css", "skeleton.min.css",
+             "googleapis.raleway.css", "googleapis.dosis.css",
+             "webstract.css", "annotation_styles.css"]
 
-for css in external_css:
-    app.css.append_css({"external_url": css})
+stylesheets_links = []
+for css in css_files:
+    stylesheets_links.append(html.Link(
+        rel='stylesheet',
+        href='/styles/' + css
+    ))
 
 # Adding Google Analytics
 app.scripts.append_script({"external_url":"https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
@@ -85,7 +89,7 @@ header = html.Div([
 ], className='row twelve columns', style={'position': 'relative', 'right': '15px'})
 
 
-app.layout = html.Div([header, html.Div(search_app.layout, id='page-content')],
+app.layout = html.Div([html.Div(stylesheets_links), header, html.Div(search_app.layout, id='page-content')],
                       className='container')
 
 #### Callbacks ####
@@ -197,3 +201,9 @@ def update_title(n_clicks, material, search):
     [Input('annotate_skip', 'n_clicks')])
 def load_next_abstract(n_clicks):
     return annotate_app.serve_abstract()
+
+
+@app.server.route('/styles/<path:path>')
+def static_file(path):
+    static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
+    return send_from_directory(static_folder, path)
