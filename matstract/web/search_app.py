@@ -2,6 +2,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
 from matstract.web.utils import open_db_connection
+from matstract.extract import parsing
 
 db = open_db_connection()
 
@@ -72,21 +73,39 @@ def get_search_results(search="", material="", max_results=10000):
         return None
     if len(material) > 0:
         if material not in search:
-            search = search + ' ' + material
+            # search = search + ' ' + material
             # print("searching for {}".format(search))
-        results = db.abstracts.find({"$text": {"$search": search}, "chem_mentions.names": material},
-                                    {"score": {"$meta": "textScore"}},
-                                    ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
+            parser = parsing.SimpleParser()
+            results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
     else:
-        results = db.abstracts.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
-                                    ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
+        results = db.abstracts_leigh.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
+                                          ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
     return list(results)
+
+
+def to_highlight(names_list, material):
+    parser = parsing.SimpleParser()
+    names = []
+    for name in names_list:
+        if 'names' in name.keys() and parser.matgen_parser(name['names'][0]) == parser.matgen_parser(material):
+            return name['names'][0]
+
+
+def sort_df(test_df, materials):
+    test_df['to_highlight'] = test_df['chem_mentions'].apply(to_highlight, material=materials)
+    test_df['count'] = test_df.apply(lambda x: x['abstract'].count(x['to_highlight']), axis=1)
+    test_df.sort_values(by='count', axis=0, ascending=False, inplace=True)
+    return test_df
 
 
 def generate_table(search='', materials='', columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
     results = get_search_results(search, materials)
     # num_results = results.count()
-    df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
+    if materials:
+        df = pd.DataFrame(results[:max_rows])
+        df = sort_df(df, materials)
+    else:
+        df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
     if not df.empty:
         format_authors = lambda author_list: ", ".join(author_list)
         df['authors'] = df['authors'].apply(format_authors)
@@ -99,13 +118,14 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
             [html.Tr([
-                html.Td(html.A(hm(str(df.iloc[i][col]), materials),
+                html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight']),
                                href=df.iloc[i]["html_link"])) if col == "title"
-                else html.Td(hm(str(df.iloc[i][col]), materials)) if col == "abstract"
+                else html.Td(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'])) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))]
         )
     return html.Table("No Results")
+
 
 
 # The Search app
@@ -144,5 +164,3 @@ layout = html.Div([
         html.Table(generate_table(''), id='table-element')
     ], className='row')
 ])
-
-
