@@ -2,9 +2,10 @@ import dash
 from flask_caching import Cache
 import dash_core_components as dcc
 import dash_html_components as html
-from matstract.web import search_app, trends_app, extract_app, similar_app, annotate_app
+from matstract.web import search_app, trends_app, extract_app, similar_app, annotate_app, keyword_app
 from dash.dependencies import Input, Output, State
 from matstract.extract.parsing import extract_materials, materials_extract
+from matstract.models import keyword_extraction
 from matstract.web.utils import open_db_connection
 import os
 from flask import send_from_directory
@@ -82,7 +83,9 @@ header = html.Div([
             html.Span(' • '),
             dcc.Link("Similar Abstracts", href="/similar"),
             html.Span(' • '),
-            dcc.Link("Annotate", href="/annotate")
+            dcc.Link("Annotate", href="/annotate"),
+            html.Span(' • '),
+            dcc.Link("Keyword Extraction", href="/keyword")
         ],
         id="nav_bar"),
     html.Br()
@@ -112,6 +115,8 @@ def display_page(path):
         return similar_app.layout
     elif path == "/annotate":
         return annotate_app.serve_layout()
+    elif path == "/keyword":
+        return keyword_app.layout
     else:
         return search_app.layout
 
@@ -222,7 +227,18 @@ def load_next_abstract(n_clicks):
     return annotate_app.serve_abstract()
 
 
+### Keywords App Callbacks ###
+@app.callback(
+    Output('extract-keywords', 'children'),
+    [Input('keyword-button', 'n_clicks')],
+    [State('keyword-material', 'value')])
+def highlight_extracted(n_clicks, text):
+    results =  [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
+    return results
+
+
 @app.server.route('/styles/<path:path>')
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
+

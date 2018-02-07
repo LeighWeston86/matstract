@@ -80,7 +80,6 @@ def get_search_results(search="", material="", max_results=10000):
     else:
         results = db.abstracts.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
                                           ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
-        print('test working')
     return list(results)
 
 
