@@ -15,6 +15,3 @@ matstract/bin/
 # pycharm files #
 */.idea/**
 .idea/**
-
-# css and js files on aws S3 #
-annotation_styles.css
