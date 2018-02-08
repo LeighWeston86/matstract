@@ -8,16 +8,18 @@ from matstract.extract.parsing import extract_materials, materials_extract
 from matstract.web.utils import open_db_connection
 import os
 from flask import send_from_directory
+import dash_materialsintelligence as dmi
 
 app = dash.Dash()
-server = app.server
-app.config.suppress_callback_exceptions = True
-app.title = "Matstract"
-cache = Cache(app.server, config={"CACHE_TYPE": "simple"})
 
 # To include local css and js files
 app.css.config.serve_locally = True
-# app.scripts.config.serve_locally = True
+app.scripts.config.serve_locally = True
+app.config.suppress_callback_exceptions = True
+app.title = "Matstract"
+
+cache = Cache(app.server, config={"CACHE_TYPE": "simple"})
+
 
 ### CSS settings ###
 BACKGROUND = 'rgb(230, 230, 230)'
@@ -36,8 +38,8 @@ for css in css_files:
         href='/styles/' + css
     ))
 
-# Adding Google Analytics
-app.scripts.append_script({"external_url":"https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
+# # Adding Google Analytics
+# app.scripts.append_script({"external_url":"https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
 
 #### App Layout ####
 
@@ -66,6 +68,7 @@ header = html.Div([
                 'font-size': '6.0rem',
                 'color': '#4D637F'
             }),
+    dmi.Annotatable(value="", className="", id=""),
     html.Nav(
         style={
             'position': 'relative',
@@ -197,6 +200,7 @@ def update_graph(n_clicks, material, search):
     figure["mode"] = "histogram"
     return figure
 
+
 @cache.memoize(timeout=600)
 @app.callback(
     Output('graph-label', 'children'),
@@ -214,6 +218,7 @@ def update_title(n_clicks, material, search):
             return "Number of papers related to '{}' mentioning {} per year:".format(search, material)
 
     return ''
+
 
 @app.callback(
     Output('annotation_container', 'children'),

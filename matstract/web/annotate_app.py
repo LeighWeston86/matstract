@@ -1,5 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_materialsintelligence as dmi
 
 from matstract.web.utils import open_db_connection
 
@@ -79,20 +80,29 @@ def serve_macro_annotation():
 
 
 def build_tokens_html(tokens, cems):
-    cde_cem_starts = [cem.start for cem in cems]
     """builds the HTML for tokenized paragraph"""
+    cde_cem_starts = [cem.start for cem in cems]
+    print(cde_cem_starts)
     html_builder = []
     for row in tokens:
         for elem in row:
+            selected_state = False
             extra_class = ''
             if elem.start in cde_cem_starts:
-                extra_class = " highlighted mtl"
+                selected_state = True
+                extra_class = ' mtl highlighted'
             html_builder.append(" ")
-            html_builder.append(html.Span(
-                elem.text,
+            html_builder.append(dmi.Annotatable(
                 id="abs-token-" + str(elem.start) + '-' + str(elem.end),
-                className="abs-token" + extra_class,
+                value=elem.text,
+                className="abs-token",
+                isSelected=selected_state,
             ))
+            # html_builder.append(html.Span(
+            #     elem.text,
+            #     id="abs-token-" + str(elem.start) + '-' + str(elem.end),
+            #     className="abs-token" + extra_class,
+            # ))
     return html_builder
 
 

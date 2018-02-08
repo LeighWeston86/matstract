@@ -1,20 +1,4 @@
-.abs-token:hover {
-    filter: brightness(150%);
-}
-
-.abs-token {
-    cursor: pointer;
-}
-
-.highlighted {
-    border: 1px solid black;
-    border-radius: 3px;
-    padding: 1px 5px;
-}
-
-.highlighted.label {
-    margin: 2px;
-}
+/* Containers */
 
 #annotation_container .row {
     margin: 0 15px;
@@ -28,3 +12,50 @@
 #label_container {
     border-bottom: 2px solid #999;
 }
+
+
+/* highlighting */
+
+.abs-token {
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.highlighted {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 1px 3px;
+    filter: brightness(90%);
+}
+
+.highlighted.label {
+    margin: 2px;
+}
+
+.highlighted.mtl {
+    background-color: #fffacd;
+}
+
+.highlighted.inrg {
+    background-color: #ffefd5;
+}
+
+.highlighted.main_mtl {
+    background-color: #ffdab9;
+}
+
+.highlighted.prop_name {
+    background-color: #00FA9A
+}
+
+.highlighted.prop_val {
+    background-color: #98FB98;
+}
+
+.highlighted.prop_unit {
+    background-color: #90EE90
+}
+
+
+
+
