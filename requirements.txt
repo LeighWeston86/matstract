@@ -9,4 +9,5 @@ pandas
 pymatgen
 gunicorn
 Flask-Caching
+nltk
 -e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
