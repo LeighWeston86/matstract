@@ -38,22 +38,24 @@ class OccurrenceExtractor(object):
         return words
 
     def bigrams(self, tokens):
-        return nltk.bigrams(tokens)
+        return list(nltk.bigrams(tokens))
 
     def trigrams(self, tokens):
-        return nltk.trigrams(tokens)
+        return list(nltk.trigrams(tokens))
 
     def most_common(self, collection, cutoff=10, min_counts=5):
-        tokens = []
+        all_tokens = []
         for abstract in collection:
-            tokens += self.preprocessing(abstract['abstract'])
-        if self.token_type == 'unigrams':
-            tokens = tokens
-        elif self.token_type == 'bigrams':
-            tokens = self.bigrams(tokens)
-        elif self.token_type == 'trigrams':
-            tokens = self.trigrams(tokens)
-        most_common = nltk.FreqDist(tokens).most_common(cutoff)
+            tokens = self.preprocessing(abstract['abstract'])
+            if self.token_type == 'unigrams':
+                tokens = tokens
+            elif self.token_type == 'bigrams':
+                tokens = self.bigrams(tokens)
+            elif self.token_type == 'trigrams':
+                tokens = self.trigrams(tokens)
+            # print(len(tokens), len(set(tokens)), tokens)
+            all_tokens += set(tokens)
+        most_common = nltk.FreqDist(all_tokens).most_common(cutoff)
         most_common = [ngram for (ngram, count) in most_common if count >= min_counts]
         return most_common
 
