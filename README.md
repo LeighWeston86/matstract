@@ -4,4 +4,4 @@ Using NLP to extract materials data from the abstracts of scientific journal art
 
 # Contributors
 
-@jdagdelen, @vtshitoyan
+@jdagdelen, @vtshitoyan, @lweston
