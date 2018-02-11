@@ -3,10 +3,13 @@ import requests
 import sys
 import json
 import xml.etree.ElementTree as ET
+from requests.exceptions import HTTPError
 from elsapy.elsclient import ElsClient
 from matstract.utils import open_db_connection
 from elsapy.elssearch import ElsSearch
 import datetime
+from tqdm import tqdm
+
 
 # Namespaces for Scopus XML
 namespaces = {'dtd': 'http://www.elsevier.com/xml/svapi/abstract/dtd',
@@ -90,7 +93,6 @@ def find_articles(year=None, issn=None, get_all=True):
     search = ElsSearch(query, index='scopus')
     search.execute(els_client=CLIENT, get_all=get_all)
     dois = [r['prism:doi'] for r in search.results]
-
     return dois
 
 
@@ -362,16 +364,25 @@ def contribute(user_creds, max_entries=1000):
     target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
     dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
     new_entries = []
-    for doi in dois:
-        article = ScopusArticle(input_doi=doi)
-
+    for doi in tqdm(dois):
         date = datetime.datetime.now().isoformat()
-        new_entries.append({"doi": doi, "article": article, "xml": article.xml, "completed": True,
-                            "pulled_on": date, "pulled_by": user})
+        try:
+            article = ScopusArticle(input_doi=doi)
+            new_entries.append({"doi": doi, "title":article.title, "abstract": article.abstract,
+                                "authors": article.authors, "url": article.url, "subjects":article.subjects,
+                                "journal": article.journal, "date": article.cover_date,
+                                "xml": ET.tostring(article.xml, encoding="utf-8", method='xml'),
+                                "completed": True, "pulled_on": date, "pulled_by": user})
+        except HTTPError:
+            new_entries.append({"doi": doi, "completed":False, "pulled_on": date, "pulled_by":user})
+
     for entry in new_entries:
-        elsevier.update_one({"doi": entry["doi"]}, entry)
+        if elsevier.find({"doi":entry["doi"]}).count():
+            elsevier.update_one({"doi":entry["doi"]}, {"$set": entry})
+        else:
+            elsevier.insert_one(entry)
 
     date = datetime.datetime.now().isoformat()
     log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
-                   {"year": target["year"], "issn": target["issn"], "status": "complete",
-                    "completed_by": user, "comleted_on": date})
+                   {"$set": {"year": target["year"], "issn": target["issn"], "status": "complete",
+                    "completed_by": user, "comleted_on": date}})

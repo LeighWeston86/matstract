@@ -10,4 +10,5 @@ pymatgen
 gunicorn
 Flask-Caching
 nltk
+tqdm
 -e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
