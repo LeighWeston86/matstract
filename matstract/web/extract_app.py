@@ -1,7 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import random
-from matstract.web.utils import open_db_connection
+from matstract.utils import open_db_connection
 
 def highlight_multiple(text, materials, color = 'Yellow'):
     for mat in materials:
@@ -59,8 +59,8 @@ layout = html.Div([
                      wrap=True,
                      placeholder='Paste abstract/other text here to extract materials mentions.'
                      ),
-        html.Button('Choose a random abstract', style = { 'position': 'relative', 'top': '-30px'}, id = 'random-abstract'),
-        html.Div([html.Button('Extract Materials', id='extract-button')]),
+        html.Div([html.Button('Extract Materials', id='extract-button'),
+                  html.Button('Choose a random abstract', id = 'random-abstract')]),
         # dcc.Dropdown(id='extract-dropdown',
         #              multi=True,
         #              placeholder='Material: e.g. "LiFePO4"',
