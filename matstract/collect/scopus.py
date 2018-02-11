@@ -374,7 +374,6 @@ def contribute(user_creds, max_entries=1000):
             new_entries.append({"doi": doi, "title":article.title, "abstract": abstract,
                                 "authors": article.authors, "url": article.url, "subjects":article.subjects,
                                 "journal": article.journal, "date": article.cover_date,
-                                "xml": ET.tostring(article.xml, encoding="utf-8", method='xml'),
                                 "completed": True, "pulled_on": date, "pulled_by": user})
         except HTTPError:
             new_entries.append({"doi": doi, "completed":False, "pulled_on": date, "pulled_by":user})
