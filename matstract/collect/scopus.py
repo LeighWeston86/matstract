@@ -92,7 +92,12 @@ def find_articles(year=None, issn=None, get_all=True):
     query = build_scopus_query(year=year, issn=issn)
     search = ElsSearch(query, index='scopus')
     search.execute(els_client=CLIENT, get_all=get_all)
-    dois = [r['prism:doi'] for r in search.results]
+    dois=[]
+    for r in search.results:
+        try:
+            dois.append(r['prism:doi'])
+        except:
+            continue
     return dois
 
 
