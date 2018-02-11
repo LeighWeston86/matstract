@@ -368,7 +368,10 @@ def contribute(user_creds, max_entries=1000):
         date = datetime.datetime.now().isoformat()
         try:
             article = ScopusArticle(input_doi=doi)
-            new_entries.append({"doi": doi, "title":article.title, "abstract": article.abstract,
+            abstract = article.abstract
+            if not isinstance(abstract, str):
+                abstract = abstract.text
+            new_entries.append({"doi": doi, "title":article.title, "abstract": abstract,
                                 "authors": article.authors, "url": article.url, "subjects":article.subjects,
                                 "journal": article.journal, "date": article.cover_date,
                                 "xml": ET.tostring(article.xml, encoding="utf-8", method='xml'),
@@ -385,4 +388,4 @@ def contribute(user_creds, max_entries=1000):
     date = datetime.datetime.now().isoformat()
     log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
                    {"$set": {"year": target["year"], "issn": target["issn"], "status": "complete",
-                    "completed_by": user, "comleted_on": date}})
+                    "completed_by": user, "completed_on": date}})
