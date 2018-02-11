@@ -364,6 +364,11 @@ def contribute(user_creds, max_entries=1000):
     target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
     dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
     new_entries = []
+
+    date = datetime.datetime.now().isoformat()
+    log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
+                   {"$set": { "status": "in progress"}})
+
     for doi in tqdm(dois):
         date = datetime.datetime.now().isoformat()
         try:
@@ -375,8 +380,9 @@ def contribute(user_creds, max_entries=1000):
                                 "authors": article.authors, "url": article.url, "subjects":article.subjects,
                                 "journal": article.journal, "date": article.cover_date,
                                 "completed": True, "pulled_on": date, "pulled_by": user})
-        except HTTPError:
-            new_entries.append({"doi": doi, "completed":False, "pulled_on": date, "pulled_by":user})
+        except HTTPError as e:
+            new_entries.append({"doi": doi, "completed":False, "error": e,
+                                "pulled_on": date, "pulled_by":user})
 
     for entry in new_entries:
         if elsevier.find({"doi":entry["doi"]}).count():
@@ -385,6 +391,5 @@ def contribute(user_creds, max_entries=1000):
             elsevier.insert_one(entry)
 
     date = datetime.datetime.now().isoformat()
-    log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
-                   {"$set": {"year": target["year"], "issn": target["issn"], "status": "complete",
-                    "completed_by": user, "completed_on": date}})
+    log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
+                   {"$set": { "status": "complete", "completed_by": user, "completed_on": date}})
