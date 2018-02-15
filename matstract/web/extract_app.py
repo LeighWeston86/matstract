@@ -52,13 +52,13 @@ layout = html.Div([
             html.P('Matstract Extract: materials extraction from text sources.')
         ], style={'margin-left': '10px'}),
         html.Label('Enter text for materials extraction:'),
-        dcc.Textarea(id='extract-textarea',
+        html.Div(dcc.Textarea(id='extract-textarea',
                      cols=100,
                      autoFocus=True,
                      spellCheck=True,
                      wrap=True,
                      placeholder='Paste abstract/other text here to extract materials mentions.'
-                     ),
+                     )),
         html.Div([html.Button('Extract Materials', id='extract-button'),
                   html.Button('Choose a random abstract', id = 'random-abstract')]),
         # dcc.Dropdown(id='extract-dropdown',
@@ -73,10 +73,10 @@ layout = html.Div([
                      value="",
                      readOnly=True,
                      ),
-        html.Div(id='extract-highlighted',
+        html.Div(id='extract-highlighted'
         ),
-        html.Div(id='highlight-random',
-        )
+        html.Div(id='highlight-random'
+        ),
         # dcc.Input(id='trends-material-box',
         #           placeholder='Material: e.g. "LiFePO4"',
         #           value='',
