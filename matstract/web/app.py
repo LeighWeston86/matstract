@@ -72,10 +72,7 @@ header = html.Div([
     dmi.Annotatable(value="", className="", id=""),
     html.Nav(
         style={
-            'position': 'relative',
-            'top': '0px',
-            'left': '27px',
-            'cursor': 'default'
+            'margin': '10px 27px',
         },
         children=[
             dcc.Link("Search", href="/search", ),

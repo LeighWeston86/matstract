@@ -27,6 +27,7 @@ john_atlas_creds.json
 
 # build related #
 *.egg-info/
-docs/
 dist/
 build/
+
+src/

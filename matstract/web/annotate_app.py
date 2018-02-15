@@ -2,7 +2,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_materialsintelligence as dmi
 
-from matstract.web.utils import open_db_connection
+from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 import pprint
