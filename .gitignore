@@ -2,8 +2,6 @@ env/
 database_management.ipynb
 db_atlas.json
 *.pyc
-extract_data.py
-data_extraction.ipynb
 
 notebooks/
 .idea/
@@ -15,3 +13,13 @@ matstract/bin/
 # pycharm files #
 */.idea/**
 .idea/**
+
+# Scopus files #
+extract/config.json
+extract_data.py
+data_extraction.ipynb
+scidir_search_results.p
+collect/scopus_config.json
+scopus_testing.ipynb
+
+john_atlas_creds.json

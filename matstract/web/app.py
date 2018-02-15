@@ -6,7 +6,6 @@ from matstract.web import search_app, trends_app, extract_app, similar_app, anno
 from dash.dependencies import Input, Output, State
 from matstract.extract.parsing import extract_materials, materials_extract
 from matstract.models import keyword_extraction
-from matstract.web.utils import open_db_connection
 import os
 from flask import send_from_directory
 import dash_materialsintelligence as dmi
