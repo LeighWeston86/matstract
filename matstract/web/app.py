@@ -93,7 +93,7 @@ header = html.Div([
 
 
 app.layout = html.Div([html.Div(stylesheets_links), header, html.Div(search_app.layout, id='page-content')],
-                      className='container')
+                      className='container main-container')
 
 #### Callbacks ####
 
