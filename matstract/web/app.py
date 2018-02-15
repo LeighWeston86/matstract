@@ -12,6 +12,7 @@ from flask import send_from_directory
 import dash_materialsintelligence as dmi
 
 app = dash.Dash()
+server = app.server
 
 # To include local css and js files
 app.css.config.serve_locally = True
@@ -19,7 +20,7 @@ app.scripts.config.serve_locally = True
 app.config.suppress_callback_exceptions = True
 app.title = "Matstract"
 
-cache = Cache(app.server, config={"CACHE_TYPE": "simple"})
+cache = Cache(server, config={"CACHE_TYPE": "simple"})
 
 
 ### CSS settings ###
@@ -225,11 +226,21 @@ def update_title(n_clicks, material, search):
     return ''
 
 
+"""
+Annotation App Callbacks
+"""
 @app.callback(
     Output('annotation_container', 'children'),
-    [Input('annotate_skip', 'n_clicks')])
-def load_next_abstract(n_clicks):
+    [Input('annotate_skip', 'n_clicks'),
+     Input('annotate_confirm', 'n_clicks')])
+def load_next_abstract(skip_clicks, confirm_clicks):
+    # print("Skip: {}, Confirm: {}".format(skip_clicks, confirm_clicks))
+    if confirm_clicks is not None:
+        a = 1
+        # do something to record the annotation
     return annotate_app.serve_abstract()
+
+
 
 
 ### Keywords App Callbacks ###

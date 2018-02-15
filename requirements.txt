@@ -5,6 +5,7 @@ dash
 dash-renderer
 dash-html-components
 dash-core-components
+dash-materialsintellignce
 pandas
 pymatgen
 gunicorn

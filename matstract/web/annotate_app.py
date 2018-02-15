@@ -3,11 +3,9 @@ import dash_core_components as dcc
 import dash_materialsintelligence as dmi
 
 from matstract.web.utils import open_db_connection
+from matstract.models.AnnotationBuilder import AnnotationBuilder
 
-from chemdataextractor.doc import Paragraph
-from chemdataextractor import Document
-
-
+import pprint
 db = open_db_connection()
 
 
@@ -21,18 +19,23 @@ def serve_abstract():
     # get a random paragraph
     random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
 
-    # tokenize using chemdataextractor
-    # title
-    ttl_tokens = Paragraph(random_abstract["title"]).tokens
-    ttl_cems = Document(random_abstract["title"]).cems
-    # abstract
-    abs_tokens = Paragraph(random_abstract["abstract"]).tokens
-    abs_cems = Document(random_abstract["abstract"]).cems
+    builder = AnnotationBuilder()
+    # tokenize and get initial annotation
+    ttl_tokens, ttl_annotations = builder.get_tokens(random_abstract["title"])
+    abs_tokens, abs_annotations = builder.get_tokens(random_abstract["abstract"])
 
     return [
         html.Div(serve_labels(), id="label_container"),
-        html.H5(build_tokens_html(ttl_tokens, ttl_cems), id="title_container", className="row"),
-        html.Div(build_tokens_html(abs_tokens, abs_cems), id="abstract_container", className="row"),
+        html.Div(dmi.AnnotationContainer(
+            tokens=ttl_tokens,
+            annotations=ttl_annotations,
+            id=random_abstract["doi"]
+        ), className="row", id="title_container", style={"fontSize": "large"}),
+        html.Div(dmi.AnnotationContainer(
+            tokens=abs_tokens,
+            annotations=abs_annotations,
+            id=random_abstract["doi"]
+        ), className="row", id="abstract_container"),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
         # html.Div(list_cde_cems(abs_cems), id='token_container'),
         html.Div(serve_buttons(), id="buttons_container", className="row")
@@ -66,7 +69,7 @@ def serve_macro_annotation():
             )], className='row'),
             html.Div([html.Div("Applications: ", className="two columns"),
                      html.Div(dcc.Dropdown(
-                         options = [
+                         options=[
                              {'label': 'Thermoelectric', 'value': 'thermoelectric'},
                              {'label': 'Battery', 'value': 'battery'},
                              {'label': 'Magnetic', 'value': 'magnetic'},
@@ -82,7 +85,6 @@ def serve_macro_annotation():
 def build_tokens_html(tokens, cems):
     """builds the HTML for tokenized paragraph"""
     cde_cem_starts = [cem.start for cem in cems]
-    print(cde_cem_starts)
     html_builder = []
     for row in tokens:
         for elem in row:
@@ -93,16 +95,11 @@ def build_tokens_html(tokens, cems):
                 extra_class = ' mtl highlighted'
             html_builder.append(" ")
             html_builder.append(dmi.Annotatable(
-                id="abs-token-" + str(elem.start) + '-' + str(elem.end),
+                id="token-" + str(elem.start) + '-' + str(elem.end),
                 value=elem.text,
-                className="abs-token",
+                className="token",
                 isSelected=selected_state,
             ))
-            # html_builder.append(html.Span(
-            #     elem.text,
-            #     id="abs-token-" + str(elem.start) + '-' + str(elem.end),
-            #     className="abs-token" + extra_class,
-            # ))
     return html_builder
 
 

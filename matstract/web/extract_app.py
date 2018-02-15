@@ -52,13 +52,13 @@ layout = html.Div([
             html.P('Matstract Extract: materials extraction from text sources.')
         ], style={'margin-left': '10px'}),
         html.Label('Enter text for materials extraction:'),
-        dcc.Textarea(id='extract-textarea',
+        html.Div(dcc.Textarea(id='extract-textarea',
                      cols=100,
                      autoFocus=True,
                      spellCheck=True,
                      wrap=True,
-                     placeholder='Paste abstract/other text here to extract materials mentions.'
-                     ),
+                     placeholder='Paste abstract/other text here to extract materials mentions.')
+                 ),
         html.Button('Choose a random abstract', style = { 'position': 'relative', 'top': '-30px'}, id = 'random-abstract'),
         html.Div([html.Button('Extract Materials', id='extract-button')]),
         # dcc.Dropdown(id='extract-dropdown',

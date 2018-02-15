@@ -16,7 +16,7 @@
 
 /* highlighting */
 
-.abs-token {
+.token {
     cursor: pointer;
     padding: 2px 4px;
 }
