@@ -1,7 +1,0 @@
-README.md
-setup.py
-matstract/__init__.py
-matstract.egg-info/PKG-INFO
-matstract.egg-info/SOURCES.txt
-matstract.egg-info/dependency_links.txt
-matstract.egg-info/top_level.txt
