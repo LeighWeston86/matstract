@@ -29,13 +29,13 @@ def serve_abstract():
         html.Div(dmi.AnnotationContainer(
             tokens=ttl_tokens,
             annotations=ttl_annotations,
-            id=random_abstract["doi"]
-        ), className="row", id="title_container", style={"fontSize": "large"}),
+            id="title_container"
+        ), className="row", style={"fontSize": "large"}),
         html.Div(dmi.AnnotationContainer(
             tokens=abs_tokens,
             annotations=abs_annotations,
-            id=random_abstract["doi"]
-        ), className="row", id="abstract_container"),
+            id="abstract_container"
+        ), className="row"),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
         # html.Div(list_cde_cems(abs_cems), id='token_container'),
         html.Div(serve_buttons(), id="buttons_container", className="row")
@@ -82,48 +82,25 @@ def serve_macro_annotation():
                      className="row")]
 
 
-def build_tokens_html(tokens, cems):
-    """builds the HTML for tokenized paragraph"""
-    cde_cem_starts = [cem.start for cem in cems]
-    html_builder = []
-    for row in tokens:
-        for elem in row:
-            selected_state = False
-            extra_class = ''
-            if elem.start in cde_cem_starts:
-                selected_state = True
-                extra_class = ' mtl highlighted'
-            html_builder.append(" ")
-            html_builder.append(dmi.Annotatable(
-                id="token-" + str(elem.start) + '-' + str(elem.end),
-                value=elem.text,
-                className="token",
-                isSelected=selected_state,
-            ))
-    return html_builder
-
-
-# def list_cde_cems(cems):
+# def build_tokens_html(tokens, cems):
+#     """builds the HTML for tokenized paragraph"""
+#     cde_cem_starts = [cem.start for cem in cems]
 #     html_builder = []
-#     for cem in cems:
-#         html_builder.append(html.Div([
-#             html.Div(
-#                 cem.text,
-#                 id="cde-cem-" + str(cem.start) + '-' + str(cem.end),
-#                 className="six columns",
-#             ), html.Div(dcc.Dropdown(
-#                 options=[
-#                     {'label': 'Material', 'value': 'mtl'},
-#                     {'label': 'Inorganic Crystal', 'value': 'igc'},
-#                 ],
-#                 value='mtl',
-#                 ),
-#                 className="six columns",
-#             )],
-#             className="row",
-#         ))
+#     for row in tokens:
+#         for elem in row:
+#             selected_state = False
+#             extra_class = ''
+#             if elem.start in cde_cem_starts:
+#                 selected_state = True
+#                 extra_class = ' mtl highlighted'
+#             html_builder.append(" ")
+#             html_builder.append(dmi.Annotatable(
+#                 id="token-" + str(elem.start) + '-' + str(elem.end),
+#                 value=elem.text,
+#                 className="token",
+#                 isSelected=selected_state,
+#             ))
 #     return html_builder
-
 
 def serve_buttons():
     return [html.Button("Skip", id="annotate_skip", className="button"),
