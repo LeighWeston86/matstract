@@ -228,11 +228,13 @@ Annotation App Callbacks
 @app.callback(
     Output('annotation_container', 'children'),
     [Input('annotate_skip', 'n_clicks'),
-     Input('annotate_confirm', 'n_clicks')])
-def load_next_abstract(skip_clicks, confirm_clicks):
+     Input('annotate_confirm', 'n_clicks')],
+    [State('abstract_container', 'annotations')])
+def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     # print("Skip: {}, Confirm: {}".format(skip_clicks, confirm_clicks))
     if confirm_clicks is not None:
         a = 1
+        # pprint.pprint(annotations)
         # do something to record the annotation
     return annotate_app.serve_abstract()
 
@@ -245,7 +247,7 @@ def load_next_abstract(skip_clicks, confirm_clicks):
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
 def highlight_extracted(n_clicks, text):
-    results =  [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
+    results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
     return results
 
 
