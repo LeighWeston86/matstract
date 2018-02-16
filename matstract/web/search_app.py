@@ -158,7 +158,7 @@ layout = html.Div([
     ], className='row'),
 
     html.Div([
-        html.Label('Top 100 Results:', id='number_results'),
-        html.Table(generate_table(''), id='table-element')
+        html.Label(id='number_results'),
+        html.Table(id='table-element')
     ], className='row')
 ])

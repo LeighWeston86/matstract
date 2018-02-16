@@ -11,7 +11,8 @@ db = open_db_connection()
 
 def serve_layout():
     """Generates the layout dynamically on every refresh"""
-    return html.Div(serve_abstract(), id="annotation_container")
+    return [html.Div(html.Div(id="abstract_container"), id="annotation_container"),
+            html.Div(serve_buttons(), id="buttons_container", className="row")]
 
 
 def serve_abstract():
@@ -25,7 +26,7 @@ def serve_abstract():
     abs_tokens, abs_annotations = builder.get_tokens(random_abstract["abstract"])
 
     return [
-        html.Div(serve_labels(), id="label_container"),
+        html.Div(serve_labels(), id="label_container", className="row"),
         html.Div(dmi.AnnotationContainer(
             tokens=ttl_tokens,
             annotations=ttl_annotations,
@@ -37,8 +38,6 @@ def serve_abstract():
             id="abstract_container"
         ), className="row"),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
-        # html.Div(list_cde_cems(abs_cems), id='token_container'),
-        html.Div(serve_buttons(), id="buttons_container", className="row")
     ]
 
 
@@ -66,7 +65,7 @@ def serve_macro_annotation():
                 clearable=False,
                 id='abstract_category'
             ), className='five columns',
-            )], className='row'),
+            )], className='row', id="first_macro_row"),
             html.Div([html.Div("Applications: ", className="two columns"),
                      html.Div(dcc.Dropdown(
                          options=[
@@ -108,7 +107,7 @@ def serve_buttons():
 
 
 def serve_labels():
-    return html.Div([
+    return [
         html.Div(html.Span("Labels: "), className="two columns"),
         html.Div([
             html.Span("Material", className="highlighted mtl label"),
@@ -118,4 +117,4 @@ def serve_labels():
             html.Span("Property Name", className="highlighted prop_name label"),
             html.Span("Property Value", className="highlighted prop_val label"),
             html.Span("Property Unit", className="highlighted prop_unit label")]
-            , className="ten columns")], className="row")
+            , className="ten columns")]
