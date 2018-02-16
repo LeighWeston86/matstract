@@ -69,7 +69,7 @@ header = html.Div([
                 'font-size': '6.0rem',
                 'color': '#4D637F'
             }),
-    dmi.Annotatable(value="", className="", id=""),
+    dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
     html.Nav(
         style={
             'margin': '10px 27px',
@@ -131,7 +131,7 @@ def display_page(path):
     [Input('search-button', 'n_clicks')],
     [State('search-box', 'value'), State('material-box', 'value')])
 def update_table(n_clicks, search, material):
-    if not material is None:
+    if material is not None:
         table = search_app.generate_table(search, material)
     else:
         table = search_app.generate_table(search)
@@ -163,45 +163,39 @@ def update_num_results_label(n_clicks, search, material):
     [Input('extract-button', 'n_clicks')],
     [State('extract-textarea', 'value')])
 def update_extract(n_clicks, text):
-    if text is None:
-        text = ''
-    materials = extract_materials(text)
-    materials = [m for m in materials if len(m) > 0]
-    # return [{"name": m, "value": m} for m in materials]
-    return ", ".join(materials)
+    if n_clicks is not None:
+        if text is None:
+            text = ''
+        materials = extract_materials(text)
+        materials = [m for m in materials if len(m) > 0]
+        # return [{"name": m, "value": m} for m in materials]
+        return ", ".join(materials)
+    return ""
 
 @app.callback(
     Output('extract-highlighted', 'children'),
     [Input('extract-button', 'n_clicks')],
     [State('extract-textarea', 'value')])
 def highlight_extracted(n_clicks, text):
-    parsed, missed = materials_extract(text)
-    highlighted = extract_app.highlighter(text, parsed, missed)
-    return highlighted
+    if n_clicks is not None:
+        parsed, missed = materials_extract(text)
+        highlighted = extract_app.highlighter(text, parsed, missed)
+        return highlighted
+    return ""
 
 @app.callback(
     Output('highlight-random', 'children'),
     [Input('random-abstract', 'n_clicks')])
 def highlight_random(n_clicks):
-    text = extract_app.random_abstract()
-    parsed, missed = materials_extract(text)
-    highlighted = extract_app.highlighter(text, parsed, missed)
-    return highlighted
+    if n_clicks is not None:
+        text = extract_app.random_abstract()
+        parsed, missed = materials_extract(text)
+        highlighted = extract_app.highlighter(text, parsed, missed)
+        return highlighted
+    return ""
 
 
 ### Trends App Callbacks ###
-
-@cache.memoize(timeout=600)
-@app.callback(
-    Output('trend', 'figure'),
-    # [Input('search-box', 'value')])
-    [Input('trends-button', 'n_clicks')],
-    [State('trends-material-box', 'value'), State('trends-search-box', 'value')])
-def update_graph(n_clicks, material, search):
-    figure = trends_app.generate_trends_graph(search=search, material=material)
-    figure["mode"] = "histogram"
-    return figure
-
 
 @cache.memoize(timeout=600)
 @app.callback(
@@ -209,17 +203,34 @@ def update_graph(n_clicks, material, search):
     [Input('trends-button', 'n_clicks')],
     [State('trends-material-box', 'value'), State('trends-search-box', 'value')])
 def update_title(n_clicks, material, search):
-    if material is None:
-        material = ''
-    if search is None:
-        search = ''
-    if len(search) == 0:
-        return "Number of papers mentioning {} per year:".format(material)
+    print("callback_for_title")
+    if n_clicks is not None:
+        if material is None:
+            material = ''
+        if search is None:
+            search = ''
+        if len(search) == 0:
+            return "Number of papers mentioning {} per year:".format(material)
+        else:
+            if len(material) > 0:
+                return "Number of papers related to '{}' mentioning {} per year:".format(search, material)
+        return ''
     else:
-        if len(material) > 0:
-            return "Number of papers related to '{}' mentioning {} per year:".format(search, material)
+        return "Number of papers mentioning {} per year:".format("graphene")
 
-    return ''
+
+@cache.memoize(timeout=600)
+@app.callback(
+    Output('trend', 'figure'),
+    [Input('trends-button', 'n_clicks')],
+    [State('trends-material-box', 'value'), State('trends-search-box', 'value')])
+def update_graph(n_clicks, material, search):
+    if n_clicks is not None:
+        figure = trends_app.generate_trends_graph(search=search, material=material)
+    else:
+        figure = trends_app.generate_trends_graph(search="", material="graphene")
+    figure["mode"] = "histogram"
+    return figure
 
 
 """
@@ -239,16 +250,17 @@ def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     return annotate_app.serve_abstract()
 
 
-
-
 ### Keywords App Callbacks ###
 @app.callback(
     Output('extract-keywords', 'children'),
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
 def highlight_extracted(n_clicks, text):
-    results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
-    return results
+    if n_clicks is not None:
+        results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
+        return results
+    else:
+        return []
 
 
 @app.server.route('/styles/<path:path>')
