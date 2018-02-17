@@ -5,11 +5,11 @@
     padding: 10px 0;
 }
 
-#abstract_container {
-    border-bottom: 2px solid #999;
+#first_macro_row {
+    border-top: 2px solid #999;
 }
 
-#label_container .row {
+#label_container {
     border-bottom: 2px solid #999;
 }
 

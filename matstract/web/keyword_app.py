@@ -5,6 +5,7 @@ from matstract.extract.parsing import SimpleParser
 import pandas as pd
 
 
+
 def arrange_keywords(kwds):
     unigrams = [unigram for unigram, count in kwds['unigrams']]
     bigrams = [' '.join(bigram) for bigram, count in kwds['bigrams']]
@@ -35,7 +36,6 @@ def get_keywords(material):
     df['tfidf'] = tfidf_arranged
     return generate_table(df)
 
-
 layout = html.Div([
     html.Label('Enter formula for associated keywords'),
     html.Div([
@@ -44,5 +44,5 @@ layout = html.Div([
                   type='text'),
         html.Button('Search keywords', id='keyword-button'),
     ]),
-    html.Div(id = 'extract-keywords')
+    html.Div(id='extract-keywords')
 ])
