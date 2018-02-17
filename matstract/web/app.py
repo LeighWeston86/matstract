@@ -246,10 +246,8 @@ def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     Output('extract-keywords', 'children'),
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
-def highlight_extracted(n_clicks, text):
-    results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
-    return results
-
+def keywords_table(n_clicks, text):
+    return keyword_app.get_keywords(text)
 
 @app.server.route('/styles/<path:path>')
 def static_file(path):
