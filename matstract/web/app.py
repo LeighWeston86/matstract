@@ -255,12 +255,15 @@ def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     Output('extract-keywords', 'children'),
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
-def highlight_extracted(n_clicks, text):
-    if n_clicks is not None:
-        results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
-        return results
-    else:
-        return []
+def keywords_table(n_clicks, text):
+    return keyword_app.get_keywords(text)
+
+#def highlight_extracted(n_clicks, text):
+#    if n_clicks is not None:
+#        results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
+#        return results
+#    else:
+#        return []
 
 
 @app.server.route('/styles/<path:path>')
