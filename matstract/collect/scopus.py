@@ -101,7 +101,7 @@ def find_articles(year=None, issn=None, get_all=True):
     return dois
 
 
-def download(url, params=None):
+def download(url, format='xml', params=None):
     """
     Helper function to download a file and return its content.
 
@@ -120,7 +120,7 @@ def download(url, params=None):
 
     """
 
-    header = {'Accept': 'application/{}'.format('xml'), 'X-ELS-APIKey': APIKEY}
+    header = {'Accept': 'application/{}'.format(format), 'X-ELS-APIKey': APIKEY}
     resp = requests.get(url, headers=header, params=params)
     resp.raise_for_status()
 
@@ -155,6 +155,27 @@ def get_content(DOI, refresh=True, *args, **kwds):
                 content = entry["xml"]
                 return content
     content = download(*args, **kwds).text
+    return content
+
+def get_content_html(input_doi, *args, **kwds):
+    """Helper function to read file content as xml.
+
+    Parameters
+    ----------
+    DOI : string
+        DOI of article, for checking database.
+
+    *args, **kwds :
+        Arguments and keywords to be passed on to download().
+
+    Returns
+    -------
+    content : str
+        The content of the file.
+    """
+
+    url = "https://api.elsevier.com/content/article/doi/{}".format(input_doi)
+    content = download(url, format='html')
     return content
 
 

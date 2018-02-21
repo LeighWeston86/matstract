@@ -21,6 +21,7 @@ data_extraction.ipynb
 scidir_search_results.p
 collect/scopus_config.json
 scopus_testing.ipynb
+scopus_config.json
 
 john_atlas_creds.json
 matstract/db_atlas.json
