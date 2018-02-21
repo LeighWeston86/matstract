@@ -23,3 +23,11 @@ collect/scopus_config.json
 scopus_testing.ipynb
 
 john_atlas_creds.json
+matstract/db_atlas.json
+
+# build related #
+*.egg-info/
+dist/
+build/
+
+src/

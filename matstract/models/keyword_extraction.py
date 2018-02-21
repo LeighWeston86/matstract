@@ -1,33 +1,33 @@
 from matstract.web.search_app import get_search_results
+from sklearn.feature_extraction.text import CountVectorizer
+from operator import itemgetter
+import numpy as np
 import nltk
 from nltk.corpus import stopwords
+from matstract.utils import open_db_connection
 
-
-class OccurrenceExtractor(object):
+class TermFrequency(object):
     '''
-    Key word extraction class based on n-gram frequencies.
+    Key word extraction class.
+    Supports keyword extraction based on term frequencey.
+    Input is a list of documents; documents are a single string.
     '''
 
     def __init__(self,
                  normalize=False,
-                 stemming=False,
                  cutoff=6,
+                 min_counts=5,
                  token_type='unigrams',
-                 first_sentence_only=False,
                  first_last_sentence_only=False):
-        self.name = ''
         self.normalize = normalize
-        self.stemming = stemming
+        self.min_counts = min_counts
         self.cutoff = cutoff
         self.token_type = token_type
-        self.first_sentence_only = first_sentence_only
         self.first_last_sentence_only = first_last_sentence_only
+        self.tf = None
 
     def preprocessing(self, text):
-        if self.first_sentence_only:
-            sents = nltk.sent_tokenize(text)
-            words = nltk.word_tokenize(sents[0])
-        elif self.first_last_sentence_only:
+        if self.first_last_sentence_only:
             sents = nltk.sent_tokenize(text)
             words = nltk.word_tokenize(sents[0] + sents[-1])
         else:
@@ -35,29 +35,84 @@ class OccurrenceExtractor(object):
         words = [word for word in words if word not in stopwords.words('english') and len(word) >= self.cutoff]
         if self.normalize:
             words = [word.lower() for word in words]
-        return words
+        if self.token_type == 'unigrams':
+            return words
+        elif self.token_type == 'bigrams':
+            return list(nltk.bigrams(words))
+        elif self.token_type == 'trigrams':
+            return list(nltk.trigrams(words))
 
-    def bigrams(self, tokens):
-        return list(nltk.bigrams(tokens))
+    def process(self, collection):
+        processed = [self.preprocessing(document) for document in collection]
+        return processed
 
-    def trigrams(self, tokens):
-        return list(nltk.trigrams(tokens))
+    def fit_tf(self, collection, cutoff=5, min_counts=5):
+        processed = self.process(collection)
+        tokens = []
+        for text in processed:
+            tokens += text
+        self.tf = nltk.FreqDist(tokens)
 
-    def most_common(self, collection, cutoff=10, min_counts=5):
-        all_tokens = []
-        for abstract in collection:
-            tokens = self.preprocessing(abstract['abstract'])
-            if self.token_type == 'unigrams':
-                tokens = tokens
-            elif self.token_type == 'bigrams':
-                tokens = self.bigrams(tokens)
-            elif self.token_type == 'trigrams':
-                tokens = self.trigrams(tokens)
-            # print(len(tokens), len(set(tokens)), tokens)
-            all_tokens += set(tokens)
-        most_common = nltk.FreqDist(all_tokens).most_common(cutoff)
-        most_common = [ngram for (ngram, count) in most_common if count >= min_counts]
-        return most_common
+    @property
+    def term_frequencies(self):
+        return self.tf
+
+    @property
+    def sorted_frequencies(self):
+        as_list = [(keys, values) for keys, values in zip(self.tf.keys(), self.tf.values())]
+        return sorted(as_list, key=itemgetter(1), reverse=True)
+
+    @property
+    def most_frequent(self):
+        return [ngram for (ngram, count) in self.tf.most_common(self.cutoff) if count >= self.min_counts]
+
+
+class DocumentFrequency(CountVectorizer):
+    '''
+    A wrapper class for sklearn.feature_extraction.text.CountVectorizer.
+    '''
+
+    def __init__(self,
+                 n_grams=1,
+                 first_last_sentence_only=False):
+        CountVectorizer.__init__(self, ngram_range=(n_grams, n_grams))
+        self.first_last_sentence_only = first_last_sentence_only
+        self.term_dict = {}
+
+    def process(self, text):
+        if self.first_last_sentence_only:
+            sents = nltk.sent_tokenize(text)
+            text = sent[0] + sent[-1]
+        return text
+
+    def fit_df(self, collection):
+        processed = [self.process(document) for document in collection]
+        bag_of_words = self.fit(processed)
+        sparse_matrix = bag_of_words.transform(processed)
+        to_binary = np.where(sparse_matrix.toarray() > 0, 1, 0)
+        word_sum = np.sum(to_binary, axis=0)
+        self.term_dict = {word: freq for (word, freq) in zip(bag_of_words.get_feature_names(), word_sum)}
+
+    @property
+    def document_frequency(self):
+        return self.term_dict
+
+    @property
+    def inverse_document_frequency(self):
+        keys = self.term_dict.keys()
+        return {key: (1 / self.term_dict[key]) for key in keys}
+
+
+def idf_mongo(db_l, word, cutoff=3):
+    if type(word) == str:
+        document_frequency = db_l.abstracts.find({'$text': {'$search': "\"{}\"".format(word)}}).count()
+    else:
+        document_frequency = db_l.abstracts.find({'$text': {'$search': "\"{}\"".format(' '.join(word))}}).count()
+    if document_frequency > cutoff:
+        idf = 1 / document_frequency
+    else:
+        idf = 0
+    return idf
 
 
 def cleanup_keywords(kw):
@@ -68,18 +123,38 @@ def cleanup_keywords(kw):
     bigrams = [gram for gram in bigrams if gram not in trigrams_flat]
     return [' '.join(gram) if type(gram) != str else gram for gram in unigrams + bigrams + trigrams]
 
-def extract_keywords(to_extract):
-        kwds = []
-        for tt in ['unigrams', 'bigrams', 'trigrams']:
-            test = OccurrenceExtractor(normalize=True, first_last_sentence_only=True, token_type=tt)
-            kwds.append(test.most_common(get_search_results(material=to_extract), cutoff=5))
-        return cleanup_keywords(kwds)
 
+def extract_tf(list_of_abstracts, count=5):
+    kwds_tf = {}
+    for tt in ['unigrams', 'bigrams', 'trigrams']:
+        tf = TermFrequency(normalize=True, first_last_sentence_only=True, token_type=tt)
+        tf.fit_tf(list_of_abstracts)
+        kwds_tf[tt] = tf.sorted_frequencies[:count]
+    return kwds_tf
+
+
+def extract_tfidf(list_of_abstracts, db_l, count=5):
+    kwds_tfidf = {}
+    for tt in ['unigrams', 'bigrams', 'trigrams']:
+        tf = TermFrequency(normalize=True, first_last_sentence_only=True, token_type=tt)
+        tf.fit_tf(list_of_abstracts)
+        most_common = tf.sorted_frequencies[:20]
+        idf_scores = [(word, idf_mongo(db_l, word) * score) for (word, score) in most_common]
+        top_idf = sorted(idf_scores, key=itemgetter(1), reverse=True)[:count]
+        kwds_tfidf[tt] = top_idf
+    return kwds_tfidf
 
 
 if __name__ == '__main__':
-    kwds = []
-    for tt in ['unigrams', 'bigrams', 'trigrams']:
-        test = OccurrenceExtractor(normalize=True, first_last_sentence_only=True, token_type=tt)
-        kwds.append(test.most_common(get_search_results(material='GaN'), cutoff=5))
-    print(cleanup_keywords(kwds))
+    db = open_db_connection()
+    material = 'GaN'
+    result = get_search_results(material=material)
+    abstracts = [doc['abstract'] for doc in result]
+    # Extract term frequencies
+    term_frequencies = extract_tf(abstracts, count=5)
+    # Extract tfidf
+    tfidf = extract_tfidf(abstracts, db, count=5)
+    for n_grams in ['unigrams', 'bigrams', 'trigrams']:
+        print('####', n_grams, '####', sep='\n')
+        for tf, tf_idf in zip(term_frequencies[n_grams], tfidf[n_grams]):
+            print(tf, tf_idf)
