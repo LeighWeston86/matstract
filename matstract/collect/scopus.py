@@ -381,43 +381,43 @@ def contribute(user_creds, max_entries=1000):
         max_entries: maximum length of session (~1s/article)
 
     """
+    with open_db_connection(user_creds=user_creds) as db:
+        user = json.load(open(user_creds, 'r'))["name"]
+        db = open_db_connection(user_creds=user_creds)
+        log = db.elsevier_log
+        elsevier = db.elsevier
 
-    user = json.load(open(user_creds, 'r'))["name"]
-    db = open_db_connection(user_creds=user_creds)
-    log = db.elsevier_log
-    elsevier = db.elsevier
+        target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
 
-    target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
-
-    date = datetime.datetime.now().isoformat()
-
-    log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
-                   {"$set": { "status": "in progress"}})
-
-    dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
-    new_entries = []
-
-    for doi in tqdm(dois):
         date = datetime.datetime.now().isoformat()
-        try:
-            article = ScopusArticle(input_doi=doi)
-            abstract = article.abstract
-            if not isinstance(abstract, str):
-                abstract = abstract.text
-            new_entries.append({"doi": doi, "title":article.title, "abstract": abstract,
-                                "authors": article.authors, "url": article.url, "subjects":article.subjects,
-                                "journal": article.journal, "date": article.cover_date,
-                                "completed": True, "pulled_on": date, "pulled_by": user})
-        except HTTPError as e:
-            new_entries.append({"doi": doi, "completed":False, "error": e,
-                                "pulled_on": date, "pulled_by":user})
 
-    for entry in new_entries:
-        if elsevier.find({"doi":entry["doi"]}).count():
-            elsevier.update_one({"doi":entry["doi"]}, {"$set": entry})
-        else:
-            elsevier.insert_one(entry)
+        log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
+                       {"$set": { "status": "in progress"}})
 
-    date = datetime.datetime.now().isoformat()
-    log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
-                   {"$set": { "status": "complete", "completed_by": user, "completed_on": date}})
+        dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
+        new_entries = []
+
+        for doi in tqdm(dois):
+            date = datetime.datetime.now().isoformat()
+            try:
+                article = ScopusArticle(input_doi=doi)
+                abstract = article.abstract
+                if not isinstance(abstract, str):
+                    abstract = abstract.text
+                new_entries.append({"doi": doi, "title":article.title, "abstract": abstract,
+                                    "authors": article.authors, "url": article.url, "subjects":article.subjects,
+                                    "journal": article.journal, "date": article.cover_date,
+                                    "completed": True, "pulled_on": date, "pulled_by": user})
+            except HTTPError as e:
+                new_entries.append({"doi": doi, "completed":False, "error": e,
+                                    "pulled_on": date, "pulled_by":user})
+
+        for entry in new_entries:
+            if elsevier.find({"doi":entry["doi"]}).count():
+                elsevier.update_one({"doi":entry["doi"]}, {"$set": entry})
+            else:
+                elsevier.insert_one(entry)
+
+        date = datetime.datetime.now().isoformat()
+        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
+                       {"$set": { "status": "complete", "completed_by": user, "completed_on": date}})
