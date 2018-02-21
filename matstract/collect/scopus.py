@@ -367,12 +367,14 @@ def contribute(user_creds, max_entries=1000):
     elsevier = db.elsevier
 
     target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
-    dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
-    new_entries = []
 
     date = datetime.datetime.now().isoformat()
+
     log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
                    {"$set": { "status": "in progress"}})
+
+    dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
+    new_entries = []
 
     for doi in tqdm(dois):
         date = datetime.datetime.now().isoformat()
