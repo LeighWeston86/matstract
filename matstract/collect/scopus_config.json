@@ -1,4 +1,0 @@
-{
-    "apikey":
-    "rest": "matstract-shard-00-00-kve41.mongodb.net:27017,matstract-shard-00-01-kve41.mongodb.net:27017,matstract-shard-00-02-kve41.mongodb.net:27017/test?ssl=true&replicaSet=matstract-shard-0&authSource=admin"
-}
