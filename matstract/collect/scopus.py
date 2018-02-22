@@ -9,7 +9,7 @@ from matstract.utils import open_db_connection
 from elsapy.elssearch import ElsSearch
 import datetime
 from tqdm import tqdm
-
+import re
 
 # Namespaces for Scopus XML
 namespaces = {'dtd': 'http://www.elsevier.com/xml/svapi/abstract/dtd',
@@ -92,7 +92,7 @@ def find_articles(year=None, issn=None, get_all=True):
     query = build_scopus_query(year=year, issn=issn)
     search = ElsSearch(query, index='scopus')
     search.execute(els_client=CLIENT, get_all=get_all)
-    dois=[]
+    dois = []
     for r in search.results:
         try:
             dois.append(r['prism:doi'])
@@ -157,6 +157,7 @@ def get_content(DOI, refresh=True, *args, **kwds):
     content = download(*args, **kwds).text
     return content
 
+
 def get_content_html(input_doi, *args, **kwds):
     """Helper function to read file content as xml.
 
@@ -206,6 +207,18 @@ def get_encoded_text(container, xpath):
     except SyntaxError:
         print("Syntax error", xpath)
         return None
+
+
+def clean_text(text):
+    if not text is None:
+        if not isinstance(text, str):
+            text = text.text
+        cleaned_text = re.sub("\n                        ", "", text)
+        cleaned_text = re.sub("\n                     ", "", cleaned_text)
+        cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
+        cleaned_text = cleaned_text.replace("Abstract ", '', 1)
+
+    return cleaned_text
 
 
 class ScopusArticle(object):
@@ -267,7 +280,8 @@ class ScopusArticle(object):
         self._issueName = get_encoded_text(coredata, 'prism:IssueName')
         self._pageRange = get_encoded_text(coredata, 'prism:pageRange')
         self._number = get_encoded_text(coredata, 'prism:number')
-        self._abstract = get_encoded_text(coredata, 'dc:description')
+        self._raw_abstract = get_encoded_text(coredata, 'dc:description')
+        self._abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
 
     @property
     def url(self):
@@ -307,8 +321,13 @@ class ScopusArticle(object):
 
     @property
     def abstract(self):
-        """The abstract of the article."""
+        """The cleaned abstract of the article."""
         return self._abstract
+
+    @property
+    def raw_abstract(self):
+        """The raw abstract of the article."""
+        return self._raw_abstract
 
     @property
     def journal(self):
@@ -371,7 +390,7 @@ class ScopusArticle(object):
         return self._subjects
 
 
-def contribute(user_creds, max_entries=1000):
+def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_entries=10):
     """
     Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
     dois, and downloads the corresponding xmls for each to the elsevier collection.
@@ -381,18 +400,20 @@ def contribute(user_creds, max_entries=1000):
         max_entries: maximum length of session (~1s/article)
 
     """
-    with open_db_connection(user_creds=user_creds) as db:
-        user = json.load(open(user_creds, 'r'))["name"]
-        db = open_db_connection(user_creds=user_creds)
-        log = db.elsevier_log
-        elsevier = db.elsevier
+    user = json.load(open(user_creds, 'r'))["name"]
+    db = open_db_connection(user_creds=user_creds)
+    log = db.elsevier_log
+    elsevier = db.elsevier
+
+    for i in range(num_blocks):
+        print("{} blocks remaining".format(num_blocks-i))
 
         target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
 
         date = datetime.datetime.now().isoformat()
 
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
-                       {"$set": { "status": "in progress"}})
+                       {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
         new_entries = []
@@ -402,22 +423,25 @@ def contribute(user_creds, max_entries=1000):
             try:
                 article = ScopusArticle(input_doi=doi)
                 abstract = article.abstract
-                if not isinstance(abstract, str):
-                    abstract = abstract.text
-                new_entries.append({"doi": doi, "title":article.title, "abstract": abstract,
-                                    "authors": article.authors, "url": article.url, "subjects":article.subjects,
-                                    "journal": article.journal, "date": article.cover_date,
+                raw_abstract = article.raw_abstract
+                if not isinstance(raw_abstract, str):
+                    raw_abstract = raw_abstract.text
+                new_entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                    "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                    "subjects": article.subjects, "journal": article.journal,
+                                    "date": article.cover_date,
                                     "completed": True, "pulled_on": date, "pulled_by": user})
             except HTTPError as e:
-                new_entries.append({"doi": doi, "completed":False, "error": e,
-                                    "pulled_on": date, "pulled_by":user})
+                new_entries.append({"doi": doi, "completed": False, "error": e,
+                                    "pulled_on": date, "pulled_by": user})
 
         for entry in new_entries:
-            if elsevier.find({"doi":entry["doi"]}).count():
-                elsevier.update_one({"doi":entry["doi"]}, {"$set": entry})
+            if elsevier.find({"doi": entry["doi"]}).count():
+                elsevier.update_one({"doi": entry["doi"]}, {"$set": entry})
             else:
                 elsevier.insert_one(entry)
 
         date = datetime.datetime.now().isoformat()
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
-                       {"$set": { "status": "complete", "completed_by": user, "completed_on": date}})
+                       {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
+                                 "updated_by": user, "updated_on": date}})
