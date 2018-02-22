@@ -406,6 +406,15 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
         max_entries: maximum length of session (~1s/article)
 
     """
+
+    try:
+        download("https://api.elsevier.com/content/article/doi/10.1016/j.actamat.2018.01.057?view=FULL")
+    except HTTPError:
+        raise HTTPError(" Cannot retreive full document from Elsevier API. \n \n"
+                        "Please confrim that you're connected to the LBNL employee network or "
+                        "the LBNL VPN.")
+
+
     user = json.load(open(user_creds, 'r'))["name"]
     db = open_db_connection(user_creds=user_creds)
     log = db.elsevier_log
@@ -414,7 +423,9 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
     for i in range(num_blocks):
         print("Blocks remaining = {}".format(num_blocks - i))
 
-        target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
+        target = log.find({"status": "incomplete",
+                           "num_articles": {"$lt": max_entries}},
+                          ["year", "issn"]).limit(1).sort("num_articles", -1)[0]
 
         date = datetime.datetime.now().isoformat()
 
@@ -422,6 +433,7 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
+
         new_entries = []
 
         for doi in tqdm(dois):
