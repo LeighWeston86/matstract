@@ -406,7 +406,7 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
     elsevier = db.elsevier
 
     for i in range(num_blocks):
-        print("{} blocks remaining".format(num_blocks-i))
+        print("Blocks remaining = {}".format(num_blocks-i))
 
         target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
 
