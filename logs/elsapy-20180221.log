@@ -1,0 +1,8 @@
+2018-02-21 16:57:23,816 - elsapy.elsclient - INFO - Module loaded.
+2018-02-21 16:57:24,018 - elsapy.elssearch - INFO - Module loaded.
+2018-02-21 17:08:56,580 - elsapy.elsclient - INFO - Module loaded.
+2018-02-21 17:08:56,674 - elsapy.elssearch - INFO - Module loaded.
+2018-02-21 17:09:02,816 - elsapy.elsclient - INFO - Sending GET request to https://api.elsevier.com/content/search/scopus?query=SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 2013 AND ISSN(0960-8974) OR EISSN(0960-8974)
+2018-02-21 17:09:15,039 - elsapy.elsclient - INFO - Sending GET request to https://api.elsevier.com/content/search/scopus?query=SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 2015 AND ISSN(0079-6727) OR EISSN(0079-6727)
+2018-02-21 17:10:34,990 - elsapy.elsclient - INFO - Sending GET request to https://api.elsevier.com/content/search/scopus?query=SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 2008 AND ISSN(1359-0286) OR EISSN(1359-0286)
+2018-02-21 17:10:57,136 - elsapy.elsclient - INFO - Sending GET request to https://api.elsevier.com/content/search/scopus?query=SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 2015 AND ISSN(0960-8974) OR EISSN(0960-8974)

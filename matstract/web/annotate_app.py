@@ -6,7 +6,7 @@ from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 import pprint
-db = open_db_connection()
+db = open_db_connection(local=True)
 
 
 def serve_layout():

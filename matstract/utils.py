@@ -4,8 +4,8 @@ from pymongo import MongoClient
 from os import environ as env
 
 
-def open_db_connection(user_creds=None):
-    if 'MATSTRACT_HOST' in env:
+def open_db_connection(user_creds=None, local=False):
+    if 'MATSTRACT_HOST' in env and local:
         uri = "mongodb://%s:%s/%s" % (
             env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], env['MATSTRACT_DB'])
         db_creds = {'db': env['MATSTRACT_DB']}
