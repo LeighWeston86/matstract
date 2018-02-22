@@ -67,19 +67,22 @@ def search_for_topic(search):
 def get_search_results(search="", material="", max_results=10000):
     if material is None:
         material = ''
+    else:
+        parser = parsing.SimpleParser()
     if search is None:
         search = ''
     if search == '' and material == '':
         return None
-    if len(material) > 0:
-        if material not in search:
-            #search = search + ' ' + material
-            # print("searching for {}".format(search))
-            parser = parsing.SimpleParser()
-            results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
-    else:
+    if material and not search:
+        results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
+    elif search and not material:
         results = db.abstracts.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
                                     ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
+    elif search and material:
+        results = db.abstracts_leigh.aggregate([
+            { "$match": { "abstract" : {"$regex": search}} },
+            { "$match": {"normalized_cems": parser.matgen_parser(material)} }
+        ])
     return list(results)
 
 def to_highlight(names_list, material):
