@@ -30,7 +30,7 @@ config = json.load(open('matstract/collect/scopus_config.json', 'r'))
 APIKEY = config["apikey"]
 
 ## Initialize client
-CLIENT = ElsClient(config['apikey'], num_res=1)
+CLIENT = ElsClient(config['apikey'], num_res=100)
 CLIENT.inst_token = config['insttoken']
 
 
@@ -90,7 +90,7 @@ def find_articles(year=None, issn=None, get_all=True):
     """
 
     query = build_scopus_query(year=year, issn=issn)
-    search = ElsSearch(query, index='scopus')
+    search = ElsSearch(query, index='scopus', )
     search.execute(els_client=CLIENT, get_all=get_all)
     dois = []
     for r in search.results:
