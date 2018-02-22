@@ -26,6 +26,7 @@ scopus_config.json
 john_atlas_creds.json
 david_atlas_creds.json
 matstract/db_atlas.json
+matstract/atlas_creds.json
 
 # build related #
 *.egg-info/
@@ -33,3 +34,4 @@ dist/
 build/
 
 src/
+collect/logs/

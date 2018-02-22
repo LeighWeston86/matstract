@@ -6,12 +6,12 @@ from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 import pprint
-db = open_db_connection()
+db = open_db_connection(local=True)
 
 
 def serve_layout():
     """Generates the layout dynamically on every refresh"""
-    return [html.Div(html.Div(id="abstract_container"), id="annotation_container"),
+    return [html.Div(serve_abstract(), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row")]
 
 
@@ -25,18 +25,20 @@ def serve_abstract():
     ttl_tokens, ttl_annotations = builder.get_tokens(random_abstract["title"])
     abs_tokens, abs_annotations = builder.get_tokens(random_abstract["abstract"])
 
+    labels = [{'text': 'Material', 'value': 'material'},
+              {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
+              {'text': 'Main Material', 'value': 'main_material'},
+              {'text': 'Keyword', 'value': 'keyword'}]
+
     return [
-        html.Div(serve_labels(), id="label_container", className="row"),
-        html.Div(dmi.AnnotationContainer(
-            tokens=ttl_tokens,
-            annotations=ttl_annotations,
-            id="title_container"
-        ), className="row", style={"fontSize": "large"}),
-        html.Div(dmi.AnnotationContainer(
-            tokens=abs_tokens,
-            annotations=abs_annotations,
-            id="abstract_container"
-        ), className="row"),
+        dmi.AnnotationContainer(
+            tokens=[ttl_tokens, abs_tokens],
+            annotations=[ttl_annotations, abs_annotations],
+            labels=labels,
+            className="annotation-container",
+            selectedValue=labels[0]['value'],
+            id="annotation_container"
+        ),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
     ]
 
@@ -106,15 +108,15 @@ def serve_buttons():
             html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]
 
 
-def serve_labels():
-    return [
-        html.Div(html.Span("Labels: "), className="two columns"),
-        html.Div([
-            html.Span("Material", className="highlighted mtl label"),
-            html.Span("Inorganic Crystal", className="highlighted inrg label"),
-            html.Span("Main Material", className="highlighted main_mtl label"),
-            html.Br(),
-            html.Span("Property Name", className="highlighted prop_name label"),
-            html.Span("Property Value", className="highlighted prop_val label"),
-            html.Span("Property Unit", className="highlighted prop_unit label")]
-            , className="ten columns")]
+# def serve_labels():
+#     return [
+#         html.Div(html.Span("Labels: "), className="two columns"),
+#         html.Div([
+#             html.Span("Material", className="highlighted mtl label"),
+#             html.Span("Inorganic Crystal", className="highlighted inrg label"),
+#             html.Span("Main Material", className="highlighted main_mtl label"),
+#             html.Br(),
+#             html.Span("Property Name", className="highlighted prop_name label"),
+#             html.Span("Property Value", className="highlighted prop_val label"),
+#             html.Span("Property Unit", className="highlighted prop_unit label")]
+#             , className="ten columns")]
