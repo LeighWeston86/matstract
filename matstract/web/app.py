@@ -260,7 +260,10 @@ def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
 def keywords_table(n_clicks, text):
-    return keyword_app.get_keywords(text)
+    if text != '':
+        return keyword_app.get_keywords(text)
+    else:
+        return None
 
 #def highlight_extracted(n_clicks, text):
 #    if n_clicks is not None:
