@@ -210,15 +210,21 @@ def get_encoded_text(container, xpath):
 
 
 def clean_text(text):
-    if not text is None:
+    try:
+
         if not isinstance(text, str):
             text = text.text
+
         cleaned_text = re.sub("\n                        ", "", text)
         cleaned_text = re.sub("\n                     ", "", cleaned_text)
         cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
         cleaned_text = cleaned_text.replace("Abstract ", '', 1)
 
-    return cleaned_text
+        return cleaned_text
+
+    except:
+
+        return None
 
 
 class ScopusArticle(object):
@@ -406,7 +412,7 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
     elsevier = db.elsevier
 
     for i in range(num_blocks):
-        print("Blocks remaining = {}".format(num_blocks-i))
+        print("Blocks remaining = {}".format(num_blocks - i))
 
         target = log.find({"status": "incomplete", "num_articles": {"$lt": max_entries}}, ["year", "issn"]).limit(1)[0]
 
@@ -424,13 +430,19 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
                 article = ScopusArticle(input_doi=doi)
                 abstract = article.abstract
                 raw_abstract = article.raw_abstract
-                if not isinstance(raw_abstract, str):
-                    raw_abstract = raw_abstract.text
-                new_entries.append({"doi": doi, "title": article.title, "abstract": abstract,
-                                    "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
-                                    "subjects": article.subjects, "journal": article.journal,
-                                    "date": article.cover_date,
-                                    "completed": True, "pulled_on": date, "pulled_by": user})
+
+                if abstract is None or raw_abstract is None:
+                    new_entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
+                                        "pulled_on": date, "pulled_by": user})
+                else:
+                    if not isinstance(raw_abstract, str):
+                        raw_abstract = raw_abstract.text
+
+                    new_entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                        "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                        "subjects": article.subjects, "journal": article.journal,
+                                        "date": article.cover_date,
+                                        "completed": True, "pulled_on": date, "pulled_by": user})
             except HTTPError as e:
                 new_entries.append({"doi": doi, "completed": False, "error": e,
                                     "pulled_on": date, "pulled_by": user})
