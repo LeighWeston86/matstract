@@ -9,6 +9,7 @@ from matstract.models import keyword_extraction
 import os
 from flask import send_from_directory
 import dash_materialsintelligence as dmi
+import pprint
 
 app = dash.Dash()
 server = app.server
@@ -40,7 +41,7 @@ for css in css_files:
     ))
 
 # # Adding Google Analytics
-# app.scripts.append_script({"external_url":"https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
+# app.scripts.append_script({"external_url": "https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
 
 #### App Layout ####
 
@@ -92,8 +93,11 @@ header = html.Div([
 ], className='row twelve columns', style={'position': 'relative', 'right': '15px'})
 
 
-app.layout = html.Div([html.Div(stylesheets_links), header, html.Div(search_app.layout, id='page-content')],
-                      className='container main-container')
+app.layout = html.Div([
+                html.Div(stylesheets_links),
+                header,
+                html.Div(search_app.layout, id='page-content')],
+             className='container main-container')
 
 #### Callbacks ####
 
@@ -237,15 +241,15 @@ def update_graph(n_clicks, material, search):
 Annotation App Callbacks
 """
 @app.callback(
-    Output('annotation_container', 'children'),
+    Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
      Input('annotate_confirm', 'n_clicks')],
-    [State('abstract_container', 'annotations')])
+    [State('annotation_container', 'annotations')])
 def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     # print("Skip: {}, Confirm: {}".format(skip_clicks, confirm_clicks))
     if confirm_clicks is not None:
         a = 1
-        # pprint.pprint(annotations)
+        pprint.pprint(annotations)
         # do something to record the annotation
     return annotate_app.serve_abstract()
 

@@ -9,6 +9,10 @@ body{
 	box-shadow: rgb(240, 240, 240) 5px 5px 5px 0px;
 }
 
+#page-content {
+    padding: 0px 15px;
+}
+
 p{
 	overflow-x: hidden;
 }

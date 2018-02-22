@@ -1,8 +1,7 @@
 /* Containers */
 
-#annotation_container .row {
-    margin: 0 15px;
-    padding: 10px 0;
+div.row {
+    padding: 5px 0px;
 }
 
 #first_macro_row {
@@ -13,41 +12,48 @@
     border-bottom: 2px solid #999;
 }
 
+.annotation-0 {
+    font-size: large;
+    padding: 10px 0px
+}
+
+.annotation-1 {
+    padding-bottom: 10px;
+}
+
 
 /* highlighting */
 
 .token {
     cursor: pointer;
     padding: 2px 4px;
+    border-radius: 3px;
 }
 
 .highlighted {
-    border: 1px solid black;
-    border-radius: 3px;
-    padding: 1px 3px;
-    filter: brightness(90%);
 }
 
 .highlighted.label {
     margin: 2px;
 }
 
-.highlighted.mtl {
+.highlighted.material {
     background-color: #fffacd;
 }
 
-.highlighted.inrg {
+.highlighted.inorganic_crystal {
     background-color: #ffefd5;
 }
 
-.highlighted.main_mtl {
+.highlighted.main_material {
     background-color: #ffdab9;
 }
 
-.highlighted.prop_name {
+.highlighted.keyword {
     background-color: #00FA9A
 }
 
+/*
 .highlighted.prop_val {
     background-color: #98FB98;
 }
@@ -55,7 +61,32 @@
 .highlighted.prop_unit {
     background-color: #90EE90
 }
+*/
 
+/* Labels */
 
+label.highlighted.label {
+    cursor: pointer;
+    display: inline;
+    border: none;
+    font-weight: normal;
+    padding: 4px 6px;
+    margin: 0px 5px;
+}
 
+label.highlighted.label.selected {
+    border: 2px solid black;
+}
 
+.labels input {
+    visibility: hidden;
+    margin-left: -15px;
+}
+
+.labels {
+    border-bottom: 2px solid #999;
+}
+
+.labels span {
+    margin-right: 15px;
+}
