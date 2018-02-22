@@ -13,5 +13,6 @@ Flask-Caching
 nltk
 tqdm
 sklearn
+elsapy
 -e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
 -e git://github.com/vtshitoyan/dash-materialsintelligence#egg=dash-materialsintellignce
