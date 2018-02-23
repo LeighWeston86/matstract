@@ -48,7 +48,6 @@ for css in css_files:
 
 ### Header and Intro text ##
 
-
 header = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
@@ -86,7 +85,10 @@ header = html.Div([
             html.Span(' • '),
             dcc.Link("Annotate", href="/annotate"),
             html.Span(' • '),
-            dcc.Link("Keyword Extraction", href="/keyword")
+            dcc.Link("Keyword Extraction", href="/keyword"),
+            html.Span(' • '),
+            html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
+                     style={"color": "red"}, target="_blank")
         ],
         id="nav_bar"),
     html.Br()
