@@ -456,7 +456,7 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
                                         "date": article.cover_date,
                                         "completed": True, "pulled_on": date, "pulled_by": user})
             except HTTPError as e:
-                new_entries.append({"doi": doi, "completed": False, "error": e,
+                new_entries.append({"doi": doi, "completed": False, "error": str(e),
                                     "pulled_on": date, "pulled_by": user})
 
         for entry in new_entries:
