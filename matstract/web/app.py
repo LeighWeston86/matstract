@@ -106,7 +106,6 @@ app.layout = html.Div([
 
 ### General Callbacks ###
 
-
 @app.callback(
     Output('page-content', 'children'),
     [Input('url', 'pathname')])
@@ -128,7 +127,6 @@ def display_page(path):
 
 
 ### Search App Callbacks ###
-
 
 @cache.memoize(timeout=600)
 @app.callback(
@@ -239,9 +237,8 @@ def update_graph(n_clicks, material, search):
     return figure
 
 
-"""
-Annotation App Callbacks
-"""
+### Annotation App Callbacks ###
+
 @app.callback(
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
@@ -257,6 +254,7 @@ def load_next_abstract(skip_clicks, confirm_clicks, annotations):
 
 
 ### Keywords App Callbacks ###
+
 @app.callback(
     Output('extract-keywords', 'children'),
     [Input('keyword-button', 'n_clicks')],
