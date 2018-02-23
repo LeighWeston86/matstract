@@ -11,7 +11,14 @@ db = open_db_connection(local=True)
 
 def serve_layout():
     """Generates the layout dynamically on every refresh"""
-    return [html.Div(serve_abstract(), id="annotation_parent_div", className="row"),
+    return [html.Div(dmi.AnnotationContainer(
+            tokens=[[]],
+            annotations=[[]],
+            labels=[],
+            className="annotation-container",
+            selectedValue=None,
+            id="annotation_container"
+            ), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row")]
 
 
@@ -44,17 +51,21 @@ def serve_abstract():
 
 
 def serve_macro_annotation():
+    application_tags = db.abstract_tags.find({})
+    tags = []
+    for tag in application_tags:
+        tags.append({'label': tag["tag"], 'value': tag['tag']})
+    print(tags)
+
     return [html.Div([html.Div("Type: ", className='two columns'),
             html.Div(dcc.Dropdown(
                 options=[
                     {'label': 'Experimental', 'value': 'experimental'},
                     {'label': 'Theoretical', 'value': 'theoretical'},
                     {'label': 'Both', 'value': 'both'},
-                    {'label': 'Unclear', 'value': 'unclear'},
 
                 ],
-                value='experimental',
-                clearable=False,
+                clearable=True,
                 id='abstract_type'
             ), className='five columns',
             ), html.Div(dcc.Dropdown(
@@ -63,60 +74,18 @@ def serve_macro_annotation():
                     {'label': 'Other Materials', 'value': 'other_materials'},
                     {'label': 'Not Materials', 'value': 'not_materials'},
                 ],
-                value='inorganic',
-                clearable=False,
+                clearable=True,
                 id='abstract_category'
             ), className='five columns',
             )], className='row', id="first_macro_row"),
-            html.Div([html.Div("Applications: ", className="two columns"),
-                     html.Div(dcc.Dropdown(
-                         options=[
-                             {'label': 'Thermoelectric', 'value': 'thermoelectric'},
-                             {'label': 'Battery', 'value': 'battery'},
-                             {'label': 'Magnetic', 'value': 'magnetic'},
-                             {'label': 'Other', 'value': 'other'}
-                         ],
-                         value='',
+            html.Div([html.Div("Tags: ", className="two columns"),
+                     html.Div(dmi.DropdownCreatable(
+                         options=tags,
                          id='abstract_tags',
                          multi=True
                      ), className="ten columns")],
                      className="row")]
 
-
-# def build_tokens_html(tokens, cems):
-#     """builds the HTML for tokenized paragraph"""
-#     cde_cem_starts = [cem.start for cem in cems]
-#     html_builder = []
-#     for row in tokens:
-#         for elem in row:
-#             selected_state = False
-#             extra_class = ''
-#             if elem.start in cde_cem_starts:
-#                 selected_state = True
-#                 extra_class = ' mtl highlighted'
-#             html_builder.append(" ")
-#             html_builder.append(dmi.Annotatable(
-#                 id="token-" + str(elem.start) + '-' + str(elem.end),
-#                 value=elem.text,
-#                 className="token",
-#                 isSelected=selected_state,
-#             ))
-#     return html_builder
-
 def serve_buttons():
     return [html.Button("Skip", id="annotate_skip", className="button"),
             html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]
-
-
-# def serve_labels():
-#     return [
-#         html.Div(html.Span("Labels: "), className="two columns"),
-#         html.Div([
-#             html.Span("Material", className="highlighted mtl label"),
-#             html.Span("Inorganic Crystal", className="highlighted inrg label"),
-#             html.Span("Main Material", className="highlighted main_mtl label"),
-#             html.Br(),
-#             html.Span("Property Name", className="highlighted prop_name label"),
-#             html.Span("Property Value", className="highlighted prop_val label"),
-#             html.Span("Property Unit", className="highlighted prop_unit label")]
-#             , className="ten columns")]
