@@ -239,9 +239,9 @@ def update_graph(n_clicks, material, search):
     return figure
 
 
-"""
-Annotation App Callbacks
-"""
+### Annotation App Callbacks ###
+
+
 @app.callback(
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),

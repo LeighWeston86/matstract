@@ -55,16 +55,20 @@ def search_for_material(material, search):
         results = db.abstracts.find({"chem_mentions.names": material}, ["year"])
     return list(results)
 
+
 def search_for_topic(search):
     db = open_db_connection()
     if search:
-        results = db.abstracts.find({"$or":[{"title":{"$regex" : ".*{}.*".format(search)}},
-                                            {"abstract":{"$regex" : ".*{}.*".format(search)}}]}, ["year"])
-    print(results.count())
-    return list(results)
+        results = db.abstracts.find({"$or": [{"title": {"$regex": ".*{}.*".format(search)}},
+                                             {"abstract": {"$regex": ".*{}.*".format(search)}}]}, ["year"])
+        print(results.count())
+        return list(results)
+    else:
+        return []
 
 
 def get_search_results(search="", material="", max_results=10000):
+    results = None
     if material is None:
         material = ''
     else:
@@ -80,10 +84,11 @@ def get_search_results(search="", material="", max_results=10000):
                                     ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
     elif search and material:
         results = db.abstracts_leigh.aggregate([
-            { "$match": { "abstract" : {"$regex": search}} },
-            { "$match": {"normalized_cems": parser.matgen_parser(material)} }
+            {"$match": {"abstract": {"$regex": search}}},
+            {"$match": {"normalized_cems": parser.matgen_parser(material)}}
         ])
     return list(results)
+
 
 def to_highlight(names_list, material):
     parser = parsing.SimpleParser()
@@ -102,10 +107,11 @@ def sort_df(test_df, materials):
 
 def generate_table(search='', materials='', columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
     results = get_search_results(search, materials)
-    # num_results = results.count()
+    print(len(results))
     if materials:
         df = pd.DataFrame(results[:max_rows])
-        df = sort_df(df, materials)
+        if not df.empty:
+            df = sort_df(df, materials)
     else:
         df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
     if not df.empty:
@@ -122,7 +128,8 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
             [html.Tr([
                 html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
                                href=df.iloc[i]["html_link"])) if col == "title"
-                else html.Td(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
+                else html.Td(
+                    hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))]
         )
