@@ -67,6 +67,13 @@ def build_scopus_query(year=None, issn=None):
 
     "SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 1994"
 
+    Args:
+        year (str): year of publication
+        issn (str): ISSN of journal
+
+    Returns:
+        (str) scoupus query string
+
     """
     base = "SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english)"
     y = " AND PUBYEAR = {}".format(year) if year else ''
@@ -80,12 +87,12 @@ def find_articles(year=None, issn=None, get_all=True):
     Returns a list of the DOI's for all articles published in the specified year and journal.
 
     Args:
-        year: (str) year of publication
-        issn: (str) ISSN (or EISSN) of journal
-        get_all: (bool) Whether all results should be returned or just the 1st result. Default is True.
+        year (str): year of publication
+        issn (str): ISSN (or EISSN) of journal
+        get_all (bool): Whether all results should be returned or just the 1st result. Default is True.
 
     Returns:
-        dois: [str] The dois for all articles published in corresponding journal + year
+        dois (str): The dois for all articles published in corresponding journal in the specified year
 
     """
 
@@ -128,21 +135,18 @@ def download(url, format='xml', params=None):
 
 
 def get_content(DOI, refresh=True, *args, **kwds):
-    """Helper function to read file content as xml.
+    """ Helper function to read file content as xml.
 
-    Parameters
-    ----------
-    DOI : string
-        DOI of article, for checking database.
+    Args:
+        input_doi (str): DOI of article
+        *args:
+        **kwds:
 
-    *args, **kwds :
-        Arguments and keywords to be passed on to download().
+    Returns:
+        Content of returned XML file
 
-    Returns
-    -------
-    content : str
-        The content of the file.
     """
+
     if not refresh:
         db = open_db_connection()
         elsevier = db.elsevier
@@ -155,28 +159,6 @@ def get_content(DOI, refresh=True, *args, **kwds):
                 content = entry["xml"]
                 return content
     content = download(*args, **kwds).text
-    return content
-
-
-def get_content_html(input_doi, *args, **kwds):
-    """Helper function to read file content as xml.
-
-    Parameters
-    ----------
-    DOI : string
-        DOI of article, for checking database.
-
-    *args, **kwds :
-        Arguments and keywords to be passed on to download().
-
-    Returns
-    -------
-    content : str
-        The content of the file.
-    """
-
-    url = "https://api.elsevier.com/content/article/doi/{}".format(input_doi)
-    content = download(url, format='html')
     return content
 
 
