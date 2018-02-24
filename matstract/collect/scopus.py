@@ -210,20 +210,24 @@ def get_encoded_text(container, xpath):
 
 
 def clean_text(text):
-    try:
+    """ Cleans abstract text from scopus documents.
 
+    Args:
+        text (str): Unformatted abstract text.
+
+    Returns:
+        (str) Abstract text with formatting issues removed.
+
+    """
+    try:
         if not isinstance(text, str):
             text = text.text
-
         cleaned_text = re.sub("\n                        ", "", text)
         cleaned_text = re.sub("\n                     ", "", cleaned_text)
         cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
         cleaned_text = cleaned_text.replace("Abstract ", '', 1)
-
         return cleaned_text
-
     except:
-
         return None
 
 
