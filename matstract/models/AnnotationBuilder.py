@@ -3,7 +3,8 @@ from chemdataextractor import Document
 
 
 class AnnotationBuilder:
-    def get_tokens(self, paragraph):
+    @staticmethod
+    def get_tokens(paragraph):
         # getting all tokens
         all_tokens = Paragraph(paragraph).tokens
         tokens = []
@@ -19,3 +20,13 @@ class AnnotationBuilder:
             for token in tokens]
 
         return tokens, annotations
+
+    @staticmethod
+    def prepare_annotation(doi, tokens, macro):
+        annotation = {'doi': doi,
+                      'tokens': tokens,
+                      'tags': macro['tags'],
+                      'type': macro['type'],
+                      'category': macro['category']}
+        return annotation
+

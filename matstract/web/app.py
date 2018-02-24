@@ -10,6 +10,7 @@ import os
 from flask import send_from_directory
 import dash_materialsintelligence as dmi
 import pprint
+from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 app = dash.Dash()
 server = app.server
@@ -244,12 +245,32 @@ Annotation App Callbacks
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
      Input('annotate_confirm', 'n_clicks')],
-    [State('annotation_container', 'annotations')])
-def load_next_abstract(skip_clicks, confirm_clicks, annotations):
-    # print("Skip: {}, Confirm: {}".format(skip_clicks, confirm_clicks))
+    [State('annotation_container', 'annotations'),
+     State('doi_container', 'children'),
+     State('abstract_tags', 'value'),
+     State('abstract_type', 'value'),
+     State('abstract_category', 'value')])
+def load_next_abstract(
+        skip_clicks,
+        confirm_clicks,
+        annotations,
+        doi,
+        abstract_tags,
+        abstract_type,
+        abstract_category):
     if confirm_clicks is not None:
-        a = 1
-        pprint.pprint(annotations)
+        pprint.pprint(abstract_tags)
+        if abstract_tags is not None:
+            tag_values = [tag["value"] for tag in abstract_tags]
+        else:
+            tag_values = None
+        macro = {
+            "tags": tag_values,
+            "type": abstract_type,
+            "category": abstract_category,
+        }
+        annotation = AnnotationBuilder.prepare_annotation(doi, annotations, macro)
+        pprint.pprint(annotation)
         # do something to record the annotation
     return annotate_app.serve_abstract()
 
@@ -261,6 +282,7 @@ def load_next_abstract(skip_clicks, confirm_clicks, annotations):
     [State('keyword-material', 'value')])
 def keywords_table(n_clicks, text):
     return keyword_app.get_keywords(text)
+
 
 #def highlight_extracted(n_clicks, text):
 #    if n_clicks is not None:
@@ -274,4 +296,3 @@ def keywords_table(n_clicks, text):
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
-
