@@ -5,25 +5,26 @@ import dash_materialsintelligence as dmi
 from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
-import pprint
 db = open_db_connection(local=True)
-
 
 def serve_layout():
     """Generates the layout dynamically on every refresh"""
-    return [html.Div(serve_abstract(), id="annotation_parent_div", className="row"),
+    return [html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row")]
 
 
-def serve_abstract():
+def serve_abstract(empty=False):
     """Returns a random abstract and refreshes annotation options"""
-    # get a random paragraph
-    random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
+    ttl_tokens, abs_tokens = [], []
+    doi = ""
+    if not empty:
+        # get a random paragraph
+        random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
+        doi = random_abstract['doi']
 
-    builder = AnnotationBuilder()
-    # tokenize and get initial annotation
-    ttl_tokens, ttl_annotations = builder.get_tokens(random_abstract["title"])
-    abs_tokens, abs_annotations = builder.get_tokens(random_abstract["abstract"])
+        # tokenize and get initial annotation
+        ttl_tokens = AnnotationBuilder.get_tokens(random_abstract["title"])
+        abs_tokens = AnnotationBuilder.get_tokens(random_abstract["abstract"])
 
     labels = [{'text': 'Material', 'value': 'material'},
               {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
@@ -32,29 +33,34 @@ def serve_abstract():
 
     return [
         dmi.AnnotationContainer(
+            doi=doi,
             tokens=[ttl_tokens, abs_tokens],
-            annotations=[ttl_annotations, abs_annotations],
+            # annotations=[ttl_annotations, abs_annotations],
             labels=labels,
             className="annotation-container",
             selectedValue=labels[0]['value'],
             id="annotation_container"
         ),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
+        html.Div(doi, id="doi_container", style={"display": "none"})
     ]
 
 
 def serve_macro_annotation():
+    application_tags = db.abstract_tags.find({})
+    tags = []
+    for tag in application_tags:
+        tags.append({'label': tag["tag"], 'value': tag['tag']})
+
     return [html.Div([html.Div("Type: ", className='two columns'),
             html.Div(dcc.Dropdown(
                 options=[
                     {'label': 'Experimental', 'value': 'experimental'},
                     {'label': 'Theoretical', 'value': 'theoretical'},
                     {'label': 'Both', 'value': 'both'},
-                    {'label': 'Unclear', 'value': 'unclear'},
 
                 ],
-                value='experimental',
-                clearable=False,
+                clearable=True,
                 id='abstract_type'
             ), className='five columns',
             ), html.Div(dcc.Dropdown(
@@ -63,60 +69,19 @@ def serve_macro_annotation():
                     {'label': 'Other Materials', 'value': 'other_materials'},
                     {'label': 'Not Materials', 'value': 'not_materials'},
                 ],
-                value='inorganic',
-                clearable=False,
+                clearable=True,
                 id='abstract_category'
             ), className='five columns',
             )], className='row', id="first_macro_row"),
-            html.Div([html.Div("Applications: ", className="two columns"),
-                     html.Div(dcc.Dropdown(
-                         options=[
-                             {'label': 'Thermoelectric', 'value': 'thermoelectric'},
-                             {'label': 'Battery', 'value': 'battery'},
-                             {'label': 'Magnetic', 'value': 'magnetic'},
-                             {'label': 'Other', 'value': 'other'}
-                         ],
-                         value='',
+            html.Div([html.Div("Tags: ", className="two columns"),
+                     html.Div(dmi.DropdownCreatable(
+                         options=tags,
                          id='abstract_tags',
-                         multi=True
+                         multi=True,
+                         value=''
                      ), className="ten columns")],
                      className="row")]
-
-
-# def build_tokens_html(tokens, cems):
-#     """builds the HTML for tokenized paragraph"""
-#     cde_cem_starts = [cem.start for cem in cems]
-#     html_builder = []
-#     for row in tokens:
-#         for elem in row:
-#             selected_state = False
-#             extra_class = ''
-#             if elem.start in cde_cem_starts:
-#                 selected_state = True
-#                 extra_class = ' mtl highlighted'
-#             html_builder.append(" ")
-#             html_builder.append(dmi.Annotatable(
-#                 id="token-" + str(elem.start) + '-' + str(elem.end),
-#                 value=elem.text,
-#                 className="token",
-#                 isSelected=selected_state,
-#             ))
-#     return html_builder
 
 def serve_buttons():
     return [html.Button("Skip", id="annotate_skip", className="button"),
             html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]
-
-
-# def serve_labels():
-#     return [
-#         html.Div(html.Span("Labels: "), className="two columns"),
-#         html.Div([
-#             html.Span("Material", className="highlighted mtl label"),
-#             html.Span("Inorganic Crystal", className="highlighted inrg label"),
-#             html.Span("Main Material", className="highlighted main_mtl label"),
-#             html.Br(),
-#             html.Span("Property Name", className="highlighted prop_name label"),
-#             html.Span("Property Value", className="highlighted prop_val label"),
-#             html.Span("Property Unit", className="highlighted prop_unit label")]
-#             , className="ten columns")]

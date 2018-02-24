@@ -10,6 +10,8 @@ import os
 from flask import send_from_directory
 import dash_materialsintelligence as dmi
 import pprint
+from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.utils import open_db_connection
 
 app = dash.Dash()
 server = app.server
@@ -21,7 +23,6 @@ app.config.suppress_callback_exceptions = True
 app.title = "Matstract"
 
 cache = Cache(server, config={"CACHE_TYPE": "simple"})
-
 
 ### CSS settings ###
 BACKGROUND = 'rgb(230, 230, 230)'
@@ -243,12 +244,31 @@ def update_graph(n_clicks, material, search):
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
      Input('annotate_confirm', 'n_clicks')],
-    [State('annotation_container', 'annotations')])
-def load_next_abstract(skip_clicks, confirm_clicks, annotations):
-    # print("Skip: {}, Confirm: {}".format(skip_clicks, confirm_clicks))
+    [State('annotation_container', 'tokens'),
+     State('doi_container', 'children'),
+     State('abstract_tags', 'value'),
+     State('abstract_type', 'value'),
+     State('abstract_category', 'value')])
+def load_next_abstract(
+        skip_clicks,
+        confirm_clicks,
+        tokens,
+        doi,
+        abstract_tags,
+        abstract_type,
+        abstract_category):
     if confirm_clicks is not None:
-        a = 1
-        pprint.pprint(annotations)
+        if abstract_tags is not None:
+            tag_values = [tag["value"] for tag in abstract_tags]
+        else:
+            tag_values = None
+        macro = {
+            "tags": tag_values,
+            "type": abstract_type,
+            "category": abstract_category,
+        }
+        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro)
+        AnnotationBuilder.insert_annotation(annotation)
         # do something to record the annotation
     return annotate_app.serve_abstract()
 
@@ -265,6 +285,7 @@ def keywords_table(n_clicks, text):
     else:
         return None
 
+
 #def highlight_extracted(n_clicks, text):
 #    if n_clicks is not None:
 #        results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
@@ -277,4 +298,3 @@ def keywords_table(n_clicks, text):
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
-
