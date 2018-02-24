@@ -11,6 +11,7 @@ from flask import send_from_directory
 import dash_materialsintelligence as dmi
 import pprint
 from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.utils import open_db_connection
 
 app = dash.Dash()
 server = app.server
@@ -22,7 +23,6 @@ app.config.suppress_callback_exceptions = True
 app.title = "Matstract"
 
 cache = Cache(server, config={"CACHE_TYPE": "simple"})
-
 
 ### CSS settings ###
 BACKGROUND = 'rgb(230, 230, 230)'
@@ -244,7 +244,7 @@ def update_graph(n_clicks, material, search):
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
      Input('annotate_confirm', 'n_clicks')],
-    [State('annotation_container', 'annotations'),
+    [State('annotation_container', 'tokens'),
      State('doi_container', 'children'),
      State('abstract_tags', 'value'),
      State('abstract_type', 'value'),
@@ -252,13 +252,12 @@ def update_graph(n_clicks, material, search):
 def load_next_abstract(
         skip_clicks,
         confirm_clicks,
-        annotations,
+        tokens,
         doi,
         abstract_tags,
         abstract_type,
         abstract_category):
     if confirm_clicks is not None:
-        pprint.pprint(abstract_tags)
         if abstract_tags is not None:
             tag_values = [tag["value"] for tag in abstract_tags]
         else:
@@ -268,8 +267,8 @@ def load_next_abstract(
             "type": abstract_type,
             "category": abstract_category,
         }
-        annotation = AnnotationBuilder.prepare_annotation(doi, annotations, macro)
-        pprint.pprint(annotation)
+        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro)
+        AnnotationBuilder.insert_annotation(annotation)
         # do something to record the annotation
     return annotate_app.serve_abstract()
 

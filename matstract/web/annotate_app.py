@@ -5,9 +5,7 @@ import dash_materialsintelligence as dmi
 from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
-import pprint
 db = open_db_connection(local=True)
-
 
 def serve_layout():
     """Generates the layout dynamically on every refresh"""
@@ -17,7 +15,7 @@ def serve_layout():
 
 def serve_abstract(empty=False):
     """Returns a random abstract and refreshes annotation options"""
-    ttl_tokens, ttl_annotations, abs_tokens, abs_annotations = [], [], [], []
+    ttl_tokens, abs_tokens = [], []
     doi = ""
     if not empty:
         # get a random paragraph
@@ -25,8 +23,8 @@ def serve_abstract(empty=False):
         doi = random_abstract['doi']
 
         # tokenize and get initial annotation
-        ttl_tokens, ttl_annotations = AnnotationBuilder.get_tokens(random_abstract["title"])
-        abs_tokens, abs_annotations = AnnotationBuilder.get_tokens(random_abstract["abstract"])
+        ttl_tokens = AnnotationBuilder.get_tokens(random_abstract["title"])
+        abs_tokens = AnnotationBuilder.get_tokens(random_abstract["abstract"])
 
     labels = [{'text': 'Material', 'value': 'material'},
               {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
@@ -37,7 +35,7 @@ def serve_abstract(empty=False):
         dmi.AnnotationContainer(
             doi=doi,
             tokens=[ttl_tokens, abs_tokens],
-            annotations=[ttl_annotations, abs_annotations],
+            # annotations=[ttl_annotations, abs_annotations],
             labels=labels,
             className="annotation-container",
             selectedValue=labels[0]['value'],
