@@ -49,7 +49,6 @@ for css in css_files:
 
 ### Header and Intro text ##
 
-
 header = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
@@ -87,7 +86,10 @@ header = html.Div([
             html.Span(' • '),
             dcc.Link("Annotate", href="/annotate"),
             html.Span(' • '),
-            dcc.Link("Keyword Extraction", href="/keyword")
+            dcc.Link("Keyword Extraction", href="/keyword"),
+            html.Span(' • '),
+            html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
+                     style={"color": "red"}, target="_blank")
         ],
         id="nav_bar"),
     html.Br()
@@ -104,7 +106,6 @@ app.layout = html.Div([
 
 
 ### General Callbacks ###
-
 
 @app.callback(
     Output('page-content', 'children'),
@@ -127,7 +128,6 @@ def display_page(path):
 
 
 ### Search App Callbacks ###
-
 
 @cache.memoize(timeout=600)
 @app.callback(
@@ -238,9 +238,8 @@ def update_graph(n_clicks, material, search):
     return figure
 
 
-"""
-Annotation App Callbacks
-"""
+### Annotation App Callbacks ###
+
 @app.callback(
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
@@ -276,12 +275,16 @@ def load_next_abstract(
 
 
 ### Keywords App Callbacks ###
+
 @app.callback(
     Output('extract-keywords', 'children'),
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
 def keywords_table(n_clicks, text):
-    return keyword_app.get_keywords(text)
+    if text != '':
+        return keyword_app.get_keywords(text)
+    else:
+        return None
 
 
 #def highlight_extracted(n_clicks, text):
