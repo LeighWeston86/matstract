@@ -396,17 +396,14 @@ class ScopusArticle(object):
         return self._subjects
 
 
-def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_entries=10):
-    """
-    Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
-    dois, and downloads the corresponding xmls for each to the elsevier collection.
+def verify_access():
+    """ Confirms that the user is connected to a network with full access to Elsevier.
+    i.e. the LBNL Employee Network
 
-    Args:
-        user_creds: path to contributing user's write-permitted credential file.
-        max_entries: maximum length of session (~1s/article)
+    Raises:
+        HTTPError: If user is not connected to network with full-text subscriber access to Elsevier content.
 
     """
-
     try:
         download("https://api.elsevier.com/content/article/doi/10.1016/j.actamat.2018.01.057?view=FULL")
     except HTTPError:
@@ -415,56 +412,94 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
                         "the LBNL VPN.")
 
 
+def collect_entries(dois, user):
+    """ Collects the scopus entry for each DOI in dois and processes them for insertion into the Matstract database.
+
+    Args:
+        dois (list(str)): List of DOIs
+        user: (dict): Credentials of user
+
+    Returns:
+        entries (list(dict)): List of entries to be inserted into database
+
+    """
+
+    entries = []
+    for doi in tqdm(dois):
+        date = datetime.datetime.now().isoformat()
+        try:
+            article = ScopusArticle(input_doi=doi)
+            abstract = article.abstract
+            raw_abstract = article.raw_abstract
+
+            if abstract is None or raw_abstract is None:
+                entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
+                                "pulled_on": date, "pulled_by": user})
+            else:
+                if not isinstance(raw_abstract, str):
+                    raw_abstract = raw_abstract.text
+                entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                "subjects": article.subjects, "journal": article.journal,
+                                "date": article.cover_date,
+                                "completed": True, "pulled_on": date, "pulled_by": user})
+        except HTTPError as e:
+            entries.append({"doi": doi, "completed": False, "error": str(e),
+                            "pulled_on": date, "pulled_by": user})
+    return entries
+
+
+def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_blocks=1):
+    """
+    Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
+    dois, and downloads the corresponding xmls for each to the elsevier collection.
+
+    Args:
+        user_creds ((:obj:`str`, optional)): path to contributing user's write-permitted credential file.
+        max_block_size ((:obj:`int`, optional)): maximum number of articles in block (~1s/article). Defaults to 100.
+        num_blocks ((:obj:`int`, optional)): maximum number of blocks to run in session. Defaults to 1.
+
+    """
     user = json.load(open(user_creds, 'r'))["name"]
     db = open_db_connection(user_creds=user_creds)
     log = db.elsevier_log
     elsevier = db.elsevier
 
     for i in range(num_blocks):
-        print("Blocks remaining = {}".format(num_blocks - i))
+        # Verify access at start of each block to detect dropped VPN sessions.
+        verify_access()
 
-        target = log.find({"status": "incomplete",
-                           "num_articles": {"$lt": max_entries}},
-                          ["year", "issn"]).limit(1).sort("num_articles", -1)[0]
+        # Get list of all available blocks sorted from largest to smallest.
+        available_blocks = log.find({"status": "incomplete",
+                                     "num_articles": {"$lt": max_block_size}},
+                                    ["year", "issn"]).limit(1).sort("num_articles", -1)
 
+        # Break if no remaining blocks smaller than max_block_size
+        if available_blocks.count() == 0:
+            print("No remaining blocks with size <= {}.".format(max_block_size))
+            break
+        else:
+            print("Blocks remaining = {}".format(min(num_blocks - i, available_blocks.count())))
+
+        target = available_blocks[0]
         date = datetime.datetime.now().isoformat()
-
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
+        # Collect scopus for block
+        print("Collecting entries for Block {}".format(target["_id"]))
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
+        new_entries = collect_entries(dois, user)
 
-        new_entries = []
-
-        for doi in tqdm(dois):
-            date = datetime.datetime.now().isoformat()
-            try:
-                article = ScopusArticle(input_doi=doi)
-                abstract = article.abstract
-                raw_abstract = article.raw_abstract
-
-                if abstract is None or raw_abstract is None:
-                    new_entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
-                                        "pulled_on": date, "pulled_by": user})
-                else:
-                    if not isinstance(raw_abstract, str):
-                        raw_abstract = raw_abstract.text
-
-                    new_entries.append({"doi": doi, "title": article.title, "abstract": abstract,
-                                        "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
-                                        "subjects": article.subjects, "journal": article.journal,
-                                        "date": article.cover_date,
-                                        "completed": True, "pulled_on": date, "pulled_by": user})
-            except HTTPError as e:
-                new_entries.append({"doi": doi, "completed": False, "error": str(e),
-                                    "pulled_on": date, "pulled_by": user})
-
-        for entry in new_entries:
+        # Insert entries into Matstract database
+        print("Inserting entries into Matstract database...")
+        for entry in tqdm(new_entries):
             if elsevier.find({"doi": entry["doi"]}).count():
                 elsevier.update_one({"doi": entry["doi"]}, {"$set": entry})
             else:
                 elsevier.insert_one(entry)
 
+        # Mark block as completed in log
         date = datetime.datetime.now().isoformat()
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
                        {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
