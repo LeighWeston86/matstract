@@ -228,7 +228,7 @@ class ScopusArticle(object):
         """
 
         url = "https://api.elsevier.com/content/article/doi/{}".format(input_doi)
-        self._url = url
+        self.retrieval_url = url
 
         params = {'view': "FULL"}
         xml = ET.fromstring(get_content(input_doi, url=url, refresh=refresh, params=params))
@@ -246,140 +246,81 @@ class ScopusArticle(object):
 
         # Parse coredata
         coredata = xml.find('coredata', namespaces)
-        self._eid = get_encoded_text(coredata, 'eid')
-        self._doi = get_encoded_text(coredata, 'prism:doi')
-        self._coverDate = get_encoded_text(coredata, 'prism:coverDate')
-        self._coverDisplayDate = get_encoded_text(coredata, 'prism:coverDisplayDate')
-        self._url = get_encoded_text(coredata, 'prism:url')
-        self._links = get_encoded_text(coredata, 'link')
-        self._identifier = get_encoded_text(coredata, 'dc:identifier')
-        self._title = get_encoded_text(coredata, 'dc:title')
-        self._publicationName = get_encoded_text(coredata, 'prism:publicationName')
-        self._issn = get_encoded_text(coredata, 'prism:issn')
-        self._isbn = get_encoded_text(coredata, 'prism:isbn')
-        self._aggregationType = get_encoded_text(coredata, 'prism:aggregationType')
-        self._edition = get_encoded_text(coredata, 'prism:edition')
-        self._volume = get_encoded_text(coredata, 'prism:volume')
-        self._issueIdentifier = get_encoded_text(coredata, 'prism:issueIdentifier')
-        self._startingPage = get_encoded_text(coredata, 'prism:startingPage')
-        self._endingPage = get_encoded_text(coredata, 'prism:endingPage')
-        self._creator = get_encoded_text(coredata, 'dc:creator')
-        self._authors = get_encoded_text(coredata, 'authors')
-        self._format = get_encoded_text(coredata, 'dc:format')
-        self._subjects = get_encoded_text(coredata, 'dcterms:subject')
-        self._copyright = get_encoded_text(coredata, 'prism:copyright')
-        self._publisher = get_encoded_text(coredata, 'prism:publisher')
-        self._issueName = get_encoded_text(coredata, 'prism:IssueName')
-        self._pageRange = get_encoded_text(coredata, 'prism:pageRange')
-        self._number = get_encoded_text(coredata, 'prism:number')
-        self._raw_abstract = get_encoded_text(coredata, 'dc:description')
-        self._abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
 
-    @property
-    def url(self):
-        for link in self._links:
+        # Scopus URL of article
+        self.scopus_url = get_encoded_text(coredata, 'prism:url')
+
+        # Scopus source_id of the article
+        self.scopus_id = get_encoded_text(coredata, 'dc:identifier')
+
+        # URL of article
+        for link in get_encoded_text(coredata, 'link'):
             if not "self" in link.items()[1]:
-                return link.items()[0][1]
+                url = link.items()[0][1]
+        self.url = url
 
-    @property
-    def scopus_url(self):
-        """URL to the scopus entry for the article."""
-        return self._url
+        # EID of article
+        self.eid = get_encoded_text(coredata, 'eid')
 
-    @property
-    def doi(self):
-        """DOI of article."""
-        return self._doi
+        # DOI of article
+        self.doi = get_encoded_text(coredata, 'prism:doi')
 
-    @property
-    def eid(self):
-        """ EID of article."""
-        return self._eid
+        # Title of article
+        self.title = get_encoded_text(coredata, 'dc:title')
 
-    @property
-    def scopus_id(self):
-        """Scopus source_id of the article."""
-        return self._identifier
+        # Authors of Article
+        self.authors = get_encoded_text(coredata, 'dc:creator')
 
-    @property
-    def title(self):
-        """Article title."""
-        return self._title
+        # Journal Name
+        self.journal = get_encoded_text(coredata, 'prism:publicationName')
 
-    @property
-    def authors(self):
-        """The list of the article's authors"""
-        return self._creator
+        # Date of publication
+        self.cover_date = get_encoded_text(coredata, 'prism:coverDate')
 
-    @property
-    def abstract(self):
-        """The cleaned abstract of the article."""
-        return self._abstract
+        # Date of publication (cover)
+        self.cover_display_date = get_encoded_text(coredata, 'prism:coverDisplayDate')
 
-    @property
-    def raw_abstract(self):
-        """The raw abstract of the article."""
-        return self._raw_abstract
+        # Journal ISSN (or EISSN, or both)
+        self.issn = get_encoded_text(coredata, 'prism:issn')
 
-    @property
-    def journal(self):
-        """Name Journal the article is published in."""
-        return self._publicationName
+        # Volume that article appears in
+        self.volume = get_encoded_text(coredata, 'prism:volume')
 
-    @property
-    def issn(self):
-        """ISSN of the publisher.
-        Note: If E-ISSN is known to Scopus, this returns both
-        ISSN and E-ISSN in random order separated by blank space.
-        """
-        return self._issn
+        # Issue that article appears in.
+        self.issue = get_encoded_text(coredata, 'prism:issueIdentifier')
 
-    @property
-    def publisher(self):
-        """Name of the publisher of the article."""
-        return self._publisher
+        # Article number
+        self.article_number = get_encoded_text(coredata, 'prism:number')
 
-    @property
-    def volume(self):
-        """Volume for the article."""
-        return self._volume
+        # Page number of first page
+        self.first_page = get_encoded_text(coredata, 'prism:startingPage')
 
-    @property
-    def issue(self):
-        """Issue number for article."""
-        return self._issueIdentifier
+        # Page number of last page
+        self.last_page = get_encoded_text(coredata, 'prism:endingPage')
 
-    @property
-    def article_number(self):
-        """Article number."""
-        return self._number
+        # Page range of article
+        self.page_range = get_encoded_text(coredata, 'prism:pageRange')
 
-    @property
-    def first_page(self):
-        """Starting page."""
-        return self._startingPage
+        # Format of Article
+        self.format = get_encoded_text(coredata, 'dc:format')
 
-    @property
-    def last_page(self):
-        """Ending page."""
-        return self._endingPage
+        # Subjects of article
+        self.subjects = get_encoded_text(coredata, 'dcterms:subject')
 
-    @property
-    def page_range(self):
-        """Page range."""
-        return self._pageRange
+        # Copywrite info
+        self.copyright = get_encoded_text(coredata, 'prism:copyright')
 
-    @property
-    def cover_date(self):
-        """The date of the cover the article is in."""
-        return self._coverDate
+        # Name of publisher
+        self.publisher = get_encoded_text(coredata, 'prism:publisher')
 
-    @property
-    def subjects(self):
-        """List of subject areas of article.
-        Note: Requires the FULL view of the article.
-        """
-        return self._subjects
+        # Name of issue
+        self.issue_name = get_encoded_text(coredata, 'prism:IssueName')
+
+        # Raw copy of abstract as returned by scopus
+        self.raw_abstract = get_encoded_text(coredata, 'dc:description')
+
+        # Cleaned abstract text
+        self.abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
 
 
 def verify_access():
@@ -473,7 +414,7 @@ def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
         # Collect scopus for block
-        print("Collecting entries for Block {}".format(target["_id"]))
+        print("Collecting entries for Block {}...".format(target["_id"]))
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
         new_entries = collect_entries(dois, user)
 
