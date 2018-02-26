@@ -428,6 +428,6 @@ def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_
 
         # Mark block as completed in log
         date = datetime.datetime.now().isoformat()
-        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
+        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
                        {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
                                  "updated_by": user, "updated_on": date}})
