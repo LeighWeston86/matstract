@@ -107,7 +107,8 @@ def sort_df(test_df, materials):
 
 def generate_table(search='', materials='', columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
     results = get_search_results(search, materials)
-    print(len(results))
+    if results is not None:
+        print(len(results))
     if materials:
         df = pd.DataFrame(results[:max_rows])
         if not df.empty:

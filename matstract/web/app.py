@@ -259,7 +259,7 @@ def load_next_abstract(
         abstract_category):
     if confirm_clicks is not None:
         if abstract_tags is not None:
-            tag_values = [tag["value"] for tag in abstract_tags]
+            tag_values = [tag["value"].lower() for tag in abstract_tags]
         else:
             tag_values = None
         macro = {
@@ -267,8 +267,11 @@ def load_next_abstract(
             "type": abstract_type,
             "category": abstract_category,
         }
+
+        builder = AnnotationBuilder()
         annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro)
-        AnnotationBuilder.insert_annotation(annotation)
+        builder.insert_annotation(annotation)
+        builder.update_tags(tag_values)
         # do something to record the annotation
     return annotate_app.serve_abstract()
 
