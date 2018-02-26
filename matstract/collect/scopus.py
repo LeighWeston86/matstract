@@ -67,6 +67,13 @@ def build_scopus_query(year=None, issn=None):
 
     "SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 1994"
 
+    Args:
+        year (str): year of publication
+        issn (str): ISSN of journal
+
+    Returns:
+        (str) scoupus query string
+
     """
     base = "SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english)"
     y = " AND PUBYEAR = {}".format(year) if year else ''
@@ -80,12 +87,12 @@ def find_articles(year=None, issn=None, get_all=True):
     Returns a list of the DOI's for all articles published in the specified year and journal.
 
     Args:
-        year: (str) year of publication
-        issn: (str) ISSN (or EISSN) of journal
-        get_all: (bool) Whether all results should be returned or just the 1st result. Default is True.
+        year (str): year of publication
+        issn (str): ISSN (or EISSN) of journal
+        get_all (bool): Whether all results should be returned or just the 1st result. Default is True.
 
     Returns:
-        dois: [str] The dois for all articles published in corresponding journal + year
+        dois (str): The dois for all articles published in corresponding journal in the specified year
 
     """
 
@@ -128,21 +135,18 @@ def download(url, format='xml', params=None):
 
 
 def get_content(DOI, refresh=True, *args, **kwds):
-    """Helper function to read file content as xml.
+    """ Helper function to read file content as xml.
 
-    Parameters
-    ----------
-    DOI : string
-        DOI of article, for checking database.
+    Args:
+        input_doi (str): DOI of article
+        *args:
+        **kwds:
 
-    *args, **kwds :
-        Arguments and keywords to be passed on to download().
+    Returns:
+        Content of returned XML file
 
-    Returns
-    -------
-    content : str
-        The content of the file.
     """
+
     if not refresh:
         db = open_db_connection()
         elsevier = db.elsevier
@@ -155,28 +159,6 @@ def get_content(DOI, refresh=True, *args, **kwds):
                 content = entry["xml"]
                 return content
     content = download(*args, **kwds).text
-    return content
-
-
-def get_content_html(input_doi, *args, **kwds):
-    """Helper function to read file content as xml.
-
-    Parameters
-    ----------
-    DOI : string
-        DOI of article, for checking database.
-
-    *args, **kwds :
-        Arguments and keywords to be passed on to download().
-
-    Returns
-    -------
-    content : str
-        The content of the file.
-    """
-
-    url = "https://api.elsevier.com/content/article/doi/{}".format(input_doi)
-    content = download(url, format='html')
     return content
 
 
@@ -210,20 +192,24 @@ def get_encoded_text(container, xpath):
 
 
 def clean_text(text):
-    try:
+    """ Cleans abstract text from scopus documents.
 
+    Args:
+        text (str): Unformatted abstract text.
+
+    Returns:
+        (str) Abstract text with formatting issues removed.
+
+    """
+    try:
         if not isinstance(text, str):
             text = text.text
-
         cleaned_text = re.sub("\n                        ", "", text)
         cleaned_text = re.sub("\n                     ", "", cleaned_text)
         cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
         cleaned_text = cleaned_text.replace("Abstract ", '', 1)
-
         return cleaned_text
-
     except:
-
         return None
 
 
@@ -242,7 +228,7 @@ class ScopusArticle(object):
         """
 
         url = "https://api.elsevier.com/content/article/doi/{}".format(input_doi)
-        self._url = url
+        self.retrieval_url = url
 
         params = {'view': "FULL"}
         xml = ET.fromstring(get_content(input_doi, url=url, refresh=refresh, params=params))
@@ -260,153 +246,91 @@ class ScopusArticle(object):
 
         # Parse coredata
         coredata = xml.find('coredata', namespaces)
-        self._eid = get_encoded_text(coredata, 'eid')
-        self._doi = get_encoded_text(coredata, 'prism:doi')
-        self._coverDate = get_encoded_text(coredata, 'prism:coverDate')
-        self._coverDisplayDate = get_encoded_text(coredata, 'prism:coverDisplayDate')
-        self._url = get_encoded_text(coredata, 'prism:url')
-        self._links = get_encoded_text(coredata, 'link')
-        self._identifier = get_encoded_text(coredata, 'dc:identifier')
-        self._title = get_encoded_text(coredata, 'dc:title')
-        self._publicationName = get_encoded_text(coredata, 'prism:publicationName')
-        self._issn = get_encoded_text(coredata, 'prism:issn')
-        self._isbn = get_encoded_text(coredata, 'prism:isbn')
-        self._aggregationType = get_encoded_text(coredata, 'prism:aggregationType')
-        self._edition = get_encoded_text(coredata, 'prism:edition')
-        self._volume = get_encoded_text(coredata, 'prism:volume')
-        self._issueIdentifier = get_encoded_text(coredata, 'prism:issueIdentifier')
-        self._startingPage = get_encoded_text(coredata, 'prism:startingPage')
-        self._endingPage = get_encoded_text(coredata, 'prism:endingPage')
-        self._creator = get_encoded_text(coredata, 'dc:creator')
-        self._authors = get_encoded_text(coredata, 'authors')
-        self._format = get_encoded_text(coredata, 'dc:format')
-        self._subjects = get_encoded_text(coredata, 'dcterms:subject')
-        self._copyright = get_encoded_text(coredata, 'prism:copyright')
-        self._publisher = get_encoded_text(coredata, 'prism:publisher')
-        self._issueName = get_encoded_text(coredata, 'prism:IssueName')
-        self._pageRange = get_encoded_text(coredata, 'prism:pageRange')
-        self._number = get_encoded_text(coredata, 'prism:number')
-        self._raw_abstract = get_encoded_text(coredata, 'dc:description')
-        self._abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
 
-    @property
-    def url(self):
-        for link in self._links:
+        # Scopus URL of article
+        self.scopus_url = get_encoded_text(coredata, 'prism:url')
+
+        # Scopus source_id of the article
+        self.scopus_id = get_encoded_text(coredata, 'dc:identifier')
+
+        # URL of article
+        for link in get_encoded_text(coredata, 'link'):
             if not "self" in link.items()[1]:
-                return link.items()[0][1]
+                url = link.items()[0][1]
+        self.url = url
 
-    @property
-    def scopus_url(self):
-        """URL to the scopus entry for the article."""
-        return self._url
+        # EID of article
+        self.eid = get_encoded_text(coredata, 'eid')
 
-    @property
-    def doi(self):
-        """DOI of article."""
-        return self._doi
+        # DOI of article
+        self.doi = get_encoded_text(coredata, 'prism:doi')
 
-    @property
-    def eid(self):
-        """ EID of article."""
-        return self._eid
+        # Title of article
+        self.title = get_encoded_text(coredata, 'dc:title')
 
-    @property
-    def scopus_id(self):
-        """Scopus source_id of the article."""
-        return self._identifier
+        # Authors of Article
+        self.authors = get_encoded_text(coredata, 'dc:creator')
 
-    @property
-    def title(self):
-        """Article title."""
-        return self._title
+        # Journal Name
+        self.journal = get_encoded_text(coredata, 'prism:publicationName')
 
-    @property
-    def authors(self):
-        """The list of the article's authors"""
-        return self._creator
+        # Date of publication
+        self.cover_date = get_encoded_text(coredata, 'prism:coverDate')
 
-    @property
-    def abstract(self):
-        """The cleaned abstract of the article."""
-        return self._abstract
+        # Date of publication (cover)
+        self.cover_display_date = get_encoded_text(coredata, 'prism:coverDisplayDate')
 
-    @property
-    def raw_abstract(self):
-        """The raw abstract of the article."""
-        return self._raw_abstract
+        # Journal ISSN (or EISSN, or both)
+        self.issn = get_encoded_text(coredata, 'prism:issn')
 
-    @property
-    def journal(self):
-        """Name Journal the article is published in."""
-        return self._publicationName
+        # Volume that article appears in
+        self.volume = get_encoded_text(coredata, 'prism:volume')
 
-    @property
-    def issn(self):
-        """ISSN of the publisher.
-        Note: If E-ISSN is known to Scopus, this returns both
-        ISSN and E-ISSN in random order separated by blank space.
-        """
-        return self._issn
+        # Issue that article appears in.
+        self.issue = get_encoded_text(coredata, 'prism:issueIdentifier')
 
-    @property
-    def publisher(self):
-        """Name of the publisher of the article."""
-        return self._publisher
+        # Article number
+        self.article_number = get_encoded_text(coredata, 'prism:number')
 
-    @property
-    def volume(self):
-        """Volume for the article."""
-        return self._volume
+        # Page number of first page
+        self.first_page = get_encoded_text(coredata, 'prism:startingPage')
 
-    @property
-    def issue(self):
-        """Issue number for article."""
-        return self._issueIdentifier
+        # Page number of last page
+        self.last_page = get_encoded_text(coredata, 'prism:endingPage')
 
-    @property
-    def article_number(self):
-        """Article number."""
-        return self._number
+        # Page range of article
+        self.page_range = get_encoded_text(coredata, 'prism:pageRange')
 
-    @property
-    def first_page(self):
-        """Starting page."""
-        return self._startingPage
+        # Format of Article
+        self.format = get_encoded_text(coredata, 'dc:format')
 
-    @property
-    def last_page(self):
-        """Ending page."""
-        return self._endingPage
+        # Subjects of article
+        self.subjects = get_encoded_text(coredata, 'dcterms:subject')
 
-    @property
-    def page_range(self):
-        """Page range."""
-        return self._pageRange
+        # Copywrite info
+        self.copyright = get_encoded_text(coredata, 'prism:copyright')
 
-    @property
-    def cover_date(self):
-        """The date of the cover the article is in."""
-        return self._coverDate
+        # Name of publisher
+        self.publisher = get_encoded_text(coredata, 'prism:publisher')
 
-    @property
-    def subjects(self):
-        """List of subject areas of article.
-        Note: Requires the FULL view of the article.
-        """
-        return self._subjects
+        # Name of issue
+        self.issue_name = get_encoded_text(coredata, 'prism:IssueName')
+
+        # Raw copy of abstract as returned by scopus
+        self.raw_abstract = get_encoded_text(coredata, 'dc:description')
+
+        # Cleaned abstract text
+        self.abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
 
 
-def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_entries=10):
-    """
-    Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
-    dois, and downloads the corresponding xmls for each to the elsevier collection.
+def verify_access():
+    """ Confirms that the user is connected to a network with full access to Elsevier.
+    i.e. the LBNL Employee Network
 
-    Args:
-        user_creds: path to contributing user's write-permitted credential file.
-        max_entries: maximum length of session (~1s/article)
+    Raises:
+        HTTPError: If user is not connected to network with full-text subscriber access to Elsevier content.
 
     """
-
     try:
         download("https://api.elsevier.com/content/article/doi/10.1016/j.actamat.2018.01.057?view=FULL")
     except HTTPError:
@@ -415,57 +339,95 @@ def contribute(user_creds="matstract/john_atlas_creds.json", num_blocks=1, max_e
                         "the LBNL VPN.")
 
 
+def collect_entries(dois, user):
+    """ Collects the scopus entry for each DOI in dois and processes them for insertion into the Matstract database.
+
+    Args:
+        dois (list(str)): List of DOIs
+        user: (dict): Credentials of user
+
+    Returns:
+        entries (list(dict)): List of entries to be inserted into database
+
+    """
+
+    entries = []
+    for doi in tqdm(dois):
+        date = datetime.datetime.now().isoformat()
+        try:
+            article = ScopusArticle(input_doi=doi)
+            abstract = article.abstract
+            raw_abstract = article.raw_abstract
+
+            if abstract is None or raw_abstract is None:
+                entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
+                                "pulled_on": date, "pulled_by": user})
+            else:
+                if not isinstance(raw_abstract, str):
+                    raw_abstract = raw_abstract.text
+                entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                "subjects": article.subjects, "journal": article.journal,
+                                "date": article.cover_date,
+                                "completed": True, "pulled_on": date, "pulled_by": user})
+        except HTTPError as e:
+            entries.append({"doi": doi, "completed": False, "error": str(e),
+                            "pulled_on": date, "pulled_by": user})
+    return entries
+
+
+def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_blocks=1):
+    """
+    Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
+    dois, and downloads the corresponding xmls for each to the elsevier collection.
+
+    Args:
+        user_creds ((:obj:`str`, optional)): path to contributing user's write-permitted credential file.
+        max_block_size ((:obj:`int`, optional)): maximum number of articles in block (~1s/article). Defaults to 100.
+        num_blocks ((:obj:`int`, optional)): maximum number of blocks to run in session. Defaults to 1.
+
+    """
     user = json.load(open(user_creds, 'r'))["name"]
     db = open_db_connection(user_creds=user_creds)
     log = db.elsevier_log
     elsevier = db.elsevier
 
     for i in range(num_blocks):
-        print("Blocks remaining = {}".format(num_blocks - i))
+        # Verify access at start of each block to detect dropped VPN sessions.
+        verify_access()
 
-        target = log.find({"status": "incomplete",
-                           "num_articles": {"$lt": max_entries}},
-                          ["year", "issn"]).limit(1).sort("num_articles", -1)[0]
+        # Get list of all available blocks sorted from largest to smallest.
+        available_blocks = log.find({"status": "incomplete",
+                                     "num_articles": {"$lt": max_block_size}},
+                                    ["year", "issn"]).limit(1).sort("num_articles", -1)
 
+        # Break if no remaining blocks smaller than max_block_size
+        if available_blocks.count() == 0:
+            print("No remaining blocks with size <= {}.".format(max_block_size))
+            break
+        else:
+            print("Blocks remaining = {}".format(min(num_blocks - i, available_blocks.count())))
+
+        target = available_blocks[0]
         date = datetime.datetime.now().isoformat()
-
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
+        # Collect scopus for block
+        print("Collecting entries for Block {}...".format(target["_id"]))
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
+        new_entries = collect_entries(dois, user)
 
-        new_entries = []
-
-        for doi in tqdm(dois):
-            date = datetime.datetime.now().isoformat()
-            try:
-                article = ScopusArticle(input_doi=doi)
-                abstract = article.abstract
-                raw_abstract = article.raw_abstract
-
-                if abstract is None or raw_abstract is None:
-                    new_entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
-                                        "pulled_on": date, "pulled_by": user})
-                else:
-                    if not isinstance(raw_abstract, str):
-                        raw_abstract = raw_abstract.text
-
-                    new_entries.append({"doi": doi, "title": article.title, "abstract": abstract,
-                                        "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
-                                        "subjects": article.subjects, "journal": article.journal,
-                                        "date": article.cover_date,
-                                        "completed": True, "pulled_on": date, "pulled_by": user})
-            except HTTPError as e:
-                new_entries.append({"doi": doi, "completed": False, "error": str(e),
-                                    "pulled_on": date, "pulled_by": user})
-
-        for entry in new_entries:
+        # Insert entries into Matstract database
+        print("Inserting entries into Matstract database...")
+        for entry in tqdm(new_entries):
             if elsevier.find({"doi": entry["doi"]}).count():
                 elsevier.update_one({"doi": entry["doi"]}, {"$set": entry})
             else:
                 elsevier.insert_one(entry)
 
+        # Mark block as completed in log
         date = datetime.datetime.now().isoformat()
-        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in_progress"},
+        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
                        {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
                                  "updated_by": user, "updated_on": date}})
