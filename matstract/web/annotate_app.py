@@ -7,6 +7,7 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 db = open_db_connection(local=True)
 
+
 def serve_layout():
     """Generates the layout dynamically on every refresh"""
     return [html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
@@ -34,8 +35,7 @@ def serve_abstract(empty=False):
     return [
         dmi.AnnotationContainer(
             doi=doi,
-            tokens=[ttl_tokens, abs_tokens],
-            # annotations=[ttl_annotations, abs_annotations],
+            tokens=ttl_tokens + abs_tokens,
             labels=labels,
             className="annotation-container",
             selectedValue=labels[0]['value'],
@@ -81,6 +81,7 @@ def serve_macro_annotation():
                          value=''
                      ), className="ten columns")],
                      className="row")]
+
 
 def serve_buttons():
     return [html.Button("Skip", id="annotate_skip", className="button"),

@@ -17,8 +17,8 @@ div.row {
     padding: 10px 0px
 }
 
-.tokens-1 {
-    padding-bottom: 10px;
+div#macro_annotation_container {
+    margin-top: 10px;
 }
 
 
