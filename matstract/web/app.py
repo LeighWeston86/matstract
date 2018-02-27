@@ -16,7 +16,7 @@ from matstract.utils import open_db_connection
 
 db = open_db_connection(local=True)
 
-app = dash.Dash("auth")
+app = dash.Dash()
 server = app.server
 
 auth = UserAuth.authenticate(app, db)

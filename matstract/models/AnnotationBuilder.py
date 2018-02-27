@@ -7,7 +7,7 @@ class AnnotationBuilder:
     _db = None
 
     def __init__(self):
-        self._db = open_db_connection(local=True)
+        self._db = open_db_connection(access="annotator", local=True)
 
     @staticmethod
     def get_tokens(paragraph):

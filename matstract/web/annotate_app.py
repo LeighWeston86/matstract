@@ -1,7 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_materialsintelligence as dmi
-import flask
 
 from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
