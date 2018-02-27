@@ -136,7 +136,6 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
         )
     return html.Table("No Results")
 
-
 # The Search app
 layout = html.Div([
     html.Div([
@@ -144,7 +143,7 @@ layout = html.Div([
             html.P('Welcome to the Matstract Database!')
         ], style={'margin-left': '10px'}),
 
-        html.Label('Search the database:'),
+        html.Label('Search the database (over {:,} abstracts!):'.format(db.abstracts.find({}).count())),
         dcc.Textarea(id='search-box',
                      cols=100,
                      autoFocus=True,
