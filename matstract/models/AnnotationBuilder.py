@@ -31,12 +31,13 @@ class AnnotationBuilder:
         return tokens
 
     @staticmethod
-    def prepare_annotation(doi, tokens, macro):
+    def prepare_annotation(doi, tokens, macro, username):
         annotation = {'doi': doi,
                       'tokens': tokens,
                       'tags': macro['tags'],
                       'type': macro['type'],
-                      'category': macro['category']}
+                      'category': macro['category'],
+                      'user': username}
         return annotation
 
     def insert_annotation(self, annotation):
