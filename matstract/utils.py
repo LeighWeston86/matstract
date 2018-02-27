@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from os import environ as env
 
 
-def open_db_connection(user_creds=None, local=False):
+def open_db_connection(user_creds=None, local=False, access="read_only"):
     if 'MATSTRACT_HOST' in env and local:
         uri = "mongodb://%s:%s/%s" % (
             env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], env['MATSTRACT_DB'])
@@ -19,10 +19,16 @@ def open_db_connection(user_creds=None, local=False):
             with open(db_creds_filename) as f:
                 db_creds = json.load(f)
         except:
-            db_creds = {"user": os.environ["ATLAS_USER"],
-                        "pass": os.environ["ATLAS_USER_PASSWORD"],
-                        "rest": os.environ["ATLAS_REST"],
-                        "db": "tri_abstracts"}
+            if access == "read_only":
+                db_creds = {"user": os.environ["ATLAS_USER"],
+                            "pass": os.environ["ATLAS_USER_PASSWORD"],
+                            "rest": os.environ["ATLAS_REST"],
+                            "db": "tri_abstracts"}
+            elif access == "annotator":
+                db_creds = {"user": os.environ["ANNOTATOR_USER"],
+                                     "pass": os.environ["ANNOTATOR_PASSWORD"],
+                                     "rest": os.environ["ATLAS_REST"],
+                                     "db": "tri_abstracts"}
 
         uri = "mongodb://{user}:{pass}@{rest}".format(**db_creds)
 
