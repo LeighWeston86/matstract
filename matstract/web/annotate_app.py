@@ -1,6 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_materialsintelligence as dmi
+import flask
 
 from matstract.utils import open_db_connection
 from matstract.models.AnnotationBuilder import AnnotationBuilder
@@ -8,9 +9,11 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 db = open_db_connection(local=True)
 
 
-def serve_layout():
+def serve_layout(username):
     """Generates the layout dynamically on every refresh"""
-    return [html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
+    return [html.Div([html.Span("Logged in as "), html.Span(username, style={"fontWeight": "bold"})],
+            id="user_info", className="row", style={"textAlign": "right"}),
+            html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row")]
 
 

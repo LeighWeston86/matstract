@@ -2,19 +2,25 @@ import dash
 from flask_caching import Cache
 import dash_core_components as dcc
 import dash_html_components as html
-from matstract.web import search_app, trends_app, extract_app, similar_app, annotate_app, keyword_app
+from matstract.web import search_app, trends_app, extract_app, similar_app, \
+    annotate_app, keyword_app
 from dash.dependencies import Input, Output, State
 from matstract.extract.parsing import extract_materials, materials_extract
-from matstract.models import keyword_extraction
 import os
 from flask import send_from_directory
+
 import dash_materialsintelligence as dmi
-import pprint
+from matstract.models.user_auth import UserAuth
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 from matstract.utils import open_db_connection
 
-app = dash.Dash()
+db = open_db_connection(local=True)
+
+app = dash.Dash("auth")
 server = app.server
+
+auth = UserAuth.authenticate(app, db)
+
 
 # To include local css and js files
 app.css.config.serve_locally = True
@@ -120,7 +126,7 @@ def display_page(path):
     elif path == "/similar":
         return similar_app.layout
     elif path == "/annotate":
-        return annotate_app.serve_layout()
+        return annotate_app.serve_layout(auth.username)
     elif path == "/keyword":
         return keyword_app.layout
     else:
@@ -269,7 +275,7 @@ def load_next_abstract(
         }
 
         builder = AnnotationBuilder()
-        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro)
+        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, auth.username)
         builder.insert_annotation(annotation)
         builder.update_tags(tag_values)
         # do something to record the annotation
@@ -301,3 +307,4 @@ def keywords_table(n_clicks, text):
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
+
