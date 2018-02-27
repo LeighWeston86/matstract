@@ -2,19 +2,25 @@ import dash
 from flask_caching import Cache
 import dash_core_components as dcc
 import dash_html_components as html
-from matstract.web import search_app, trends_app, extract_app, similar_app, annotate_app, keyword_app
+from matstract.web import search_app, trends_app, extract_app, similar_app, \
+    annotate_app, keyword_app
 from dash.dependencies import Input, Output, State
 from matstract.extract.parsing import extract_materials, materials_extract
-from matstract.models import keyword_extraction
 import os
 from flask import send_from_directory
+
 import dash_materialsintelligence as dmi
-import pprint
+from matstract.models.user_auth import UserAuth
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 from matstract.utils import open_db_connection
 
+db = open_db_connection(local=True)
+
 app = dash.Dash()
 server = app.server
+
+auth = UserAuth.authenticate(app, db)
+
 
 # To include local css and js files
 app.css.config.serve_locally = True
@@ -30,7 +36,7 @@ COLORSCALE = [[0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,1
               [0.5, "rgb(37,180,167)"], [0.65, "rgb(17,123,215)"], [1, "rgb(54,50,153)"]]
 
 # loading css files
-css_files = ["dash_styles.css", "dash_extra.css", "skeleton.min.css",
+css_files = ["dash_extra.css", "skeleton.min.css",
              "googleapis.raleway.css", "googleapis.dosis.css",
              "webstract.css", "annotation_styles.css"]
 
@@ -51,29 +57,31 @@ for css in css_files:
 
 header = html.Div([
     dcc.Location(id="url", refresh=False),
-    html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
+    html.Div([
+        html.Div(
+        html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
              style={
-                 'height': '100px',
+                 'width': '400px',
                  'float': 'right',
-                 'position': 'relative',
-                 'bottom': '20px',
-                 'left': '10px'
-             },
-             ),
-    html.H2('Matstract db',
+                 'max-width': "100%"
+             })),
+        html.H2(
+            'Matstract db',
             style={
-                'position': 'relative',
-                'top': '0px',
-                'left': '27px',
+                'margin-left': '27px',
+                'margin-top': '0px',
                 'font-family': 'Dosis',
                 'display': 'inline',
                 'font-size': '6.0rem',
-                'color': '#4D637F'
+                'color': '#4D637F',
+                "float": "left"
             }),
+        ]),
     dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
     html.Nav(
         style={
             'margin': '10px 27px',
+            'clear': "both"
         },
         children=[
             dcc.Link("Search", href="/search", ),
@@ -88,12 +96,11 @@ header = html.Div([
             html.Span(' • '),
             dcc.Link("Keyword Extraction", href="/keyword"),
             html.Span(' • '),
-            html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
-                     style={"color": "red"}, target="_blank")
+            html.Span(html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
+                     style={"color": "red"}, target="_blank"))
         ],
         id="nav_bar"),
-    html.Br()
-], className='row twelve columns', style={'position': 'relative', 'right': '15px'})
+], className='row', style={'position': 'relative', 'right': '15px'})
 
 
 app.layout = html.Div([
@@ -120,7 +127,7 @@ def display_page(path):
     elif path == "/similar":
         return similar_app.layout
     elif path == "/annotate":
-        return annotate_app.serve_layout()
+        return annotate_app.serve_layout(auth.username)
     elif path == "/keyword":
         return keyword_app.layout
     else:
@@ -228,14 +235,18 @@ def update_title(n_clicks, material, search):
 @app.callback(
     Output('trend', 'figure'),
     [Input('trends-button', 'n_clicks')],
-    [State('trends-material-box', 'value'), State('trends-search-box', 'value')])
-def update_graph(n_clicks, material, search):
+    [State('trends-material-box', 'value'),
+     State('trends-search-box', 'value'),
+     State('trend', 'figure')])
+def update_graph(n_clicks, material, search, current_figure):
     if n_clicks is not None:
         figure = trends_app.generate_trends_graph(search=search, material=material)
+        figure["mode"] = "histogram"
+        return figure
     else:
-        figure = trends_app.generate_trends_graph(search="", material="graphene")
-    figure["mode"] = "histogram"
-    return figure
+        return current_figure
+        # figure = trends_app.generate_trends_graph(search="", material="graphene")
+
 
 
 ### Annotation App Callbacks ###
@@ -269,7 +280,7 @@ def load_next_abstract(
         }
 
         builder = AnnotationBuilder()
-        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro)
+        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, auth.username)
         builder.insert_annotation(annotation)
         builder.update_tags(tag_values)
         # do something to record the annotation
@@ -283,10 +294,10 @@ def load_next_abstract(
     [Input('keyword-button', 'n_clicks')],
     [State('keyword-material', 'value')])
 def keywords_table(n_clicks, text):
-    if text != '':
+    if text is not None and text != '':
         return keyword_app.get_keywords(text)
     else:
-        return None
+        return ""
 
 
 #def highlight_extracted(n_clicks, text):
@@ -301,3 +312,4 @@ def keywords_table(n_clicks, text):
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
+

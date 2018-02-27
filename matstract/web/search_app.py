@@ -145,10 +145,10 @@ layout = html.Div([
 
         html.Label('Search the database (over {:,} abstracts!):'.format(db.abstracts.find({}).count())),
         dcc.Textarea(id='search-box',
-                     cols=100,
                      autoFocus=True,
                      spellCheck=True,
                      wrap=True,
+                     style={"width": "100%"},
                      placeholder='Search: e.g. "Li-ion battery"'),
     ]),
 
@@ -170,5 +170,5 @@ layout = html.Div([
     html.Div([
         html.Label(id='number_results'),
         html.Table(id='table-element')
-    ], className='row')
+    ], className='row', style={"overflow": "scroll"})
 ])

@@ -7,7 +7,7 @@ class AnnotationBuilder:
     _db = None
 
     def __init__(self):
-        self._db = open_db_connection(local=True)
+        self._db = open_db_connection(access="annotator", local=True)
 
     @staticmethod
     def get_tokens(paragraph):
@@ -31,12 +31,13 @@ class AnnotationBuilder:
         return tokens
 
     @staticmethod
-    def prepare_annotation(doi, tokens, macro):
+    def prepare_annotation(doi, tokens, macro, username):
         annotation = {'doi': doi,
                       'tokens': tokens,
                       'tags': macro['tags'],
                       'type': macro['type'],
-                      'category': macro['category']}
+                      'category': macro['category'],
+                      'user': username}
         return annotation
 
     def insert_annotation(self, annotation):
