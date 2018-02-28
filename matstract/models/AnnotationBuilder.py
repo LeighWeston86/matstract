@@ -3,6 +3,7 @@ from chemdataextractor import Document
 from matstract.utils import open_db_connection, authenticate
 import datetime
 
+authentication_db = open_db_connection(local=True)
 
 class AnnotationBuilder:
     _db = None
@@ -45,12 +46,13 @@ class AnnotationBuilder:
         return annotation
 
     def insert_annotation(self, annotation):
-        if authenticate(self._db, annotation["user"]):
+        if authenticate(authentication_db, annotation["user"]):
             annotation["authenticated"] = True
-            self._db.annotations_test.insert_one(annotation)
+            print("Authorized annotation")
+            # self._db.annotations_test.insert_one(annotation)
         else:
             print("Unauthorized annotation submitted!")
-            self._db.annotations_test.insert_one(annotation)
+            # self._db.annotations_test.insert_one(annotation)
 
     def update_tags(self, tags):
         current_tags = self._db.abstract_tags.find({})
