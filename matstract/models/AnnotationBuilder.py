@@ -1,7 +1,7 @@
 from chemdataextractor.doc import Paragraph
 from chemdataextractor import Document
 from matstract.utils import open_db_connection
-
+import pprint
 
 class AnnotationBuilder:
     _db = None
@@ -51,6 +51,12 @@ class AnnotationBuilder:
                     self._db.abstract_tags.insert_one(self.prepare_tag(tag))
                 except Exception as e:
                     print(e)
+
+    def get_username(self, user_key):
+        user = self._db.user_keys.find_one({"user_key": user_key})
+        if user is not None:
+            return user["name"]
+        return None
 
     @staticmethod
     def prepare_tag(tag):

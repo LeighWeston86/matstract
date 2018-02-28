@@ -101,12 +101,9 @@ app.layout = html.Div([
     html.Div(stylesheets_links),
     header,
     html.Div(search_app.layout, id='page-content'),
-    html.Div(dcc.Input(id='user_key',
-                       style={"width": "100%"},
-                       type='text',
-                       value=''),
-             style={'display': 'none'})
-],
+    html.Div("", id='user_key', style={'display': 'none'}),
+    html.Div("", id='username', style={'display': 'none'})
+    ],
     className='container main-container')
 
 
@@ -118,8 +115,8 @@ app.layout = html.Div([
 @app.callback(
     Output('page-content', 'children'),
     [Input('url', 'pathname')],
-    [State('user_key', 'value')])
-def display_page(path, username):
+    [State('user_key', 'children')])
+def display_page(path, user_key):
     if path == "/search":
         return search_app.layout
     elif path == "/trends":
@@ -129,7 +126,7 @@ def display_page(path, username):
     elif path == "/similar":
         return similar_app.layout
     elif path == "/annotate":
-        return annotate_app.serve_layout(username)
+        return annotate_app.serve_layout(user_key)
     elif path == "/keyword":
         return keyword_app.layout
     else:
@@ -261,7 +258,7 @@ def update_graph(n_clicks, material, search, current_figure):
      State('abstract_tags', 'value'),
      State('abstract_type', 'value'),
      State('abstract_category', 'value'),
-     State('user_key', 'value')])
+     State('user_key_input', 'value')])
 def load_next_abstract(
         skip_clicks,
         confirm_clicks,
@@ -270,32 +267,40 @@ def load_next_abstract(
         abstract_tags,
         abstract_type,
         abstract_category,
-        username):
+        user_key):
     if confirm_clicks is not None:
-        if abstract_tags is not None:
-            tag_values = [tag["value"].lower() for tag in abstract_tags]
-        else:
-            tag_values = None
-        macro = {
-            "tags": tag_values,
-            "type": abstract_type,
-            "category": abstract_category,
-        }
-
         builder = AnnotationBuilder()
-        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
-        builder.insert_annotation(annotation)
-        builder.update_tags(tag_values)
+        username = builder.get_username(user_key)
+        if username is not None:
+            if abstract_tags is not None:
+                tag_values = [tag["value"].lower() for tag in abstract_tags]
+            else:
+                tag_values = None
+            macro = {
+                "tags": tag_values,
+                "type": abstract_type,
+                "category": abstract_category,
+            }
+
+            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
+            builder.insert_annotation(annotation)
+            builder.update_tags(tag_values)
     return annotate_app.serve_abstract()
 
 
 @app.callback(
-    Output('user_key', 'value'),
-    [Input('annotate_confirm', 'n_clicks')],
-    [State('user_key-input', 'value')])
-def set_user_key(clicks, key):
-    return key
+    Output('user_key', 'children'),
+    [Input('user_key_input', 'value')])
+def set_user_key(user_key):
+    return user_key
 
+@app.callback(
+    Output('auth_info', 'children'),
+    [Input('user_key_input', 'value')])
+def set_user_info(user_key):
+    builder = AnnotationBuilder()
+    username = builder.get_username(user_key)
+    return annotate_app.serve_auth_info(username)
 
 ### Keywords App Callbacks ###
 

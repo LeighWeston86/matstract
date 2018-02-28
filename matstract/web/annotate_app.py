@@ -8,19 +8,16 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 db = open_db_connection(local=True)
 
 
-def serve_layout(username):
+def serve_layout(user_key):
     """Generates the layout dynamically on every refresh"""
-    return [html.Div([html.Span("Logged in as "), html.Span(username, style={"fontWeight": "bold"})],
-            id="user_info", className="row", style={"textAlign": "right"}),
+
+    return [html.Div(
+                serve_user_info(user_key, ""),
+                id="user_info_div",
+                className="row",
+                style={"textAlign": "right"}),
             html.Div(serve_abstract(empty=False), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row"),
-            html.Div([html.A("User key:  "),
-                      dcc.Input(id='user_key-input',
-                                type='text',
-                                placeholder='Enter user key here.',
-                                value=username,
-                                )
-                      ])
             ]
 
 
@@ -107,3 +104,25 @@ def serve_buttons():
     """Confirm and skip buttons"""
     return [html.Button("Skip", id="annotate_skip", className="button"),
             html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]
+
+
+def serve_auth_info(username):
+    if username is not None and len(username) > 0:
+        username_info = [html.Span("Annotating as "), html.Span(username, style={"font-weight": "bold"})]
+    else:
+        username_info = "Not Authorised to annotate"
+    return username_info
+
+
+def serve_user_info(user_key, username):
+    return [
+        html.Div([
+            html.Span("User key: "),
+            dcc.Input(id='user_key_input',
+                      type='text',
+                      placeholder='Enter user key here.',
+                      value=user_key,
+                      style={"margin-bottom": "0", "height": "auto", "padding": "5px"}
+                      )
+        ]),
+        html.Div(serve_auth_info(""), id="auth_info", style={"padding": "5px 10px 0px 0px"})]
