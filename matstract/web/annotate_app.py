@@ -10,7 +10,7 @@ db = open_db_connection(local=True)
 
 def serve_layout(username):
     """Generates the layout dynamically on every refresh"""
-    if len(username) == 0:
+    if db.user_keys.find({"user_key":username}).count() == 0:
         contents = []
     else:
         name = db.user_keys.find({"user_key": username})[0]["name"]
