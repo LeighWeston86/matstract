@@ -1,7 +1,7 @@
 from chemdataextractor.doc import Paragraph
 from chemdataextractor import Document
 from matstract.utils import open_db_connection
-import pprint
+
 
 class AnnotationBuilder:
     _db = None
