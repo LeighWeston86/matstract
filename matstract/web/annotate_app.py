@@ -8,23 +8,16 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 db = open_db_connection(local=True)
 
 
-def serve_layout(username):
+def serve_layout(user_key):
     """Generates the layout dynamically on every refresh"""
-    if db.user_keys.find({"user_key":username}).count() == 0:
-        contents = []
-    else:
-        name = db.user_keys.find({"user_key": username})[0]["name"]
-        contents = [html.Span("Logged in as "), html.Span(name, style={"fontWeight": "bold"})]
 
-    return [html.Div(contents,
-                     id="user_info", className="row", style={"textAlign": "right"}),
-            html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
+    return [html.Div(
+                serve_user_info(user_key, ""),
+                id="user_info_div",
+                className="row",
+                style={"textAlign": "right"}),
+            html.Div(serve_abstract(empty=False), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row"),
-            html.Div([html.A("User key:  "),
-                      dcc.Input(id='user_key-input',
-                                type='text',
-                                placeholder='Enter user key here.',
-                                value=username)])
             ]
 
 
@@ -36,17 +29,28 @@ def serve_abstract(empty=False):
         # get a random paragraph
         random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
         doi = random_abstract['doi']
-
         # tokenize and get initial annotation
         ttl_tokens = AnnotationBuilder.get_tokens(random_abstract["title"])
         abs_tokens = AnnotationBuilder.get_tokens(random_abstract["abstract"])
 
-    labels = [{'text': 'Material', 'value': 'material'},
-              {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
-              {'text': 'Main Material', 'value': 'main_material'},
-              {'text': 'Keyword', 'value': 'keyword'}]
+    # labels for token-by-token annotation
+    labels = [
+        {'text': 'Material', 'value': 'material'},
+        {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
+        {'text': 'Main Material', 'value': 'main_material'},
+        {'text': 'Property', 'value': 'property'},
+        {'text': 'Property value', 'value': 'property_value'},
+        {'text': 'Property unit', 'value': 'property_unit'},
+    ]
 
     return [
+        html.Div([
+            html.Span("doi: "), html.A(
+                doi,
+                href="https://doi.org/" + doi,
+                target="_blank",
+                id="doi_container")],
+            className="row", style={"paddingBottom": "10px"}),
         dmi.AnnotationContainer(
             doi=doi,
             tokens=ttl_tokens + abs_tokens,
@@ -56,47 +60,68 @@ def serve_abstract(empty=False):
             id="annotation_container"
         ),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
-        html.Div(doi, id="doi_container", style={"display": "none"})
     ]
 
 
 def serve_macro_annotation():
-    application_tags = db.abstract_tags.find({})
+    """Things like experimental vs theoretical, inorganic vs organic, etc."""
     tags = []
-    for tag in application_tags:
+    for tag in db.abstract_tags.find({}):
         tags.append({'label': tag["tag"], 'value': tag['tag']})
 
     return [html.Div([html.Div("Type: ", className='two columns'),
-                      html.Div(dcc.Dropdown(
-                          options=[
-                              {'label': 'Experimental', 'value': 'experimental'},
-                              {'label': 'Theoretical', 'value': 'theoretical'},
-                              {'label': 'Both', 'value': 'both'},
+            html.Div(dcc.Dropdown(
+                options=[
+                    {'label': 'Experimental', 'value': 'experimental'},
+                    {'label': 'Theoretical', 'value': 'theoretical'},
+                    {'label': 'Both', 'value': 'both'},
 
-                          ],
-                          clearable=True,
-                          id='abstract_type'
-                      ), className='five columns',
-                      ), html.Div(dcc.Dropdown(
-            options=[
-                {'label': 'Inorganic Crystals', 'value': 'inorganic'},
-                {'label': 'Other Materials', 'value': 'other_materials'},
-                {'label': 'Not Materials', 'value': 'not_materials'},
-            ],
-            clearable=True,
-            id='abstract_category'
-        ), className='five columns',
-        )], className='row', id="first_macro_row"),
+                ],
+                clearable=True,
+                id='abstract_type'
+            ), className='five columns',
+            ), html.Div(dcc.Dropdown(
+                options=[
+                    {'label': 'Inorganic Crystals', 'value': 'inorganic'},
+                    {'label': 'Other Materials', 'value': 'other_materials'},
+                    {'label': 'Not Materials', 'value': 'not_materials'},
+                ],
+                clearable=True,
+                id='abstract_category'
+            ), className='five columns',
+            )], className='row', id="first_macro_row"),
             html.Div([html.Div("Tags: ", className="two columns"),
-                      html.Div(dmi.DropdownCreatable(
-                          options=tags,
-                          id='abstract_tags',
-                          multi=True,
-                          value=''
-                      ), className="ten columns")],
+                     html.Div(dmi.DropdownCreatable(
+                         options=tags,
+                         id='abstract_tags',
+                         multi=True,
+                         value=''
+                     ), className="ten columns")],
                      className="row")]
 
 
 def serve_buttons():
+    """Confirm and skip buttons"""
     return [html.Button("Skip", id="annotate_skip", className="button"),
             html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]
+
+
+def serve_auth_info(username):
+    if username is not None and len(username) > 0:
+        username_info = [html.Span("Annotating as "), html.Span(username, style={"font-weight": "bold"})]
+    else:
+        username_info = "Not Authorised to annotate"
+    return username_info
+
+
+def serve_user_info(user_key, username):
+    return [html.Div([
+                html.Span("User key: "),
+                dcc.Input(id='user_key_input',
+                          type='text',
+                          placeholder='Enter user key here.',
+                          value=user_key,
+                          style={"margin-bottom": "0", "height": "auto", "padding": "5px"}
+                          )
+            ]),
+            html.Div(serve_auth_info(""), id="auth_info", style={"padding": "5px 10px 0px 0px"})]

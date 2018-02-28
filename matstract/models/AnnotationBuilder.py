@@ -61,6 +61,12 @@ class AnnotationBuilder:
                 except Exception as e:
                     print(e)
 
+    def get_username(self, user_key):
+        user = self._db.user_keys.find_one({"user_key": user_key})
+        if user is not None:
+            return user["name"]
+        return None
+
     @staticmethod
     def prepare_tag(tag):
         return {"tag": tag}

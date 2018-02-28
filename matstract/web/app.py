@@ -55,23 +55,21 @@ header = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Div([
         html.Div(
-            html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
-                     style={
-                         'width': '400px',
-                         'float': 'right',
-                         'max-width': "100%"
-                     })),
+        html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
+             style={
+                 'width': '400px',
+                 'float': 'right',
+                 'max-width': "100%"
+             })),
         html.H2(
             'Matstract db',
             style={
-                'margin-left': '27px',
-                'margin-top': '0px',
+                'padding-left': '27px',
                 'font-family': 'Dosis',
-                'display': 'inline',
                 'font-size': '6.0rem',
                 'color': '#4D637F',
                 "float": "left",
-                "wrap":"false"
+                "whiteSpace": "nowrap"
             }),
     ]),
     dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
@@ -103,12 +101,11 @@ app.layout = html.Div([
     html.Div(stylesheets_links),
     header,
     html.Div(search_app.layout, id='page-content'),
-    html.Div(dcc.Input(id='user_key',
-                       style={"width": "100%"},
-                       type='text',
-                       value=''),
-             style={'display': 'none'})],
+    html.Div("", id='user_key', style={'display': 'none'}),
+    html.Div("", id='username', style={'display': 'none'})
+    ],
     className='container main-container')
+
 
 #### Callbacks ####
 
@@ -118,8 +115,8 @@ app.layout = html.Div([
 @app.callback(
     Output('page-content', 'children'),
     [Input('url', 'pathname')],
-    [State('user_key', 'value')])
-def display_page(path, username):
+    [State('user_key', 'children')])
+def display_page(path, user_key):
     if path == "/search":
         return search_app.layout
     elif path == "/trends":
@@ -129,7 +126,7 @@ def display_page(path, username):
     elif path == "/similar":
         return similar_app.layout
     elif path == "/annotate":
-        return annotate_app.serve_layout(username)
+        return annotate_app.serve_layout(user_key)
     elif path == "/keyword":
         return keyword_app.layout
     else:
@@ -219,7 +216,6 @@ def highlight_random(n_clicks):
     [Input('trends-button', 'n_clicks')],
     [State('trends-material-box', 'value'), State('trends-search-box', 'value')])
 def update_title(n_clicks, material, search):
-    print("callback_for_title")
     if n_clicks is not None:
         if material is None:
             material = ''
@@ -249,29 +245,9 @@ def update_graph(n_clicks, material, search, current_figure):
         return figure
     else:
         return current_figure
-        # figure = trends_app.generate_trends_graph(search="", material="graphene")
 
 
 ### Annotation App Callbacks ###
-
-@app.callback(
-    Output('user_key', 'value'),
-    [Input('annotate_confirm', 'n_clicks'),
-     Input('annotate_skip', 'n_clicks')],
-    [State('user_key-input', 'value')])
-def set_user_key(clicks, moreclicks, key):
-    return key
-
-@app.callback(
-    Output('user_info', 'children'),
-    [Input('user_key-input', 'value')])
-def update_user(username):
-    if db.user_keys.find({"user_key": username}).count() == 0:
-        contents = []
-    else:
-        name = db.user_keys.find({"user_key": username})[0]["name"]
-        contents = [html.Span("Logged in as "), html.Span(name, style={"fontWeight": "bold"})]
-    return contents
 
 @app.callback(
     Output('annotation_parent_div', 'children'),
@@ -282,7 +258,7 @@ def update_user(username):
      State('abstract_tags', 'value'),
      State('abstract_type', 'value'),
      State('abstract_category', 'value'),
-     State('user_key', 'value')])
+     State('user_key_input', 'value')])
 def load_next_abstract(
         skip_clicks,
         confirm_clicks,
@@ -291,25 +267,40 @@ def load_next_abstract(
         abstract_tags,
         abstract_type,
         abstract_category,
-        username):
+        user_key):
     if confirm_clicks is not None:
-        if abstract_tags is not None:
-            tag_values = [tag["value"].lower() for tag in abstract_tags]
-        else:
-            tag_values = None
-        macro = {
-            "tags": tag_values,
-            "type": abstract_type,
-            "category": abstract_category,
-        }
-
         builder = AnnotationBuilder()
-        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
-        builder.insert_annotation(annotation)
-        builder.update_tags(tag_values)
-        # do something to record the annotation
+        username = builder.get_username(user_key)
+        if username is not None:
+            if abstract_tags is not None:
+                tag_values = [tag["value"].lower() for tag in abstract_tags]
+            else:
+                tag_values = None
+            macro = {
+                "tags": tag_values,
+                "type": abstract_type,
+                "category": abstract_category,
+            }
+
+            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
+            builder.insert_annotation(annotation)
+            builder.update_tags(tag_values)
     return annotate_app.serve_abstract()
 
+
+@app.callback(
+    Output('user_key', 'children'),
+    [Input('user_key_input', 'value')])
+def set_user_key(user_key):
+    return user_key
+
+@app.callback(
+    Output('auth_info', 'children'),
+    [Input('user_key_input', 'value')])
+def set_user_info(user_key):
+    builder = AnnotationBuilder()
+    username = builder.get_username(user_key)
+    return annotate_app.serve_auth_info(username)
 
 ### Keywords App Callbacks ###
 

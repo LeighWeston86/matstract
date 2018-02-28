@@ -38,30 +38,29 @@ div#macro_annotation_container {
 }
 
 .highlighted.material {
-    background-color: #fffacd;
+    background-color: #FFDC00;
 }
 
 .highlighted.inorganic_crystal {
-    background-color: #ffefd5;
+    background-color: #FF851B;
 }
 
 .highlighted.main_material {
-    background-color: #ffdab9;
+    background-color: #FF4136;
 }
 
-.highlighted.keyword {
-    background-color: #00FA9A
+.highlighted.property {
+    background-color: #2ECC40;
 }
 
-/*
-.highlighted.prop_val {
-    background-color: #98FB98;
+.highlighted.property_value {
+    background-color: #39CCCC;
 }
 
-.highlighted.prop_unit {
-    background-color: #90EE90
+.highlighted.property_unit {
+    background-color: #7FDBFF;
 }
-*/
+
 
 /* Labels */
 
