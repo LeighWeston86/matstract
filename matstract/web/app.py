@@ -287,7 +287,7 @@ def load_next_abstract(
 
         builder = AnnotationBuilder()
         annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
-        # builder.insert_annotation(annotation)
+        builder.insert_annotation(annotation)
         builder.update_tags(tag_values)
         # do something to record the annotation
     return annotate_app.serve_abstract()
