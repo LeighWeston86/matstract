@@ -26,12 +26,24 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
                             "db": "tri_abstracts"}
             elif access == "annotator":
                 db_creds = {"user": os.environ["ANNOTATOR_USER"],
-                                     "pass": os.environ["ANNOTATOR_PASSWORD"],
-                                     "rest": os.environ["ATLAS_REST"],
-                                     "db": "tri_abstracts"}
+                            "pass": os.environ["ANNOTATOR_PASSWORD"],
+                            "rest": os.environ["ATLAS_REST"],
+                            "db": "tri_abstracts"}
 
         uri = "mongodb://{user}:{pass}@{rest}".format(**db_creds)
 
     mongo_client = MongoClient(uri, connect=False)
     db = mongo_client[db_creds["db"]]
     return db
+
+
+def authenticate(db, user_key=None):
+    if user_key is None or db.user_keys.find({"user_key": user_key}).count() == 0:
+        print("User key not found!")
+        return False
+    elif db.user_keys.find({"user_key": user_key}).count() > 1:
+        print("Multiple copies of same user key in db!")
+        return True
+    elif db.user_keys.find({"user_key": user_key}).count() == 1:
+        return True
+    return None

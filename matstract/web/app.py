@@ -70,7 +70,8 @@ header = html.Div([
                 'display': 'inline',
                 'font-size': '6.0rem',
                 'color': '#4D637F',
-                "float": "left"
+                "float": "left",
+                "wrap":"false"
             }),
     ]),
     dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
@@ -106,10 +107,8 @@ app.layout = html.Div([
                        style={"width": "100%"},
                        type='text',
                        value=''),
-             style={'display': 'none'})
-],
+             style={'display': 'none'})],
     className='container main-container')
-
 
 #### Callbacks ####
 
@@ -256,6 +255,25 @@ def update_graph(n_clicks, material, search, current_figure):
 ### Annotation App Callbacks ###
 
 @app.callback(
+    Output('user_key', 'value'),
+    [Input('annotate_confirm', 'n_clicks'),
+     Input('annotate_skip', 'n_clicks')],
+    [State('user_key-input', 'value')])
+def set_user_key(clicks, moreclicks, key):
+    return key
+
+@app.callback(
+    Output('user_info', 'children'),
+    [Input('user_key-input', 'value')])
+def update_user(username):
+    if db.user_keys.find({"user_key": username}).count() == 0:
+        contents = []
+    else:
+        name = db.user_keys.find({"user_key": username})[0]["name"]
+        contents = [html.Span("Logged in as "), html.Span(name, style={"fontWeight": "bold"})]
+    return contents
+
+@app.callback(
     Output('annotation_parent_div', 'children'),
     [Input('annotate_skip', 'n_clicks'),
      Input('annotate_confirm', 'n_clicks')],
@@ -291,14 +309,6 @@ def load_next_abstract(
         builder.update_tags(tag_values)
         # do something to record the annotation
     return annotate_app.serve_abstract()
-
-
-@app.callback(
-    Output('user_key', 'value'),
-    [Input('annotate_confirm', 'n_clicks')],
-    [State('user_key-input', 'value')])
-def set_user_key(clicks, key):
-    return key
 
 
 ### Keywords App Callbacks ###
