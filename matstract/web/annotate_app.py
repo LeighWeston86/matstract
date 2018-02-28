@@ -7,19 +7,24 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 db = open_db_connection(local=True)
 
+
 def serve_layout(username):
     """Generates the layout dynamically on every refresh"""
-    return [html.Div([html.Span("Logged in as "), html.Span(username, style={"fontWeight": "bold"})],
-            id="user_info", className="row", style={"textAlign": "right"}),
-            html.Div(serve_abstract(empty=False), id="annotation_parent_div", className="row"),
+    if len(username) == 0:
+        contents = []
+    else:
+        name = db.user_keys.find({"user_key": username})[0]["name"]
+        contents = [html.Span("Logged in as "), html.Span(name, style={"fontWeight": "bold"})]
+
+    return [html.Div(contents,
+                     id="user_info", className="row", style={"textAlign": "right"}),
+            html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row"),
             html.Div([html.A("User key:  "),
                       dcc.Input(id='user_key-input',
                                 type='text',
                                 placeholder='Enter user key here.',
-                                value=username,
-                                )
-                      ])
+                                value=username)])
             ]
 
 
@@ -62,33 +67,33 @@ def serve_macro_annotation():
         tags.append({'label': tag["tag"], 'value': tag['tag']})
 
     return [html.Div([html.Div("Type: ", className='two columns'),
-            html.Div(dcc.Dropdown(
-                options=[
-                    {'label': 'Experimental', 'value': 'experimental'},
-                    {'label': 'Theoretical', 'value': 'theoretical'},
-                    {'label': 'Both', 'value': 'both'},
+                      html.Div(dcc.Dropdown(
+                          options=[
+                              {'label': 'Experimental', 'value': 'experimental'},
+                              {'label': 'Theoretical', 'value': 'theoretical'},
+                              {'label': 'Both', 'value': 'both'},
 
-                ],
-                clearable=True,
-                id='abstract_type'
-            ), className='five columns',
-            ), html.Div(dcc.Dropdown(
-                options=[
-                    {'label': 'Inorganic Crystals', 'value': 'inorganic'},
-                    {'label': 'Other Materials', 'value': 'other_materials'},
-                    {'label': 'Not Materials', 'value': 'not_materials'},
-                ],
-                clearable=True,
-                id='abstract_category'
-            ), className='five columns',
-            )], className='row', id="first_macro_row"),
+                          ],
+                          clearable=True,
+                          id='abstract_type'
+                      ), className='five columns',
+                      ), html.Div(dcc.Dropdown(
+            options=[
+                {'label': 'Inorganic Crystals', 'value': 'inorganic'},
+                {'label': 'Other Materials', 'value': 'other_materials'},
+                {'label': 'Not Materials', 'value': 'not_materials'},
+            ],
+            clearable=True,
+            id='abstract_category'
+        ), className='five columns',
+        )], className='row', id="first_macro_row"),
             html.Div([html.Div("Tags: ", className="two columns"),
-                     html.Div(dmi.DropdownCreatable(
-                         options=tags,
-                         id='abstract_tags',
-                         multi=True,
-                         value=''
-                     ), className="ten columns")],
+                      html.Div(dmi.DropdownCreatable(
+                          options=tags,
+                          id='abstract_tags',
+                          multi=True,
+                          value=''
+                      ), className="ten columns")],
                      className="row")]
 
 
