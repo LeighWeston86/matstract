@@ -24,17 +24,28 @@ def serve_abstract(empty=False):
         # get a random paragraph
         random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
         doi = random_abstract['doi']
-
         # tokenize and get initial annotation
         ttl_tokens = AnnotationBuilder.get_tokens(random_abstract["title"])
         abs_tokens = AnnotationBuilder.get_tokens(random_abstract["abstract"])
 
-    labels = [{'text': 'Material', 'value': 'material'},
-              {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
-              {'text': 'Main Material', 'value': 'main_material'},
-              {'text': 'Keyword', 'value': 'keyword'}]
+    # labels for token-by-token annotation
+    labels = [
+        {'text': 'Material', 'value': 'material'},
+        {'text': 'Inorganic Crystal', 'value': 'inorganic_crystal'},
+        {'text': 'Main Material', 'value': 'main_material'},
+        {'text': 'Property', 'value': 'property'},
+        {'text': 'Property value', 'value': 'property_value'},
+        {'text': 'Property unit', 'value': 'property_unit'},
+    ]
 
     return [
+        html.Div([
+            html.Span("doi: "), html.A(
+                doi,
+                href="https://doi.org/" + doi,
+                target="_blank",
+                id="doi_container")],
+            className="row", style={"paddingBottom": "10px"}),
         dmi.AnnotationContainer(
             doi=doi,
             tokens=ttl_tokens + abs_tokens,
@@ -44,14 +55,13 @@ def serve_abstract(empty=False):
             id="annotation_container"
         ),
         html.Div(serve_macro_annotation(), id="macro_annotation_container"),
-        html.Div(doi, id="doi_container", style={"display": "none"})
     ]
 
 
 def serve_macro_annotation():
-    application_tags = db.abstract_tags.find({})
+    """Things like experimental vs theoretical, inorganic vs organic, etc."""
     tags = []
-    for tag in application_tags:
+    for tag in db.abstract_tags.find({}):
         tags.append({'label': tag["tag"], 'value': tag['tag']})
 
     return [html.Div([html.Div("Type: ", className='two columns'),
@@ -86,5 +96,6 @@ def serve_macro_annotation():
 
 
 def serve_buttons():
+    """Confirm and skip buttons"""
     return [html.Button("Skip", id="annotate_skip", className="button"),
             html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]

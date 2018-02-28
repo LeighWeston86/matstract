@@ -43,5 +43,5 @@ class UserAuth(Auth):
         users = db.users.find({})
         user_list = []
         for user in users:
-            user_list.append([user["username"], user["password"]])
+            user_list.append([user["_id"], user["password"]])
         return UserAuth(dash_app, user_list)

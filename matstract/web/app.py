@@ -1,6 +1,7 @@
 import dash
 from flask_caching import Cache
 import dash_core_components as dcc
+# from matstract.models.flask_login import server
 import dash_html_components as html
 from matstract.web import search_app, trends_app, extract_app, similar_app, \
     annotate_app, keyword_app
@@ -16,6 +17,7 @@ from matstract.utils import open_db_connection
 
 db = open_db_connection(local=True)
 
+# app = dash.Dash(server=server,csrf_protect=False,loginSupported=True)
 app = dash.Dash()
 server = app.server
 
@@ -68,13 +70,12 @@ header = html.Div([
         html.H2(
             'Matstract db',
             style={
-                'margin-left': '27px',
-                'margin-top': '0px',
+                'padding-left': '27px',
                 'font-family': 'Dosis',
-                'display': 'inline',
                 'font-size': '6.0rem',
                 'color': '#4D637F',
-                "float": "left"
+                "float": "left",
+                "whiteSpace": "nowrap"
             }),
         ]),
     dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
@@ -100,13 +101,13 @@ header = html.Div([
                      style={"color": "red"}, target="_blank"))
         ],
         id="nav_bar"),
-], className='row', style={'position': 'relative', 'right': '15px'})
+], className='row')
 
 
 app.layout = html.Div([
                 html.Div(stylesheets_links),
                 header,
-                html.Div(search_app.layout, id='page-content')],
+                html.Div(search_app.layout, id='page-content', className="row")],
              className='container main-container')
 
 #### Callbacks ####
@@ -215,7 +216,6 @@ def highlight_random(n_clicks):
     [Input('trends-button', 'n_clicks')],
     [State('trends-material-box', 'value'), State('trends-search-box', 'value')])
 def update_title(n_clicks, material, search):
-    print("callback_for_title")
     if n_clicks is not None:
         if material is None:
             material = ''
@@ -245,7 +245,6 @@ def update_graph(n_clicks, material, search, current_figure):
         return figure
     else:
         return current_figure
-        # figure = trends_app.generate_trends_graph(search="", material="graphene")
 
 
 
@@ -283,7 +282,6 @@ def load_next_abstract(
         annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, auth.username)
         builder.insert_annotation(annotation)
         builder.update_tags(tag_values)
-        # do something to record the annotation
     return annotate_app.serve_abstract()
 
 
