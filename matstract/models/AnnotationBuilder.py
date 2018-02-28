@@ -1,6 +1,7 @@
 from chemdataextractor.doc import Paragraph
 from chemdataextractor import Document
-from matstract.utils import open_db_connection
+from matstract.utils import open_db_connection, authenticate
+import datetime
 
 
 class AnnotationBuilder:
@@ -32,16 +33,24 @@ class AnnotationBuilder:
 
     @staticmethod
     def prepare_annotation(doi, tokens, macro, username):
+        date = datetime.datetime.now().isoformat()
         annotation = {'doi': doi,
                       'tokens': tokens,
                       'tags': macro['tags'],
                       'type': macro['type'],
                       'category': macro['category'],
-                      'user': username}
+                      'user': username,
+                      'date': date,
+                      'authenticated': False}
         return annotation
 
     def insert_annotation(self, annotation):
-        self._db.annotations.insert_one(annotation)
+        if authenticate(self._db, annotation["user"]):
+            annotation["authenticated"] = True
+            self._db.annotations.insert_one(annotation)
+        else:
+            print("Unauthorized annotation submitted!")
+            self._db.annotations.insert_one(annotation)
 
     def update_tags(self, tags):
         current_tags = self._db.abstract_tags.find({})
