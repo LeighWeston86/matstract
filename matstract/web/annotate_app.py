@@ -7,7 +7,6 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 db = open_db_connection(local=True)
 
-
 def serve_layout(username):
     """Generates the layout dynamically on every refresh"""
     return [html.Div([html.Span("Logged in as "), html.Span(username, style={"fontWeight": "bold"})],
