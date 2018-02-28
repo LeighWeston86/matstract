@@ -12,8 +12,16 @@ def serve_layout(username):
     """Generates the layout dynamically on every refresh"""
     return [html.Div([html.Span("Logged in as "), html.Span(username, style={"fontWeight": "bold"})],
             id="user_info", className="row", style={"textAlign": "right"}),
-            html.Div(serve_abstract(empty=True), id="annotation_parent_div", className="row"),
-            html.Div(serve_buttons(), id="buttons_container", className="row")]
+            html.Div(serve_abstract(empty=False), id="annotation_parent_div", className="row"),
+            html.Div(serve_buttons(), id="buttons_container", className="row"),
+            html.Div([html.A("User key:  "),
+                      dcc.Input(id='user_key-input',
+                                type='text',
+                                placeholder='Enter user key here.',
+                                value=username,
+                                )
+                      ])
+            ]
 
 
 def serve_abstract(empty=False):

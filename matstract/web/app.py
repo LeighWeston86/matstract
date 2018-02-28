@@ -10,7 +10,6 @@ import os
 from flask import send_from_directory
 
 import dash_materialsintelligence as dmi
-from matstract.models.user_auth import UserAuth
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 from matstract.utils import open_db_connection
 
@@ -18,9 +17,6 @@ db = open_db_connection(local=True)
 
 app = dash.Dash()
 server = app.server
-
-auth = UserAuth.authenticate(app, db)
-
 
 # To include local css and js files
 app.css.config.serve_locally = True
@@ -59,12 +55,12 @@ header = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Div([
         html.Div(
-        html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
-             style={
-                 'width': '400px',
-                 'float': 'right',
-                 'max-width': "100%"
-             })),
+            html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
+                     style={
+                         'width': '400px',
+                         'float': 'right',
+                         'max-width': "100%"
+                     })),
         html.H2(
             'Matstract db',
             style={
@@ -76,7 +72,7 @@ header = html.Div([
                 'color': '#4D637F',
                 "float": "left"
             }),
-        ]),
+    ]),
     dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
     html.Nav(
         style={
@@ -97,17 +93,23 @@ header = html.Div([
             dcc.Link("Keyword Extraction", href="/keyword"),
             html.Span(' • '),
             html.Span(html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
-                     style={"color": "red"}, target="_blank"))
+                             style={"color": "red"}, target="_blank"))
         ],
         id="nav_bar"),
 ], className='row', style={'position': 'relative', 'right': '15px'})
 
-
 app.layout = html.Div([
-                html.Div(stylesheets_links),
-                header,
-                html.Div(search_app.layout, id='page-content')],
-             className='container main-container')
+    html.Div(stylesheets_links),
+    header,
+    html.Div(search_app.layout, id='page-content'),
+    html.Div(dcc.Input(id='user_key',
+                       style={"width": "100%"},
+                       type='text',
+                       value=''),
+             style={'display': 'none'})
+],
+    className='container main-container')
+
 
 #### Callbacks ####
 
@@ -116,8 +118,9 @@ app.layout = html.Div([
 
 @app.callback(
     Output('page-content', 'children'),
-    [Input('url', 'pathname')])
-def display_page(path):
+    [Input('url', 'pathname')],
+    [State('user_key', 'value')])
+def display_page(path, username):
     if path == "/search":
         return search_app.layout
     elif path == "/trends":
@@ -127,7 +130,7 @@ def display_page(path):
     elif path == "/similar":
         return similar_app.layout
     elif path == "/annotate":
-        return annotate_app.serve_layout(auth.username)
+        return annotate_app.serve_layout(username)
     elif path == "/keyword":
         return keyword_app.layout
     else:
@@ -184,6 +187,7 @@ def update_extract(n_clicks, text):
         return ", ".join(materials)
     return ""
 
+
 @app.callback(
     Output('extract-highlighted', 'children'),
     [Input('extract-button', 'n_clicks')],
@@ -194,6 +198,7 @@ def highlight_extracted(n_clicks, text):
         highlighted = extract_app.highlighter(text, parsed, missed)
         return highlighted
     return ""
+
 
 @app.callback(
     Output('highlight-random', 'children'),
@@ -248,7 +253,6 @@ def update_graph(n_clicks, material, search, current_figure):
         # figure = trends_app.generate_trends_graph(search="", material="graphene")
 
 
-
 ### Annotation App Callbacks ###
 
 @app.callback(
@@ -259,7 +263,8 @@ def update_graph(n_clicks, material, search, current_figure):
      State('doi_container', 'children'),
      State('abstract_tags', 'value'),
      State('abstract_type', 'value'),
-     State('abstract_category', 'value')])
+     State('abstract_category', 'value'),
+     State('user_key', 'value')])
 def load_next_abstract(
         skip_clicks,
         confirm_clicks,
@@ -267,7 +272,8 @@ def load_next_abstract(
         doi,
         abstract_tags,
         abstract_type,
-        abstract_category):
+        abstract_category,
+        username):
     if confirm_clicks is not None:
         if abstract_tags is not None:
             tag_values = [tag["value"].lower() for tag in abstract_tags]
@@ -280,11 +286,19 @@ def load_next_abstract(
         }
 
         builder = AnnotationBuilder()
-        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, auth.username)
-        builder.insert_annotation(annotation)
+        annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
+        # builder.insert_annotation(annotation)
         builder.update_tags(tag_values)
         # do something to record the annotation
     return annotate_app.serve_abstract()
+
+
+@app.callback(
+    Output('user_key', 'value'),
+    [Input('annotate_confirm', 'n_clicks')],
+    [State('user_key-input', 'value')])
+def set_user_key(clicks, key):
+    return key
 
 
 ### Keywords App Callbacks ###
@@ -300,7 +314,7 @@ def keywords_table(n_clicks, text):
         return ""
 
 
-#def highlight_extracted(n_clicks, text):
+# def highlight_extracted(n_clicks, text):
 #    if n_clicks is not None:
 #        results = [html.Div(word) for word in keyword_extraction.extract_keywords(text)]
 #        return results
@@ -312,4 +326,3 @@ def keywords_table(n_clicks, text):
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
-
