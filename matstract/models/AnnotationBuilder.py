@@ -32,14 +32,14 @@ class AnnotationBuilder:
         return tokens
 
     @staticmethod
-    def prepare_annotation(doi, tokens, macro, username):
+    def prepare_annotation(doi, tokens, macro, user_key):
         date = datetime.datetime.now().isoformat()
         annotation = {'doi': doi,
                       'tokens': tokens,
                       'tags': macro['tags'],
                       'type': macro['type'],
                       'category': macro['category'],
-                      'user': username,
+                      'user': user_key,
                       'date': date,
                       'authenticated': False}
         return annotation

@@ -270,8 +270,7 @@ def load_next_abstract(
         user_key):
     if confirm_clicks is not None:
         builder = AnnotationBuilder()
-        username = builder.get_username(user_key)
-        if username is not None:
+        if builder.get_username(user_key) is not None:
             if abstract_tags is not None:
                 tag_values = [tag["value"].lower() for tag in abstract_tags]
             else:
@@ -282,7 +281,7 @@ def load_next_abstract(
                 "category": abstract_category,
             }
 
-            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, username)
+            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, user_key)
             builder.insert_annotation(annotation)
             builder.update_tags(tag_values)
     return annotate_app.serve_abstract()
