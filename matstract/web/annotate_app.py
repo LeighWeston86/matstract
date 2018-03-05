@@ -17,6 +17,7 @@ def serve_layout(user_key):
                 className="row",
                 style={"textAlign": "right"}),
             html.Div(serve_abstract(empty=False), id="annotation_parent_div", className="row"),
+            html.Div(serve_tasks(), id="tasks_container", className="row"),
             html.Div(serve_buttons(), id="buttons_container", className="row"),
             ]
 
@@ -103,8 +104,27 @@ def serve_macro_annotation():
 def serve_buttons():
     """Confirm and skip buttons"""
     return [html.Button("Skip", id="annotate_skip", className="button"),
-            html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary")]
+            html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary"),
+            html.Span("", id="annotation_message", style={"color": "red", "paddingLeft": "5px"})]
 
+
+def serve_tasks():
+    """Checkboxes to confirm the completed tasks"""
+    checkboxes_html = dcc.Checklist(
+                            options=[
+                                {'label': 'Materials', 'value': 'materials'},
+                                {'label': 'Properties', 'value': 'properties'},
+                                {'label': 'Macro', 'value': 'macro'}
+                            ],
+                            values=[],
+                            labelStyle={
+                                'display': 'inline-block',
+                                'padding': '0px 10px 0px 0px'
+                            },
+                            id='completed_tasks'
+    )
+    return [html.Div(["Completed Tasks: "], className="two columns", style={"whiteSpace": "nowrap"}),
+            html.Div(checkboxes_html, className="ten columns")]
 
 def serve_auth_info(username):
     if username is not None and len(username) > 0:
