@@ -258,7 +258,8 @@ def update_graph(n_clicks, material, search, current_figure):
      State('abstract_tags', 'value'),
      State('abstract_type', 'value'),
      State('abstract_category', 'value'),
-     State('user_key_input', 'value')])
+     State('user_key_input', 'value'),
+     State('completed_tasks', 'values')])
 def load_next_abstract(
         skip_clicks,
         confirm_clicks,
@@ -267,7 +268,8 @@ def load_next_abstract(
         abstract_tags,
         abstract_type,
         abstract_category,
-        user_key):
+        user_key,
+        tasks):
     if confirm_clicks is not None:
         builder = AnnotationBuilder()
         if builder.get_username(user_key) is not None:
@@ -281,11 +283,21 @@ def load_next_abstract(
                 "category": abstract_category,
             }
 
-            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, user_key)
+            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, tasks, user_key)
             builder.insert_annotation(annotation)
             builder.update_tags(tag_values)
     return annotate_app.serve_abstract()
 
+@app.callback(
+    Output('annotation_message', 'children'),
+    [Input('annotate_confirm', 'n_clicks')],
+    [State('user_key_input', 'value')])
+def feedback_message(n_clicks, user_key):
+    if n_clicks is not None:
+        builder = AnnotationBuilder()
+        if builder.get_username(user_key) is None:
+            return "Not authorised: Did not save the annotation!"
+    return ""
 
 @app.callback(
     Output('user_key', 'children'),
