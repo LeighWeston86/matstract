@@ -42,7 +42,7 @@ stylesheets_links = []
 for css in css_files:
     stylesheets_links.append(html.Link(
         rel='stylesheet',
-        href='/styles/' + css
+        href='/static/' + css
     ))
 
 # # Adding Google Analytics
