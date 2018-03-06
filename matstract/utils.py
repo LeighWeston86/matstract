@@ -52,7 +52,7 @@ def authenticate(db, user_key=None):
 
 def open_es_client(user_creds=None, access="read_only"):
     if 'ELASTIC_HOST' in env:
-        hosts = [env['ELASTIC_HOST']],
+        hosts = [env['ELASTIC_HOST']]
         http_auth = (env['ELASTIC_USER'], env['ELASTIC_PASS'])
         return Elasticsearch(hosts=hosts, http_auth=http_auth)
     else:
