@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from matstract.web import search_app, trends_app, extract_app, similar_app, \
     annotate_app, keyword_app
+from matstract.web.annotation_apps import macro_ann_app
 from dash.dependencies import Input, Output, State
 from matstract.extract.parsing import extract_materials, materials_extract
 import os
@@ -12,6 +13,7 @@ from flask import send_from_directory
 import dash_materialsintelligence as dmi
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 from matstract.utils import open_db_connection
+from matstract.web.callbacks.annotation_callbacks import annotation_callbacks
 
 db = open_db_connection(local=True)
 
@@ -117,6 +119,7 @@ app.layout = html.Div([
     [Input('url', 'pathname')],
     [State('user_key', 'children')])
 def display_page(path, user_key):
+    path = str(path)
     if path == "/search":
         return search_app.layout
     elif path == "/trends":
@@ -125,8 +128,8 @@ def display_page(path, user_key):
         return extract_app.layout
     elif path == "/similar":
         return similar_app.layout
-    elif path == "/annotate":
-        return annotate_app.serve_layout(user_key)
+    elif path.startswith("/annotate"):
+        return annotate_app.serve_layout(db, user_key, path)
     elif path == "/keyword":
         return keyword_app.layout
     else:
@@ -207,7 +210,6 @@ def highlight_random(n_clicks):
         return highlighted
     return ""
 
-
 ### Trends App Callbacks ###
 
 @cache.memoize(timeout=600)
@@ -246,73 +248,6 @@ def update_graph(n_clicks, material, search, current_figure):
     else:
         return current_figure
 
-
-### Annotation App Callbacks ###
-
-@app.callback(
-    Output('annotation_parent_div', 'children'),
-    [Input('annotate_skip', 'n_clicks'),
-     Input('annotate_confirm', 'n_clicks')],
-    [State('annotation_container', 'tokens'),
-     State('doi_container', 'children'),
-     State('abstract_tags', 'value'),
-     State('abstract_type', 'value'),
-     State('abstract_category', 'value'),
-     State('user_key_input', 'value'),
-     State('completed_tasks', 'values')])
-def load_next_abstract(
-        skip_clicks,
-        confirm_clicks,
-        tokens,
-        doi,
-        abstract_tags,
-        abstract_type,
-        abstract_category,
-        user_key,
-        tasks):
-    if confirm_clicks is not None:
-        builder = AnnotationBuilder()
-        if builder.get_username(user_key) is not None:
-            if abstract_tags is not None:
-                tag_values = [tag["value"].lower() for tag in abstract_tags]
-            else:
-                tag_values = None
-            macro = {
-                "tags": tag_values,
-                "type": abstract_type,
-                "category": abstract_category,
-            }
-
-            annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, tasks, user_key)
-            builder.insert_annotation(annotation)
-            builder.update_tags(tag_values)
-    return annotate_app.serve_abstract()
-
-@app.callback(
-    Output('annotation_message', 'children'),
-    [Input('annotate_confirm', 'n_clicks')],
-    [State('user_key_input', 'value')])
-def feedback_message(n_clicks, user_key):
-    if n_clicks is not None:
-        builder = AnnotationBuilder()
-        if builder.get_username(user_key) is None:
-            return "Not authorised: Did not save the annotation!"
-    return ""
-
-@app.callback(
-    Output('user_key', 'children'),
-    [Input('user_key_input', 'value')])
-def set_user_key(user_key):
-    return user_key
-
-@app.callback(
-    Output('auth_info', 'children'),
-    [Input('user_key_input', 'value')])
-def set_user_info(user_key):
-    builder = AnnotationBuilder()
-    username = builder.get_username(user_key)
-    return annotate_app.serve_auth_info(username)
-
 ### Keywords App Callbacks ###
 
 @app.callback(
@@ -338,3 +273,7 @@ def keywords_table(n_clicks, text):
 def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'matstract/web/styles')
     return send_from_directory(static_folder, path)
+
+
+### Annotation App Callbacks ###
+annotation_callbacks(app)

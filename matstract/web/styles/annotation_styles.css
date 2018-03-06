@@ -21,6 +21,17 @@ div#macro_annotation_container {
     margin-top: 10px;
 }
 
+div#annotation_container {
+    border-bottom: 1px solid black;
+    padding-bottom: 10px;
+}
+
+
+div#macro_ann_type {
+    display: inline-grid;
+    width: 150px;
+    margin: 0px 10px;
+}
 
 /* highlighting */
 
@@ -41,26 +52,39 @@ div#macro_annotation_container {
     background-color: #FFDC00;
 }
 
-.highlighted.inorganic_crystal {
+.highlighted.synthesis_method {
     background-color: #FF851B;
 }
 
-.highlighted.main_material {
-    background-color: #FF4136;
+.highlighted.property {
+    background-color: #7FDBFF;
 }
 
-.highlighted.property {
+.highlighted.characterization_method {
     background-color: #2ECC40;
 }
 
 .highlighted.property_value {
-    background-color: #39CCCC;
+    background-color: #2ECC40;
 }
 
 .highlighted.property_unit {
-    background-color: #7FDBFF;
+    background-color: #39CCCC;
 }
 
+.highlighted.application {
+    background-color: #FF4136;
+}
+
+button#macro_ann_not_rel {
+    background-color: #FF4136;
+    border-color: #FF4136;
+}
+
+button#macro_ann_not_rel:hover {
+    background-color: #EE2116;
+    border-color: #EE2116;
+}
 
 /* Labels */
 
