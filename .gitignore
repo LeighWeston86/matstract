@@ -2,6 +2,7 @@ env/
 database_management.ipynb
 db_atlas.json
 *.pyc
+_config.json
 
 notebooks/
 .idea/

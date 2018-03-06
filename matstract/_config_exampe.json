@@ -1,0 +1,14 @@
+{
+  "mongo": {
+    "db": "tri_abstracts",
+    "user": "USERNAME",
+    "pass": "PASSWORD",
+    "rest": "ATLAS CONNECTION STRING"
+  },
+  "elastic": {
+    "hosts": ["MATSTRACT ELASTIC CLOUD HOSTNAME"],
+    "user": "USERNAME",
+    "pass": "PASSWORD"
+  }
+}
+
