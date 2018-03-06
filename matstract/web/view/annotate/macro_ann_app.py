@@ -6,7 +6,12 @@ def serve_layout(db, _):
     """Generates the layout dynamically on every refresh"""
 
     return [html.Div(serve_plain_abstract(db=db, empty=True), id="macro_ann_parent_div", className="row"),
-            html.Div(serve_buttons(), className="row")]
+            html.Div(
+                "",
+                id="macro_ann_message",
+                style={"color": "red", "paddingLeft": "5px"},
+                className="row")
+            ]
 
 
 def serve_plain_abstract(db, empty=False):
@@ -32,6 +37,7 @@ def serve_plain_abstract(db, empty=False):
             random_abstract["abstract"],
             style={"borderBottom": "1px solid black", "padding-bottom": "10px"}
         ),
+        html.Div(serve_buttons())
     ]
 
 
@@ -57,14 +63,9 @@ def serve_buttons():
         "Skip",
         id="macro_ann_skip",
         className="button")
-    annotation_msg = html.Span(
-        "",
-        id="macro_ann_message",
-        style={"color": "red", "paddingLeft": "5px"})
     return html.Div([
         not_rel_button,
         html.Span("Type: ", style={"paddingLeft": "10px"}),
         the_dropdown,
         confirm_button,
-        skip_button,
-        annotation_msg])
+        skip_button], className="row")
