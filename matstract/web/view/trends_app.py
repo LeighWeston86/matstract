@@ -1,7 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import operator
-from matstract.web.search_app import search_for_material, search_for_topic
+from matstract.web.view.search_app import search_for_material, search_for_topic
 
 
 def generate_trends_graph(search='', material=''):
