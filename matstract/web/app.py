@@ -163,9 +163,10 @@ def update_num_results_label(n_clicks, search, material):
         n = len(results)
         if n == 0:
             return "No Results"
-        elif n == 10000:
-            n = "> 10,000"
-        return 'Showing {} of {} results'.format(min(100, n), n)
+        elif n == 1000:
+            return 'Showing {} of >{:,} results'.format(100, n)
+        else:
+            return 'Showing {} of {:,} results'.format(min(100, n), n)
     else:
         return ''
 

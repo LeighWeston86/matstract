@@ -1,6 +1,7 @@
 import os
 import json
 from pymongo import MongoClient
+from elasticsearch import Elasticsearch
 from os import environ as env
 
 
@@ -47,3 +48,24 @@ def authenticate(db, user_key=None):
     elif db.user_keys.find({"user_key": user_key}).count() == 1:
         return True
     return None
+
+
+def open_es_client(user_creds=None, local=False, access="read_only"):
+    if 'ELASTIC_HOST' in env and local:
+        hosts = [env['ELASTIC_HOST']],
+        http_auth = (env['ELASTIC_USER'], env['ELASTIC_PASS'])
+        return Elasticsearch(hosts=hosts, http_auth=http_auth)
+    else:
+        if user_creds is not None:
+            db_creds_filename = user_creds
+        else:
+            db_creds_filename = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), '_config.json')
+        with open(db_creds_filename) as f:
+            db_creds = json.load(f)
+
+        hosts = db_creds["elastic"]["hosts"]
+        http_auth = (db_creds["elastic"]["user"], db_creds["elastic"]["pass"])
+
+    es_client = Elasticsearch(hosts=hosts, http_auth=http_auth)
+    return es_client
