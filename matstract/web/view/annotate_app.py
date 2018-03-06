@@ -1,4 +1,4 @@
-from matstract.web.annotation_apps import macro_ann_app, token_ann_app
+from matstract.web.view.annotate import token_ann_app, macro_ann_app
 import dash_html_components as html
 import dash_core_components as dcc
 

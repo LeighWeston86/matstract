@@ -1,4 +1,4 @@
-from matstract.web.app import app
+from matstract.web.index import app
 
 server = app.server
 

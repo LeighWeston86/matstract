@@ -1,13 +1,13 @@
 from dash.dependencies import Input, Output, State
 from matstract.models.AnnotationBuilder import AnnotationBuilder
-from matstract.web import annotate_app
-from matstract.web.annotation_apps import macro_ann_app, token_ann_app
+from matstract.web.view import annotate_app
+from matstract.web.view.annotate import token_ann_app, macro_ann_app
 from matstract.utils import open_db_connection
 
 db = open_db_connection(local=True)
 
 
-def annotation_callbacks(app):
+def bind(app):
     def _auth_message(n_clicks, user_key):
         if n_clicks is not None:
             builder = AnnotationBuilder()
@@ -24,10 +24,14 @@ def annotation_callbacks(app):
 
     @app.callback(
         Output('macro_ann_message', 'children'),
-        [Input('macro_ann_confirm', 'n_clicks')],
+        [Input('macro_ann_confirm', 'n_clicks'),
+         Input('macro_ann_not_rel', 'n_clicks')],
         [State('user_key_input', 'value')])
-    def macro_ann_message(n_clicks, user_key):
-        return _auth_message(n_clicks, user_key)
+    def macro_ann_message(conf_click, not_rel_click, user_key):
+        if conf_click is not None:
+            return _auth_message(conf_click, user_key)
+        return _auth_message(not_rel_click, user_key)
+
 
     # sets the user key every time it is updated
     @app.callback(

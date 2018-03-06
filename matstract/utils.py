@@ -16,9 +16,9 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
                 db_creds_filename = user_creds
             else:
                 db_creds_filename = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), 'db_atlas.json')
+                    os.path.dirname(os.path.abspath(__file__)), '_config.json')
             with open(db_creds_filename) as f:
-                db_creds = json.load(f)
+                db_creds = json.load(f)["mongo"]
         except:
             if access == "read_only":
                 db_creds = {"user": os.environ["ATLAS_USER"],
