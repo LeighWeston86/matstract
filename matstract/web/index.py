@@ -2,13 +2,13 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_materialsintelligence as dmi
-from dash.dependencies import Input, Output, State
 
 from flask_caching import Cache
-from flask import send_from_directory
 
+from flask import send_from_directory
 from matstract.web.view import annotate_app, similar_app, \
     search_app, keyword_app, extract_app, trends_app
+from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
     extract_callbacks, keyword_callbacks, trends_callbacks
 from matstract.utils import open_db_connection
@@ -42,16 +42,13 @@ stylesheets_links = []
 for css in css_files:
     stylesheets_links.append(html.Link(
         rel='stylesheet',
-        href='/static/' + css
+        href='/static/css/' + css
     ))
 
 # # Adding Google Analytics
 # app.scripts.append_script({"external_url": "https://s3-us-west-1.amazonaws.com/webstract/webstract_analytics.js"})
 
 #### App Layout ####
-
-
-### Header and Intro text ##
 
 header = html.Div([
     dcc.Location(id="url", refresh=False),
@@ -102,14 +99,12 @@ header = html.Div([
 app.layout = html.Div([
     html.Div(stylesheets_links),
     header,
-    html.Div(search_app.layout, id='page-content'),
+    html.Div("", id='page-content'),
     html.Div("", id='user_key', style={'display': 'none'}),
     html.Div("", id='username', style={'display': 'none'})
     ],
     className='container main-container')
 
-
-### General Callbacks ###
 
 @app.callback(
     Output('page-content', 'children'),
@@ -133,9 +128,9 @@ def display_page(path, user_key):
         return search_app.layout
 
 
-@app.server.route('/static/<path:path>')
-def static_file(path):
-    static_folder = os.path.join(os.getcwd(), 'matstract/web/static')
+@app.server.route('/static/css/<path:path>')
+def get_stylesheet(path):
+    static_folder = os.path.join(os.getcwd(), 'matstract/web/static/css')
     return send_from_directory(static_folder, path)
 
 
@@ -145,4 +140,5 @@ trends_callbacks.bind(app, cache)
 extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
+
 

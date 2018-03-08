@@ -58,10 +58,11 @@ class AnnotationBuilder:
         return annotation
 
     @staticmethod
-    def prep_macro_ann(doi, relevance, abs_type, user_key):
+    def prep_macro_ann(doi, relevance, flag, abs_type, user_key):
         """Macro Annotation (1. in the document)"""
         return {'doi': doi,
                 'relevant': relevance,
+                'flag': flag,
                 'type': abs_type,
                 'user': user_key,
                 'date': datetime.datetime.now().isoformat(),

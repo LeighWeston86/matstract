@@ -1,6 +1,7 @@
 from matstract.web.view.annotate import token_ann_app, macro_ann_app
 import dash_html_components as html
 import dash_core_components as dcc
+from textwrap import dedent as s
 
 
 def serve_layout(db, user_key, path):
@@ -73,3 +74,7 @@ def get_ann_mode(path):
     elif path.startswith('/annotate/'):
         mode = path.split('/')[-1]
     return mode, attr
+
+
+def build_markdown(text):
+    return dcc.Markdown(s(text))

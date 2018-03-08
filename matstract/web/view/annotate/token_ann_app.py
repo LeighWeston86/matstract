@@ -82,5 +82,6 @@ def serve_macro_annotation(db, display):
 def serve_buttons():
     """Confirm and skip buttons"""
     return [html.Button("Skip", id="annotate_skip", className="button"),
-            html.Button("Confirm Annotation", id="annotate_confirm", className="button-primary"),
+            html.Button("Confirm", id="annotate_confirm", className="button-primary"),
+            html.Button("Flag", id="token_ann_flag", className="ann-flag"),
             html.Span("", id="annotation_message", style={"color": "red", "paddingLeft": "5px"})]

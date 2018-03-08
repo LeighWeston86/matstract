@@ -5,12 +5,14 @@ import dash_core_components as dcc
 def serve_layout(db, _):
     """Generates the layout dynamically on every refresh"""
 
+    # doc = get_doc("macro_ann_help.txt")
     return [html.Div(serve_plain_abstract(db=db, empty=True), id="macro_ann_parent_div", className="row"),
             html.Div(
                 "",
                 id="macro_ann_message",
                 style={"color": "red", "paddingLeft": "5px"},
-                className="row")
+                className="row"),
+            html.Div("", className="row", id="macro_ann_instructions")
             ]
 
 
@@ -59,6 +61,10 @@ def serve_buttons():
         "Confirm",
         id="macro_ann_confirm",
         className="button-primary")
+    flag_button = html.Button(
+        "Flag",
+        id="macro_ann_flag",
+        className="ann-flag")
     skip_button = html.Button(
         "Skip",
         id="macro_ann_skip",
@@ -68,4 +74,5 @@ def serve_buttons():
         html.Span("Type: ", style={"paddingLeft": "10px"}),
         the_dropdown,
         confirm_button,
+        flag_button,
         skip_button], className="row")
