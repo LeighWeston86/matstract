@@ -33,6 +33,21 @@ div#macro_ann_type {
     margin: 0px 10px;
 }
 
+div#macro_ann_instructions {
+    border-radius: 5px;
+    background: #fafafa;
+    padding: 10px 20px;
+}
+
+div#macro_ann_instructions h6 {
+    margin-bottom: 2px;
+}
+
+div#macro_ann_instructions li {
+    margin-bottom: 0;
+    margin-left: 10px;
+}
+
 /* highlighting */
 
 .token {
@@ -85,6 +100,17 @@ button#macro_ann_not_rel:hover {
     background-color: #EE2116;
     border-color: #EE2116;
 }
+
+button.ann-flag {
+    background-color: #FFDC00;
+    border-color: #FFDC00;
+}
+
+button.ann-flag:hover {
+    background-color: #EECB00;
+    border-color: #EECB00;
+}
+
 
 /* Labels */
 
