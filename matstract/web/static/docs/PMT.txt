@@ -4,8 +4,8 @@
 
 Any technique used to modify a sample post-synthesis.
 
-i. Materials were treated via `annealing` (NN)
+i. Materials were treated via (`annealing`, NN)
 
-ii. Materials were `annealed` at high temperature (VB)
+ii. Materials were (`annealed`, VB) at high temperature
 
-iii. The `annealed` samples were then cooled via a rapid quenching technique (JJ)
+iii. The (`annealed`, JJ) samples were then cooled via a rapid quenching technique
