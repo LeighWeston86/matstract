@@ -7,6 +7,7 @@ _config.json
 notebooks/
 .idea/
 matstract/bin/
+matstract/web/static/docs/.ipynb_checkpoints/
 
 # mac specific #
 .DS_store
