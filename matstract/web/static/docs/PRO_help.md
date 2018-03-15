@@ -1,0 +1,25 @@
+##### Property
+
+###### Part of speech: NN, NP, or JJ
+
+Definition (i): anything that can have a unit and a value, e.g., conductivity, band gap, or quantities based on many values e.g., band gap. Does not included conditions such as temperature, or sample specific properties such as thickness.
+
+i. "We measured the `electron mobility` of GaN to me 10 cm$^2$/Vs" (NP)
+
+ii. The `band gap` of ZnO is 3.4 eV (NP)
+
+iii. We calculated the `band structure` using tight binding (NP)
+
+&nbsp;
+
+Definition (ii): Any qualitative property or phenomenon exhibited by a material that does not have a unit, e.g., ferroelectricity, metallic.
+
+i. BaTiO3 exhibits `ferroelectricity` (note in this case it is NN)
+
+ii. We studied `metallic` Ge nanowires   (in this case JJ)
+
+&nbsp;
+
+Definition (iii): Any measureable spectra, e.g., band structure, absorption spectrum, phonon dispersion curve. 
+
+Properties that include another species, e.g., adsorption isotherm, band offset, or, properties that depend on a device, e.g., leakage current, are not materials properties, but will be included to improve the NLP models.

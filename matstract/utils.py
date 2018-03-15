@@ -3,7 +3,6 @@ import json
 from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 from os import environ as env
-from flask import send_from_directory
 
 
 def open_db_connection(user_creds=None, local=False, access="read_only"):

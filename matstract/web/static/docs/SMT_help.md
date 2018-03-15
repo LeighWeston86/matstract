@@ -1,0 +1,13 @@
+##### Synthesis Method
+
+###### Part of speech: NN, JJ, VB, NP
+
+Definition: Any technique for synthesising a material, e.g., pulsed laser deposition, solid state reaction. Does not include post-processing such as annealing.
+
+i. Films we deposited using `pulsed laser deposition` (NP)
+
+ii. We `sputtered` GaN films (VB)
+
+iii. GaN films were grown by `sputtering` (NN)
+
+iiii GaN films were deposited using the `sputtering` technique (JJ)

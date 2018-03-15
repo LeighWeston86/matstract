@@ -66,7 +66,8 @@ def bind(app):
          State('doi_container', 'children'),
          State('abstract_tags', 'value'),
          State('user_key_input', 'value'),
-         State('annotation_labels', 'children')])
+         State('annotation_labels', 'children'),
+         State('annotation_container', 'passiveLabels')])
     def load_next_abstract(
             _,
             confirm_clicks,
@@ -75,10 +76,14 @@ def bind(app):
             doi,
             abstract_tags,
             user_key,
-            annotation_labels):
+            annotation_labels,
+            previous_labels):
         labels = None
         if annotation_labels is not None:
             labels = annotation_labels.split('&')
+        new_labels = labels
+        if len(previous_labels) > 0:
+            new_labels = list(set(labels).union([label["value"] for label in previous_labels]))
         builder = AnnotationBuilder()
         if builder.get_username(user_key) is not None:
             if confirm_clicks is not None:
@@ -90,13 +95,13 @@ def bind(app):
                     "tags": tag_values,
                 }
 
-                annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, labels, user_key)
+                annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, new_labels, user_key)
                 builder.insert(annotation, builder.ANNOTATION_COLLECTION)
                 builder.update_tags(tag_values)
             elif flag_clicks is not None:
                 macro_ann = builder.prep_macro_ann(doi, None, True, None, user_key)
                 builder.insert(macro_ann, builder.MACRO_ANN_COLLECTION)
-        return token_ann_app.serve_abstract(db, show_labels=labels)
+        return token_ann_app.serve_abstract(db, user_key, show_labels=labels)
 
     ## Macro Annotation Callbacks
     @app.callback(
@@ -125,18 +130,29 @@ def bind(app):
             relevance = None
             flag = True
         else:  # either skip is clicked or first load
-            return macro_ann_app.serve_plain_abstract(db)
+            return macro_ann_app.serve_plain_abstract()
         builder = AnnotationBuilder()
         if builder.get_username(user_key) is not None:
             macro_ann = builder.prep_macro_ann(doi, relevance, flag, abs_type, user_key)
             builder.insert(macro_ann, builder.MACRO_ANN_COLLECTION)
-        return macro_ann_app.serve_plain_abstract(db)
+        return macro_ann_app.serve_plain_abstract()
 
     @app.callback(
         Output('macro_ann_instructions', 'children'),
         [Input('url', 'pathname')])
     def load_instructions(_):
-        full_path = os.path.join(os.getcwd(), 'matstract/web/static/docs/macro_ann_help.txt')
+        full_path = os.path.join(os.getcwd(), 'matstract/web/static/docs/MACRO_help.md')
         with open(full_path, 'r') as instructions:
             text = instructions.read()
         return annotate_app.build_markdown(text)
+
+    @app.callback(
+        Output('annotation_instructions', 'children'),
+        [Input('annotation_container', 'selectedValue')]
+    )
+    def load_instructions(selected_value):
+        full_path = os.path.join(os.getcwd(), 'matstract/web/static/docs/', selected_value + '_help.md')
+        with open(full_path, 'r') as instructions:
+            text = instructions.read()
+        return annotate_app.build_markdown(text)
+
