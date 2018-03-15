@@ -1,4 +1,4 @@
-from matstract.web.search_app import get_search_results
+from matstract.web.view.search_app import get_search_results
 from sklearn.feature_extraction.text import CountVectorizer
 from operator import itemgetter
 import numpy as np

@@ -1,10 +1,14 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
-from matstract.utils import open_db_connection
+from matstract.utils import open_db_connection, open_es_client
 from matstract.extract import parsing
+from elasticsearch_dsl import Search
+from elasticsearch_dsl.query import Match, MultiMatch
+from bson import ObjectId
 
 db = open_db_connection()
+client = open_es_client()
 
 
 def highlight_material(body, material):
@@ -66,6 +70,9 @@ def search_for_topic(search):
     else:
         return []
 
+def sort_results(results, ids):
+    results_sorted = sorted(results, key=lambda k: ids.index(k['_id']))
+    return results_sorted
 
 def get_search_results(search="", material="", max_results=10000):
     results = None
@@ -80,15 +87,50 @@ def get_search_results(search="", material="", max_results=10000):
     if material and not search:
         results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
     elif search and not material:
-        results = db.abstracts.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
-                                    ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
+        ids = elastic_search(search, max_results)
+        results = sort_results(db.abstracts.find({"_id":{"$in": ids[0:1000]}}), ids)
     elif search and material:
+        ids = elastic_search(search, max_results)[0:1000]
         results = db.abstracts_leigh.aggregate([
-            {"$match": {"abstract": {"$regex": search}}},
+            {"$match": {"_id": {"$in":ids}}},
             {"$match": {"normalized_cems": parser.matgen_parser(material)}}
         ])
     return list(results)
 
+# def get_search_results(search="", material="", max_results=10000):
+#     results = None
+#     if material is None:
+#         material = ''
+#     else:
+#         parser = parsing.SimpleParser()
+#     if search is None:
+#         search = ''
+#     if search == '' and material == '':
+#         return None
+#     if material and not search:
+#         results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
+#     elif search and not material:
+#         results = db.abstracts.find({"$text": {"$search": search}}, {"score": {"$meta": "textScore"}},
+#                                     ).sort([('score', {'$meta': 'textScore'})]).limit(max_results)
+#     elif search and material:
+#         results = db.abstracts_leigh.aggregate([
+#             {"$match": {"abstract": {"$regex": search}}},
+#             {"$match": {"normalized_cems": parser.matgen_parser(material)}}
+#         ])
+#     return list(results)
+
+def elastic_search(search="", max_results=10000):
+    if search is None:
+        search = ''
+    if search == '':
+        return None
+
+    query = {"query": {"simple_query_string": {"query": search}}}
+
+    # hits = client.search(index="tri_abstracts", body=query, _source_include=["id"], size=max_results)["hits"]["hits"]
+    hits = client.search(index="tri_abstracts", body=query, size=max_results)["hits"]["hits"]
+    ids = [ObjectId(h["_id"]) for h in hits]
+    return ids
 
 def to_highlight(names_list, material):
     parser = parsing.SimpleParser()
@@ -107,7 +149,8 @@ def sort_df(test_df, materials):
 
 def generate_table(search='', materials='', columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
     results = get_search_results(search, materials)
-    print(len(results))
+    if results is not None:
+        print(len(results))
     if materials:
         df = pd.DataFrame(results[:max_rows])
         if not df.empty:
@@ -127,14 +170,13 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
             # Body
             [html.Tr([
                 html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
-                               href=df.iloc[i]["html_link"])) if col == "title"
+                               href=df.iloc[i]["html_link"], target="_blank")) if col == "title"
                 else html.Td(
                     hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))]
         )
     return html.Table("No Results")
-
 
 # The Search app
 layout = html.Div([
@@ -143,12 +185,12 @@ layout = html.Div([
             html.P('Welcome to the Matstract Database!')
         ], style={'margin-left': '10px'}),
 
-        html.Label('Search the database:'),
+        html.Label('Search the database ({:,} abstracts!):'.format(db.abstracts.find({}).count())),
         dcc.Textarea(id='search-box',
-                     cols=100,
                      autoFocus=True,
                      spellCheck=True,
                      wrap=True,
+                     style={"width": "100%"},
                      placeholder='Search: e.g. "Li-ion battery"'),
     ]),
 
@@ -170,5 +212,5 @@ layout = html.Div([
     html.Div([
         html.Label(id='number_results'),
         html.Table(id='table-element')
-    ], className='row')
+    ], className='row', style={"overflow": "scroll"})
 ])
