@@ -4,7 +4,6 @@ from matstract.utils import open_db_connection
 from matstract.extract.parsing import SimpleParser
 import pandas as pd
 
-
 def arrange_keywords(kwds):
     unigrams = [unigram for unigram, count in kwds['unigrams']]
     bigrams = [' '.join(bigram) for bigram, count in kwds['bigrams']]

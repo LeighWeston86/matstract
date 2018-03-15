@@ -1,4 +1,4 @@
-from matstract.web.view.search_app import get_search_results
+from matstract.web.search_app import get_search_results
 from sklearn.feature_extraction.text import CountVectorizer
 from operator import itemgetter
 import numpy as np
@@ -32,10 +32,11 @@ class TermFrequency(object):
             words = nltk.word_tokenize(sents[0] + sents[-1])
         else:
             words = nltk.word_tokenize(text)
-        words = [word for word in words if word not in stopwords.words('english') and len(word) >= self.cutoff]
+        words = [word for word in words if word not in stopwords.words('english')]
         if self.normalize:
             words = [word.lower() for word in words]
         if self.token_type == 'unigrams':
+            words = [word for word in words if len(word) >= self.cutoff]
             return words
         elif self.token_type == 'bigrams':
             return list(nltk.bigrams(words))
@@ -82,7 +83,7 @@ class DocumentFrequency(CountVectorizer):
     def process(self, text):
         if self.first_last_sentence_only:
             sents = nltk.sent_tokenize(text)
-            text = sent[0] + sent[-1]
+            text = sents[0] + sents[-1]
         return text
 
     def fit_df(self, collection):
@@ -101,6 +102,10 @@ class DocumentFrequency(CountVectorizer):
     def inverse_document_frequency(self):
         keys = self.term_dict.keys()
         return {key: (1 / self.term_dict[key]) for key in keys}
+
+    @property
+    def sorted_document_frequency(self):
+        return sorted([(key, self.term_dict[key]) for key in self.term_dict.keys()], key=itemgetter(1), reverse=True)
 
 
 def idf_mongo(db_l, word, cutoff=3):
