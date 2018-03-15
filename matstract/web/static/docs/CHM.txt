@@ -1,0 +1,10 @@
+### Chemical mention: CHM
+
+##### NN, NP, JJ
+
+Anything found by chemdata extractor but not fitting Material of Interest definition above. Any molecule, polymer, biomolecule, organic chemical entity.
+
+
+i. `H2O` (NN)
+
+ii. `polyethylene` film (JJ)
