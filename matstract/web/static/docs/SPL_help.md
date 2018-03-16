@@ -1,11 +1,11 @@
 ##### Structure/phase label
 
-###### Part of speech: JJ, NN
+###### Part of speech: JJ
 
-Names for crystal structures, e.g., tetragonal, zinc blende, fcc, or any symmetry label Pbnm, Pnma (can google any if unsure). Amorphous is not a crystal structure.
+Names for crystal structures, e.g., tetragonal, zinc blende, fcc, or any symmetry label Pbnm, Pnma (can google any if
+unsure). Note that this is only for specific crystal structures, i.e., orhtorhomic is ok, perovskite is not. Amorphous
+is not a crystal structure.
 
-i. In the ground state BN is `hexagonal` (JJ)
+i. In the ground state BN is (`hexagonal`, JJ)
 
-ii. `Orthorhombic` SrZrO3 has `Pbnm` symmetry (JJ, JJ)
-
-iii. The `perovskite` crystal structure (JJ)
+ii. The perovskite SrZrO3 has an (`orthorhombic`, JJ) crystal structure with (`Pbnm`, JJ) symmetry

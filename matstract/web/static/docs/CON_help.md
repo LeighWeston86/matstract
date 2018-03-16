@@ -2,6 +2,7 @@
 
 ##### Part of speech: NN, NP, or JJ
 
-A condition on which a property depends. Temperature, pressure, strain etc. Also any sample conditions for which a measurement may depend, e.g., carrier con
+A condition on which a property depends. Temperature, pressure, strain etc. Also any sample conditions for which a
+measurement may depend, e.g., carrier concentration.
 
-i. The `temperature` of the phase transition was 300 K.
+i. "The (`temperature`, NN) of the phase transition was 300 K
