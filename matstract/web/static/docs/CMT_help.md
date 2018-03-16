@@ -1,6 +1,6 @@
-### Characterization technique : CMT
+##### Characterization method
 
-##### NN,  NP
+###### Part of speech: NN,  NP
 
 Any method for used ot characterize a material, experiment or theory: e.g., photoluminescence, XRD, tight binding, DFT.
 

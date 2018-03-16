@@ -19,7 +19,7 @@ def serve_layout(db, user_key, path):
                 id="user_info_div",
                 className="row",
                 style={"textAlign": "right"}),
-            html.Div(ann_app.serve_layout(db, attr)),
+            html.Div(ann_app.serve_layout(db, user_key, attr)),
             ]
 
 
@@ -47,17 +47,17 @@ def serve_user_info(user_key):
 def serve_ann_options():
     return html.Nav(children=[
                 html.Span('Tasks: | '),
-                dcc.Link("Macro", href="/annotate//macro", ),
+                dcc.Link("Macro", href="/annotate/macro", ),
                 html.Span(' | '),
-                dcc.Link("Materials", href="/annotate/token/material"),
+                dcc.Link("Materials", href="/annotate/token/CHM&MAT&DSC"),
                 html.Span(' | '),
                 dcc.Link(
-                    "Properties",
-                    href="/annotate/token/property&property_value&property_unit"),
+                    "Properties and Conditions",
+                    href="/annotate/token/PRO&PVL&PUT&CON&CVL&CUT&SPL"),
                 html.Span(' | '),
-                dcc.Link("Methods", href="/annotate/token/characterization_method&synthesis_method"),
+                dcc.Link("Methods and Applications", href="/annotate/token/SMT&CMT&PMT&APL"),
                 html.Span(' | '),
-                dcc.Link("Applications", href="/annotate/token/application"),
+                dcc.Link("All", href="/annotate/token/"),
                 html.Span(' |'),
     ])
 

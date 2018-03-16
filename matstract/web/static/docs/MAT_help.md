@@ -1,6 +1,6 @@
-### Material of interest : MAT
+##### Material of interest
 
-##### NN, NP, JJ
+###### Part of speech: NN, NP, JJ
 
 Any inorganic solid or alloy, any non-gaseous element (at RT), e.g., BaTiO3, FeNi, Fe. For single elements, only tag as MAT if the mention refers to the solid-state phase of the material; e.g., Ni being mentioned as a catalyst; on the otherhand for Si-doped GaN, Si will not be tagged as CHM not MAT.
 

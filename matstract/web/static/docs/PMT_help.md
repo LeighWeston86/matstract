@@ -1,6 +1,6 @@
-### Post-processing/treatment technique : PMT
+##### Post-processing / treatment method : PMT
 
-##### NN, JJ, VB, NP
+###### Part of speech: NN, JJ, VB, NP
 
 Any technique used to modify a sample post-synthesis.
 

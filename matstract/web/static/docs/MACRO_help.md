@@ -4,6 +4,8 @@ materials project database. These are mostly, but not limited to inorganic
 crystals. This stage serves as a filter for more advanced annotation tasks, e.g.
 identifying materials or synthesis methods.
 
+&nbsp;
+
 ###### **Guidelines**
 - Inorganic chemistry, physics and materials science are mostly relevant, whereas
 biology and organic chemistry are mostly not relevant.
@@ -12,6 +14,7 @@ viruses, organic polymers, etc.. and do not include any inorganic crystals or ma
 - Examples of relevant abstracts are studies of inorganic crystals, amorphous materials,
 nanowires, nanoparticles, substrates, etc.
 - If you think the abstract is on the borderline, annotate it as relevant.
+
 
 ###### **Instructions**
 - If the abstract is not relevant, click `NOT RELEVANT`.

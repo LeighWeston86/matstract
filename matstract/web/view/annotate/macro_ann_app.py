@@ -1,26 +1,28 @@
 import dash_html_components as html
 import dash_core_components as dcc
+from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 
-def serve_layout(db, _):
+def serve_layout(_, __, ___):
     """Generates the layout dynamically on every refresh"""
 
-    # doc = get_doc("macro_ann_help.txt")
-    return [html.Div(serve_plain_abstract(db=db, empty=True), id="macro_ann_parent_div", className="row"),
+    return [html.Div(serve_plain_abstract(empty=True), id="macro_ann_parent_div", className="row"),
             html.Div(
                 "",
                 id="macro_ann_message",
                 style={"color": "red", "paddingLeft": "5px"},
                 className="row"),
-            html.Div("", className="row", id="macro_ann_instructions")
+            html.Div("", className="row instructions", id="macro_ann_instructions")
             ]
 
 
-def serve_plain_abstract(db, empty=False):
+def serve_plain_abstract(empty=False):
     random_abstract = {"abstract": "", "title": ""}
     doi = ""
     if not empty:
-        random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
+        builder = AnnotationBuilder()
+        # get a random paragraph]
+        random_abstract = builder.get_abstract(good_ones=True)
         doi = random_abstract['doi']
 
     return [

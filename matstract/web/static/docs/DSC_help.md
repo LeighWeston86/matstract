@@ -1,6 +1,6 @@
-### Descriptor for material: DSC
+##### Descriptor for material
 
-##### VB, JJ, NN, NP
+###### Part of speech: VB, JJ, NN, NP
 
 Special descriptions of the shape/type for the material/chemical mention. Examples are nanowire, quantum dot, dopant, ion.
 

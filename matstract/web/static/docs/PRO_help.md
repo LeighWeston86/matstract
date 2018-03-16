@@ -1,8 +1,6 @@
-## Quantitative property/condition
+##### Property
 
-### Property : PRO
-
-##### NN, NP, or JJ
+###### Part of speech: NN, NP, or JJ
 
 Definition (i): anything that can have a unit and a value, e.g., conductivity, band gap, or quantities based on many
 values e.g., band structure. Does not included conditions such as temperature, or sample specific properties such as
@@ -14,12 +12,16 @@ ii. The (`band gap`, NP) of ZnO is 3.4 eV
 
 iii. We calculated the (`band structure`, NP) using tight binding
 
+&nbsp;
+
 Definition (ii): Any qualitative property or phenomenon exhibited by a material that does not have a unit, e.g.,
 ferroelectricity, metallic.
 
 i. BaTiO3 exhibits (`ferroelectricity`, NN)
 
 ii. We studied (`metallic`, JJ) Ge nanowires
+
+&nbsp;
 
 Definition (iii): Any measureable spectra, e.g., absorption spectrum, phonon dispersion curve
 

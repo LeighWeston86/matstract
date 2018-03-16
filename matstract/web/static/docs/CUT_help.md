@@ -1,6 +1,6 @@
-### Condition unit: CUT
+##### Condition unit
 
-##### NN
+###### Part of speech: NN
 
 The unit for a condition on which a property depends.
 

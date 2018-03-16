@@ -1,8 +1,6 @@
-## High-level/qualitative information
+##### Synthesis Method
 
-### Synthesis Method : SMT
-
-##### NN, JJ, VB, NP
+###### Part of speech: NN, JJ, VB, NP
 
 Definition: Any technique for synthesising a material, e.g., pulsed laser deposition, solid state reaction. Does not include post-processing such as annealing.
 

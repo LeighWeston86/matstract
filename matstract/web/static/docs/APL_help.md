@@ -1,6 +1,6 @@
-### Application/Device : APL
+##### Application / Device
 
-##### JJ, NN, NP
+###### Part of speech: JJ, NN, NP
 
 Definition: Any high-level application such as photovoltaics, or any specific device such as field effect transistor.
 

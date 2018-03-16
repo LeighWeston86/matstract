@@ -1,6 +1,6 @@
-### Condition value: CVL
+##### Condition value
 
-##### JJ
+###### Part of speech: NN
 
 A value for a condition on which a property depends.
 
