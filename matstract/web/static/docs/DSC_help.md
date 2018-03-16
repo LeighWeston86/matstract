@@ -15,3 +15,11 @@ iv. BeH2 (`foam`, NN)
 v. PbO - based (`glass`, NN)
 
 vi. We made a (`ceramic`, JJ) film.
+
+&nbsp;
+
+This has to be a modifier for the material, and not a standalone reference to the material.
+
+*Poisitive example:* We sputterd Co (`thin films`, NN).
+
+*Negative example:* The **thin films** had a high conductivity. (here, thin films is a sample reference)
