@@ -73,6 +73,11 @@ div.instructions li {
     background-color: #FF851B; /* orange */
 }
 
+.highlighted.REF {
+    background-color: black; /* black */
+    color: white;
+}
+
 .highlighted.DSC {
     background-color: #FF4136; /* red */
     color: white;
@@ -81,6 +86,10 @@ div.instructions li {
 .highlighted.PRO {
     background-color: #0074D9; /* blue */
     color: white;
+}
+
+.highlighted.QUA {
+    background-color: #DDDDDD; /* silver */
 }
 
 .highlighted.PVL {
