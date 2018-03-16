@@ -15,7 +15,6 @@ def serve_layout(db, user_key, labels):
                 show_labels=show_labels),
                 id="annotation_parent_div",
             className="row"),
-            html.Div(serve_buttons(), id="buttons_container", className="row"),
             html.Div(labels, id="annotation_labels", style={"display": "none"})]
 
 
@@ -66,6 +65,7 @@ def serve_abstract(db, user_key, empty=False, show_labels=None):
         ),
         html.Div(serve_macro_annotation(db, macro_display), id="macro_annotation_container"),
         html.Div("", className="row instructions", id="annotation_instructions"),
+        html.Div(serve_buttons(), id="buttons_container", className="row")
     ]
 
 

@@ -78,7 +78,7 @@ def bind(app):
             user_key,
             annotation_labels,
             previous_labels):
-        labels = None
+        labels = [label["value"] for label in AnnotationBuilder.LABELS]
         if annotation_labels is not None:
             labels = annotation_labels.split('&')
         new_labels = labels
