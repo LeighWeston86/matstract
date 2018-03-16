@@ -16,7 +16,7 @@ iv. The (`yield`, NN) of the reaction was 80%.
 
 &nbsp;
 
-Definition (ii): Any qualitative property or phenomenon exhibited by a material that does not have a unit, e.g.,
+Definition (ii): Any binary qualitative property or phenomenon exhibited by a material that does not have a unit, e.g.,
 ferroelectricity, metallic.
 
 i. BaTiO3 exhibits (`ferroelectricity`, NN)
