@@ -1,6 +1,6 @@
 ##### Property
 
-###### Part of speech: NN, NP, or JJ
+###### Part of speech: NN, NP
 
 Definition (i): anything that can have a unit and a value, e.g., conductivity, band gap, or quantities based on many
 values e.g., band structure. Does not included conditions such as temperature, or sample specific properties such as
