@@ -16,15 +16,6 @@ iv. The (`yield`, NN) of the reaction was 80%.
 
 &nbsp;
 
-Definition (ii): Any binary qualitative property or phenomenon exhibited by a material that does not have a unit, e.g.,
-ferroelectricity, metallic.
-
-i. BaTiO3 exhibits (`ferroelectricity`, NN)
-
-ii. We studied (`metallic`, JJ) Ge nanowires
-
-&nbsp;
-
 Definition (iii): Any measureable spectra, e.g., absorption spectrum, phonon dispersion curve
 
 Properties that include another species, e.g., adsorption isotherm, band offset, or, properties that depend on a
