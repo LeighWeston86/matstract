@@ -61,7 +61,7 @@ def search_for_material(material, search):
 
 
 def search_for_topic(search):
-    db = open_db_connection()
+    db = open_db_connection(db="matstract_db")
     if search:
         results = db.abstracts.find({"$or": [{"title": {"$regex": ".*{}.*".format(search)}},
                                              {"abstract": {"$regex": ".*{}.*".format(search)}}]}, ["year"])
