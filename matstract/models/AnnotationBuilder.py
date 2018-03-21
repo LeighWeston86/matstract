@@ -1,7 +1,7 @@
 from chemdataextractor.doc import Paragraph
 from chemdataextractor import Document
-from matstract.utils import open_db_connection, authenticate
-import datetime
+from matstract.utils import open_db_connection
+from matstract.models.Annotation import TokenAnnotation
 
 
 class AnnotationBuilder:
@@ -52,7 +52,9 @@ class AnnotationBuilder:
     def __init__(self):
         self._db = open_db_connection(access="annotator", local=True)
 
-    def get_abstract(self, good_ones=False):
+    def get_abstract(self, doi=None, good_ones=False):
+        if doi is not None:
+            return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"doi": doi})
         if good_ones:
             return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
                 {"$match": {"doi": {"$in": self.GOOD_ABSTRACTS}}},
@@ -74,6 +76,13 @@ class AnnotationBuilder:
             tokens = ttl_tokens + abs_tokens
             existing_labels = []
         return tokens, existing_labels
+
+    def get_annotations(self, user=None):
+        constraints = dict()
+        if user is not None:
+            constraints["user"] = user
+        annotations = getattr(self._db, self.ANNOTATION_COLLECTION).find(constraints)
+        return [TokenAnnotation(annotation=annotation) for annotation in annotations]
 
 
     @staticmethod
@@ -100,39 +109,15 @@ class AnnotationBuilder:
                 })
         return tokens
 
-
-    @staticmethod
-    def prepare_annotation(doi, tokens, macro, labels, user_key):
-        date = datetime.datetime.now().isoformat()
-        annotation = {'doi': doi,
-                      'tokens': tokens,
-                      'tags': macro['tags'],
-                      'user': user_key,
-                      'date': date,
-                      'labels': labels,
-                      'authenticated': False}
-        return annotation
-
-    @staticmethod
-    def prep_macro_ann(doi, relevance, flag, abs_type, user_key):
-        """Macro Annotation (1. in the document)"""
-        return {'doi': doi,
-                'relevant': relevance,
-                'flag': flag,
-                'type': abs_type,
-                'user': user_key,
-                'date': datetime.datetime.now().isoformat(),
-                'authenticated': False}
-
     def insert(self, annotation, collection):
-        if authenticate(self._db, annotation["user"]):
-            annotation["authenticated"] = True
+        auth = annotation.authenticate(self._db)
+        if auth:
             getattr(self._db, collection).replace_one({
-                "doi": annotation["doi"], "user": annotation["user"]},
-                annotation, upsert=True)
+                "doi": annotation.doi, "user": annotation.user},
+                annotation.__dict__, upsert=True)
         else:
             print("Unauthorized annotation submitted!")
-            getattr(self._db, collection).insert_one(annotation)
+            getattr(self._db, collection).insert_one(annotation.__dict__)
 
     def update_tags(self, tags):
         current_tags = self._db.abstract_tags.find({})

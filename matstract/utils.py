@@ -38,18 +38,6 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
     return db
 
 
-def authenticate(db, user_key=None):
-    if user_key is None or db.user_keys.find({"user_key": user_key}).count() == 0:
-        print("User key not found!")
-        return False
-    elif db.user_keys.find({"user_key": user_key}).count() > 1:
-        print("Multiple copies of same user key in db!")
-        return True
-    elif db.user_keys.find({"user_key": user_key}).count() == 1:
-        return True
-    return None
-
-
 def open_es_client(user_creds=None, access="read_only"):
     if 'ELASTIC_HOST' in env:
         hosts = [env['ELASTIC_HOST']]

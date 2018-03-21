@@ -12,6 +12,7 @@ gunicorn
 elsapy
 Flask-Caching
 nltk
+numpy
 tqdm
 sklearn
 elsapy
