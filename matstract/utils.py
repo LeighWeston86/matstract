@@ -3,6 +3,7 @@ import json
 from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 from os import environ as env
+from flask import send_from_directory
 
 
 def open_db_connection(user_creds=None, local=False, access="read_only"):
@@ -16,9 +17,9 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
                 db_creds_filename = user_creds
             else:
                 db_creds_filename = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), 'db_atlas.json')
+                    os.path.dirname(os.path.abspath(__file__)), '_config.json')
             with open(db_creds_filename) as f:
-                db_creds = json.load(f)
+                db_creds = json.load(f)["mongo"]
         except:
             if access == "read_only":
                 db_creds = {"user": os.environ["ATLAS_USER"],
@@ -50,9 +51,9 @@ def authenticate(db, user_key=None):
     return None
 
 
-def open_es_client(user_creds=None, local=False, access="read_only"):
+def open_es_client(user_creds=None, access="read_only"):
     if 'ELASTIC_HOST' in env:
-        hosts = [env['ELASTIC_HOST']],
+        hosts = [env['ELASTIC_HOST']]
         http_auth = (env['ELASTIC_USER'], env['ELASTIC_PASS'])
         return Elasticsearch(hosts=hosts, http_auth=http_auth)
     else:
@@ -69,3 +70,5 @@ def open_es_client(user_creds=None, local=False, access="read_only"):
 
     es_client = Elasticsearch(hosts=hosts, http_auth=http_auth)
     return es_client
+
+

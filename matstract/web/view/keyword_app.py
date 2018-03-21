@@ -4,13 +4,12 @@ from matstract.utils import open_db_connection
 from matstract.extract.parsing import SimpleParser
 import pandas as pd
 
-
-
 def arrange_keywords(kwds):
     unigrams = [unigram for unigram, count in kwds['unigrams']]
     bigrams = [' '.join(bigram) for bigram, count in kwds['bigrams']]
     trigrams = [' '.join(trigram) for trigram, count in kwds['trigrams']]
     return unigrams + bigrams + trigrams
+
 
 def generate_table(dataframe, max_rows=100):
     return html.Table(
@@ -22,6 +21,7 @@ def generate_table(dataframe, max_rows=100):
             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
         ]) for i in range(min(len(dataframe), max_rows))]
     )
+
 
 def get_keywords(material):
     db = open_db_connection()
