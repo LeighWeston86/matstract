@@ -170,7 +170,7 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
             # Body
             [html.Tr([
                 html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
-                               href=df.iloc[i]["html_link"], target="_blank")) if col == "title"
+                               href=df.iloc[i]["link"], target="_blank")) if col == "title"
                 else html.Td(
                     hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
