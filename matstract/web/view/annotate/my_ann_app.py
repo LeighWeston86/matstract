@@ -10,8 +10,10 @@ def serve_layout(_, user_key, __):
     children = []
     for annotation in my_annotations:
         children.append(html.Li([
-            html.Span(annotation.doi, style={"fontWeight": "bold"}),
-            html.Span(" : continue  "),
+            html.Span([token["text"] + " " for token in annotation.tokens[0]], style={"fontWeight": "bold"}),
+            html.Br(),
+            html.Span(annotation.doi),
+            html.Span(" "),
             serve_ann_options(quote(annotation.doi, safe="")),
             html.Br(),
             html.Span(str(annotation.labels))
