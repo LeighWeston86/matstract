@@ -7,7 +7,7 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, MultiMatch
 from bson import ObjectId
 
-db = open_db_connection()
+db = open_db_connection(db="matstract_db")
 client = open_es_client()
 
 
