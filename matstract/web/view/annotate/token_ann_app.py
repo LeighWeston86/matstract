@@ -1,44 +1,64 @@
 import dash_html_components as html
 import dash_materialsintelligence as dmi
 from matstract.models.AnnotationBuilder import AnnotationBuilder
+from urllib.parse import unquote
 
 
-def serve_layout(db, labels):
+def serve_layout(db, user_key, attrs):
     """Generates the layout dynamically on every refresh"""
-    show_labels = None
+    print(attrs)
+    labels, show_labels, doi = None, None, None
+    if len(attrs) == 1:
+        labels = attrs[0]
+    elif len(attrs) == 2:
+        doi = unquote(attrs[0])
+        labels = attrs[1]
+    if labels == "":
+        labels = None
     if labels is not None:
         show_labels = str(labels).split('&')
     return [html.Div(serve_abstract(
                 db,
-                empty=True,
+                user_key=user_key,
+                empty=doi is None,
+                doi=doi,
                 show_labels=show_labels),
                 id="annotation_parent_div",
             className="row"),
-            html.Div(serve_buttons(), id="buttons_container", className="row"),
+            html.Div("", id="annotation_message", style={"color": "red", "paddingLeft": "5px"}),
             html.Div(labels, id="annotation_labels", style={"display": "none"})]
 
 
-def serve_abstract(db, empty=False, show_labels=None):
+def serve_abstract(db,
+                   user_key,
+                   empty=False,
+                   show_labels=None,
+                   doi=None,
+                   past_tokens=None):
     """Returns a random abstract and refreshes annotation options"""
-    ttl_tokens, abs_tokens = [], []
-    doi = ""
-    if not empty:
+    if empty:
+        tokens = []
+        existing_labels = []
+    else:
+        builder = AnnotationBuilder()
         # get a random paragraph
-        random_abstract = db.abstracts_vahe.aggregate([{"$sample": {"size": 1}}]).next()
+        random_abstract = builder.get_abstract(good_ones=True, doi=doi)
         doi = random_abstract['doi']
         # tokenize and get initial annotation
-        pre_annotate = False
-        if show_labels is not None and "material" in show_labels:
-            pre_annotate = True
-
-        ttl_tokens = AnnotationBuilder.get_tokens(random_abstract["title"], pre_annotate)
-        abs_tokens = AnnotationBuilder.get_tokens(random_abstract["abstract"], pre_annotate)
+        cems = False
+        if show_labels is not None and "MAT" in show_labels:
+            cems = True
+        tokens, existing_labels = builder.get_tokens(random_abstract, user_key, cems)
+        if past_tokens is not None:
+            tokens = past_tokens
 
     # labels for token-by-token annotation
     labels = AnnotationBuilder.LABELS
 
     macro_display = "none"
+    passive_labels = []
     if show_labels is not None:
+        passive_labels = [pl for pl in labels if pl["value"] in existing_labels and pl["value"] not in show_labels]
         labels = [label for label in labels if label["value"] in show_labels]
         if "application" in show_labels:
             macro_display = "block"
@@ -47,19 +67,22 @@ def serve_abstract(db, empty=False, show_labels=None):
         html.Div([
             html.Span("doi: "), html.A(
                 doi,
-                href="https://doi.org/" + doi,
+                href="https://doi.org/" + str(doi),
                 target="_blank",
                 id="doi_container")],
             className="row", style={"paddingBottom": "10px"}),
         dmi.AnnotationContainer(
             doi=doi,
-            tokens=ttl_tokens + abs_tokens,
+            tokens=tokens,
             labels=labels,
+            passiveLabels=passive_labels,
             className="annotation-container",
             selectedValue=labels[0]['value'],
             id="annotation_container"
         ),
         html.Div(serve_macro_annotation(db, macro_display), id="macro_annotation_container"),
+        html.Div("", className="row instructions", id="annotation_instructions"),
+        html.Div(serve_buttons(), id="buttons_container", className="row")
     ]
 
 
@@ -81,7 +104,6 @@ def serve_macro_annotation(db, display):
 
 def serve_buttons():
     """Confirm and skip buttons"""
-    return [html.Button("Skip", id="annotate_skip", className="button"),
-            html.Button("Confirm", id="annotate_confirm", className="button-primary"),
+    return [html.Button("Confirm", id="annotate_confirm", className="button-primary"),
             html.Button("Flag", id="token_ann_flag", className="ann-flag"),
-            html.Span("", id="annotation_message", style={"color": "red", "paddingLeft": "5px"})]
+            html.Button("Skip", id="annotate_skip", className="button")]

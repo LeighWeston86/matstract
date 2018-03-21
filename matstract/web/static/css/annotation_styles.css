@@ -33,17 +33,17 @@ div#macro_ann_type {
     margin: 0px 10px;
 }
 
-div#macro_ann_instructions {
+div.instructions {
     border-radius: 5px;
     background: #fafafa;
     padding: 10px 20px;
 }
 
-div#macro_ann_instructions h6 {
-    margin-bottom: 2px;
+div.instructions p, h6 {
+    margin-bottom: 5px;
 }
 
-div#macro_ann_instructions li {
+div.instructions li {
     margin-bottom: 0;
     margin-left: 10px;
 }
@@ -52,43 +52,88 @@ div#macro_ann_instructions li {
 
 .token {
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 2px;
     border-radius: 3px;
 }
 
-.highlighted {
+.highlighted.passive {
+  -webkit-filter: opacity(30%);
+  filter: opacity(30%);
 }
 
 .highlighted.label {
     margin: 2px;
 }
 
-.highlighted.material {
-    background-color: #FFDC00;
+.highlighted.CHM {
+    background-color: #FFDC00; /* yellow */
 }
 
-.highlighted.synthesis_method {
-    background-color: #FF851B;
+.highlighted.MAT {
+    background-color: #FF851B; /* orange */
 }
 
-.highlighted.property {
-    background-color: #7FDBFF;
+.highlighted.REF {
+    background-color: #FBCEB1; /* apricot */
 }
 
-.highlighted.characterization_method {
-    background-color: #2ECC40;
+.highlighted.DSC {
+    background-color: #FF4136; /* red */
+    color: white;
 }
 
-.highlighted.property_value {
-    background-color: #2ECC40;
+.highlighted.PRO {
+    background-color: #0074D9; /* blue */
+    color: white;
 }
 
-.highlighted.property_unit {
-    background-color: #39CCCC;
+.highlighted.QUA {
+    background-color: #DDDDDD; /* silver */
 }
 
-.highlighted.application {
-    background-color: #FF4136;
+.highlighted.PVL {
+    background-color: #7FDBFF; /* aqua */
+}
+
+.highlighted.PUT {
+    background-color: #39CCCC; /* teal */
+}
+
+.highlighted.CON {
+    background-color: #3D9970; /* olive */
+    color: white;
+}
+
+.highlighted.CUT {
+    background-color: #2ECC40; /* green */
+}
+
+.highlighted.CVL {
+    background-color: #01FF70; /* lime */
+}
+
+.highlighted.SPL {
+    background-color: #85144b; /* maroon */
+    color: white;
+}
+
+.highlighted.SMT {
+    background-color: #001f3f; /* navy */
+    color: white;
+}
+
+.highlighted.CMT {
+    background-color: #F012BE; /* fuchsia */
+    color: white;
+}
+
+.highlighted.PMT {
+    background-color: #B10DC9; /* purple */
+    color: white;
+}
+
+.highlighted.APL {
+    background-color: #AAAAAA; /* gray */
 }
 
 button#macro_ann_not_rel {
@@ -117,7 +162,6 @@ button.ann-flag:hover {
 label.highlighted.label {
     cursor: pointer;
     display: inline;
-    border: none;
     font-weight: normal;
     padding: 4px 6px;
     margin: 0px 5px;

@@ -3,10 +3,9 @@ import json
 from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 from os import environ as env
-from flask import send_from_directory
 
 
-def open_db_connection(user_creds=None, local=False, access="read_only"):
+def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
     if 'MATSTRACT_HOST' in env and local:
         uri = "mongodb://%s:%s/%s" % (
             env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], env['MATSTRACT_DB'])
@@ -25,30 +24,18 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
                 db_creds = {"user": os.environ["ATLAS_USER"],
                             "pass": os.environ["ATLAS_USER_PASSWORD"],
                             "rest": os.environ["ATLAS_REST"],
-                            "db": "tri_abstracts"}
+                            "db": db}
             elif access == "annotator":
                 db_creds = {"user": os.environ["ANNOTATOR_USER"],
                             "pass": os.environ["ANNOTATOR_PASSWORD"],
                             "rest": os.environ["ATLAS_REST"],
-                            "db": "tri_abstracts"}
+                            "db": db}
 
         uri = "mongodb://{user}:{pass}@{rest}".format(**db_creds)
 
     mongo_client = MongoClient(uri, connect=False)
     db = mongo_client[db_creds["db"]]
     return db
-
-
-def authenticate(db, user_key=None):
-    if user_key is None or db.user_keys.find({"user_key": user_key}).count() == 0:
-        print("User key not found!")
-        return False
-    elif db.user_keys.find({"user_key": user_key}).count() > 1:
-        print("Multiple copies of same user key in db!")
-        return True
-    elif db.user_keys.find({"user_key": user_key}).count() == 1:
-        return True
-    return None
 
 
 def open_es_client(user_creds=None, access="read_only"):
