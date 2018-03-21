@@ -24,7 +24,7 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
                 db_creds = {"user": os.environ["ATLAS_USER"],
                             "pass": os.environ["ATLAS_USER_PASSWORD"],
                             "rest": os.environ["ATLAS_REST"],
-                            "db": "tri_abstracts"}
+                            "db": "matstract_db"}
             elif access == "annotator":
                 db_creds = {"user": os.environ["ANNOTATOR_USER"],
                             "pass": os.environ["ANNOTATOR_PASSWORD"],
