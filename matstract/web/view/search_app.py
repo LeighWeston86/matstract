@@ -70,11 +70,9 @@ def search_for_topic(search):
     else:
         return []
 
-
 def sort_results(results, ids):
     results_sorted = sorted(results, key=lambda k: ids.index(k['_id']))
     return results_sorted
-
 
 def get_search_results(search="", material="", max_results=10000):
     results = None
@@ -184,26 +182,35 @@ def generate_table(search='', materials='', columns=('title', 'authors', 'year',
 layout = html.Div([
     html.Div([
         html.Div([
-            html.P('Matstract Doppelgängers: find similar abstracts.')
+            html.P('Welcome to the Matstract Database!')
         ], style={'margin-left': '10px'}),
-        html.Label('Enter an abstract to find similar entries:'),
-        html.Div(dcc.Textarea(id='similar-textarea',
-                     style={"width": "100%"},
+
+        html.Label('Search the database ({:,} abstracts!):'.format(db.abstracts.find({}).count())),
+        dcc.Textarea(id='search-box',
                      autoFocus=True,
                      spellCheck=True,
                      wrap=True,
-                     placeholder='Paste abstract/other text here.'
-                     )),
+                     style={"width": "100%"},
+                     placeholder='Search: e.g. "Li-ion battery"'),
+    ]),
+
+    html.Div([
+        dcc.Input(id='material-box',
+                  placeholder='Material: e.g. "LiFePO4"',
+                  type='text'),
+        html.Button('Submit', id='search-button'),
+    ]),
+    # Row 2:
+    html.Div([
+
         html.Div([
-            dcc.Input(id='material-box',
-                      placeholder='Material: e.g. "LiFePO4"',
-                      type='text'),
-            html.Button('Submit', id='search-button'),
-        ]),
-        html.Div([html.Button('Find Doppelgängers', id='similar-button'),
-                  html.Button('Choose a random abstract', id = 'similar-random-abstract')]),
-        html.Div([
-            html.Table(id='similar-abstracts-table')
-        ], className='row', style={"overflow": "scroll"}),
-    ], className='twelve columns'),
+
+        ], className='nine columns', style=dict(textAlign='center')),
+
+    ], className='row'),
+
+    html.Div([
+        html.Label(id='number_results'),
+        html.Table(id='table-element')
+    ], className='row', style={"overflow": "scroll"})
 ])
