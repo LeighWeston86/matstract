@@ -1,4 +1,4 @@
-from matstract.web.view.annotate import token_ann_app, macro_ann_app
+from matstract.web.view.annotate import token_ann_app, macro_ann_app, my_ann_app
 import dash_html_components as html
 import dash_core_components as dcc
 from textwrap import dedent as s
@@ -6,10 +6,12 @@ from textwrap import dedent as s
 
 def serve_layout(db, user_key, path):
     """Generates the layout dynamically on every refresh"""
-    mode, attr = get_ann_mode(path)
+    mode, attrs = get_ann_mode(path)
 
     if mode == "token":
         ann_app = token_ann_app
+    elif mode == "my_annotations":
+        ann_app = my_ann_app
     else:
         ann_app = macro_ann_app
 
@@ -19,13 +21,17 @@ def serve_layout(db, user_key, path):
                 id="user_info_div",
                 className="row",
                 style={"textAlign": "right"}),
-            html.Div(ann_app.serve_layout(db, user_key, attr)),
+            html.Div(ann_app.serve_layout(db, user_key, attrs)),
             ]
 
 
 def serve_auth_info(username):
     if username is not None and len(username) > 0:
-        username_info = [html.Span("Annotating as "), html.Span(username, style={"font-weight": "bold"})]
+        username_info = [html.Span("Annotating as "),
+                         html.Span(username, style={"font-weight": "bold"}),
+                         html.Span(" ( "),
+                         dcc.Link("my annotations", href="/annotate/my_annotations"),
+                         html.Span(" )")]
     else:
         username_info = "Not Authorised to annotate"
     return username_info
@@ -63,17 +69,17 @@ def serve_ann_options():
 
 
 def get_ann_mode(path):
-    mode, attr = None, None
+    mode,attrs = None, None
     if path.startswith('/annotate/token/'):
         mode = 'token'
-        attr = path.split('/')[-1]
-        if attr == '':
-            attr = None
+        attrs = path.split('/')[3:]
     elif path.startswith('/annotate/token'):
         mode = path.split('/')[-1]
+        attrs = path.split('/')[3:]
     elif path.startswith('/annotate/'):
         mode = path.split('/')[-1]
-    return mode, attr
+        attrs = path.split('/')[2:]
+    return mode, attrs
 
 
 def build_markdown(text):

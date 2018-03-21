@@ -74,8 +74,7 @@ div.instructions li {
 }
 
 .highlighted.REF {
-    background-color: black; /* black */
-    color: white;
+    background-color: #FBCEB1;
 }
 
 .highlighted.DSC {
@@ -163,7 +162,6 @@ button.ann-flag:hover {
 label.highlighted.label {
     cursor: pointer;
     display: inline;
-    border: none;
     font-weight: normal;
     padding: 4px 6px;
     margin: 0px 5px;

@@ -1,6 +1,7 @@
 from dash.dependencies import Input, Output, State
 import os
 from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.models.Annotation import TokenAnnotation, MacroAnnotation
 from matstract.web.view import annotate_app
 from matstract.web.view.annotate import token_ann_app, macro_ann_app
 from matstract.utils import open_db_connection
@@ -19,9 +20,12 @@ def bind(app):
     @app.callback(
         Output('annotation_message', 'children'),
         [Input('annotate_confirm', 'n_clicks'),
-         Input('token_ann_flag', 'n_clicks')],
+         Input('token_ann_flag', 'n_clicks'),
+         Input('annotate_skip', 'n_clicks')],
         [State('user_key_input', 'value')])
-    def annotation_message(confirm_click, flag_click, user_key):
+    def annotation_message(confirm_click, flag_click, skip_click, user_key):
+        if skip_click is not None:
+            return _auth_message(None, user_key)
         if flag_click is not None:
             return _auth_message(flag_click, user_key)
         return _auth_message(confirm_click, user_key)
@@ -30,9 +34,12 @@ def bind(app):
         Output('macro_ann_message', 'children'),
         [Input('macro_ann_confirm', 'n_clicks'),
          Input('macro_ann_not_rel', 'n_clicks'),
-         Input('macro_ann_flag', 'n_clicks')],
+         Input('macro_ann_flag', 'n_clicks'),
+         Input('macro_ann_skip', 'n_clicks')],
         [State('user_key_input', 'value')])
-    def macro_ann_message(conf_click, not_rel_click, flag_click, user_key):
+    def macro_ann_message(conf_click, not_rel_click, flag_click, skip_click, user_key):
+        if skip_click is not None:
+            return _auth_message(None, user_key)
         if conf_click is not None:
             return _auth_message(conf_click, user_key)
         elif flag_click is not None:
@@ -69,7 +76,7 @@ def bind(app):
          State('annotation_labels', 'children'),
          State('annotation_container', 'passiveLabels')])
     def load_next_abstract(
-            _,
+            skip_clicks,
             confirm_clicks,
             flag_clicks,
             tokens,
@@ -87,21 +94,31 @@ def bind(app):
         builder = AnnotationBuilder()
         if builder.get_username(user_key) is not None:
             if confirm_clicks is not None:
-                if abstract_tags is not None:
-                    tag_values = [tag["value"].lower() for tag in abstract_tags]
-                else:
-                    tag_values = None
-                macro = {
-                    "tags": tag_values,
-                }
-
-                annotation = AnnotationBuilder.prepare_annotation(doi, tokens, macro, new_labels, user_key)
+                tags = [tag["value"].lower() for tag in abstract_tags] if abstract_tags is not None else None
+                annotation = TokenAnnotation(doi=doi,
+                                             tokens=tokens,
+                                             labels=new_labels,
+                                             tags=tags,
+                                             user=user_key)
                 builder.insert(annotation, builder.ANNOTATION_COLLECTION)
-                builder.update_tags(tag_values)
+                builder.update_tags(tags)
+                doi = None
             elif flag_clicks is not None:
-                macro_ann = builder.prep_macro_ann(doi, None, True, None, user_key)
+                macro_ann = MacroAnnotation(doi=doi,
+                                            relevant=None,
+                                            flag=True,
+                                            abs_type=None,
+                                            user=user_key)
                 builder.insert(macro_ann, builder.MACRO_ANN_COLLECTION)
-        return token_ann_app.serve_abstract(db, user_key, show_labels=labels)
+                doi = None
+        if skip_clicks is not None:
+            doi = None  # to load a new abstract
+        past_tokens = tokens if doi is not None else None  # reload tokens from previous annotation
+        return token_ann_app.serve_abstract(db,
+                                            user_key,
+                                            show_labels=labels,
+                                            past_tokens=past_tokens,
+                                            doi=doi)
 
     ## Macro Annotation Callbacks
     @app.callback(
@@ -123,17 +140,17 @@ def bind(app):
             user_key):
         flag = False
         if confirm_click is not None:
-            relevance = True
+            relevant = True
         elif not_rel_click is not None:
-            relevance = False
+            relevant = False
         elif flag_click is not None:
-            relevance = None
+            relevant = None
             flag = True
         else:  # either skip is clicked or first load
             return macro_ann_app.serve_plain_abstract()
         builder = AnnotationBuilder()
         if builder.get_username(user_key) is not None:
-            macro_ann = builder.prep_macro_ann(doi, relevance, flag, abs_type, user_key)
+            macro_ann = MacroAnnotation(doi, relevant, flag, abs_type, user=user_key)
             builder.insert(macro_ann, builder.MACRO_ANN_COLLECTION)
         return macro_ann_app.serve_plain_abstract()
 
