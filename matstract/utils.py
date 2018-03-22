@@ -5,7 +5,7 @@ from elasticsearch import Elasticsearch
 from os import environ as env
 
 
-def open_db_connection(user_creds=None, local=False, access="read_only"):
+def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
     if 'MATSTRACT_HOST' in env and local:
         uri = "mongodb://%s:%s/%s" % (
             env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], env['MATSTRACT_DB'])
@@ -24,12 +24,12 @@ def open_db_connection(user_creds=None, local=False, access="read_only"):
                 db_creds = {"user": os.environ["ATLAS_USER"],
                             "pass": os.environ["ATLAS_USER_PASSWORD"],
                             "rest": os.environ["ATLAS_REST"],
-                            "db": "tri_abstracts"}
+                            "db": db}
             elif access == "annotator":
                 db_creds = {"user": os.environ["ANNOTATOR_USER"],
                             "pass": os.environ["ANNOTATOR_PASSWORD"],
                             "rest": os.environ["ATLAS_REST"],
-                            "db": "tri_abstracts"}
+                            "db": db}
 
         uri = "mongodb://{user}:{pass}@{rest}".format(**db_creds)
 
