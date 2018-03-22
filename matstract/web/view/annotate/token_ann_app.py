@@ -6,7 +6,6 @@ from urllib.parse import unquote
 
 def serve_layout(db, user_key, attrs):
     """Generates the layout dynamically on every refresh"""
-    print(attrs)
     labels, show_labels, doi = None, None, None
     if len(attrs) == 1:
         labels = attrs[0]
