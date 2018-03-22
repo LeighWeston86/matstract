@@ -10,8 +10,8 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 class AnnotationMetrics:
     _db = None
 
-    def __init__(self):
-        self._db = open_db_connection(access="annotator", local=False)
+    def __init__(self, local=False):
+        self._db = open_db_connection(access="annotator", local=local)
 
     def similarity_matrix(self, labels=None, annotators=None):
         """

@@ -59,11 +59,13 @@ class TokenAnnotation(Annotation):
     def to_iob(self):
         """
         Converts the annotation object to CoNNL IOB annotation text string, with
-        each row corresponding to a single token. The POS tags are all set to UNDEF
+        each row corresponding to a single token.
         :return: the string in CoNNL IOB annotation format
         """
         iob = []
-        for tokenRow in self.tokens:
+        iob_str = []
+        for row_idx, tokenRow in enumerate(self.tokens):
+            iob.append([])
             for idx, token in enumerate(tokenRow):
                 if token["annotation"] is None:
                     label = "O"
@@ -71,8 +73,10 @@ class TokenAnnotation(Annotation):
                     label = "B-" + token["annotation"]
                 else:
                     label = "I-" + token["annotation"]
-                iob.append(token["text"] + " UNDEF " + label + "\n")
-        return "".join(iob)
+                iob[row_idx].append((token["text"], token["pos"], label))
+                iob_str.append(token["text"] + " " + token["pos"] + " " + label + "\n")
+            iob_str.append("\n")
+        return iob, "".join(iob_str)
 
     def to_agr_list(self):
         """

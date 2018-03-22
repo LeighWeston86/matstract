@@ -49,8 +49,8 @@ class AnnotationBuilder:
         {'text': 'Application / Device', 'value': 'APL'},
     ]
 
-    def __init__(self):
-        self._db = open_db_connection(access="annotator", local=True)
+    def __init__(self, local=False):
+        self._db = open_db_connection(access="annotator", local=local)
 
     def get_abstract(self, doi=None, good_ones=False):
         if doi is not None:
@@ -94,15 +94,18 @@ class AnnotationBuilder:
             cde_cem_starts = []
 
         # getting all tokens
-        all_tokens = Paragraph(text).tokens
+        cde_p = Paragraph(text)
+        all_tokens = cde_p.tokens
+        pos_tokens = cde_p.pos_tagged_tokens  # part of speech tagger
         # building the array for annotation
         tokens = []
-        for idx, sentence in enumerate(all_tokens):
+        for row_idx, sentence in enumerate(all_tokens):
             tokens.append([])
-            for elem in sentence:
-                tokens[idx].append({
+            for idx, elem in enumerate(sentence):
+                tokens[row_idx].append({
                     "id": "token-" + str(elem.start) + "-" + str(elem.end),
                     "annotation": ('CHM' if elem.start in cde_cem_starts else None),
+                    "pos": pos_tokens[row_idx][idx][1],
                     "text": elem.text,
                     "start": elem.start,
                     "end": elem.end
