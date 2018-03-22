@@ -36,6 +36,8 @@ matstract/_config.json
 *.egg-info/
 dist/
 build/
+.eggs/
+.cache/
 
 src/
 collect/logs/
