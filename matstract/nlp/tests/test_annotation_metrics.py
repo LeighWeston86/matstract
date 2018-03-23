@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from matstract.nlp.annotation_metrics import AnnotationMetrics
-from numpy.testing import assert_almost_equal, assert_equal
+from numpy.testing import assert_almost_equal
 
 
 class TestAnnotationMetrics(unittest.TestCase):

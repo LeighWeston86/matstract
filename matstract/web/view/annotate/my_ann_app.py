@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 
 def serve_layout(_, user_key, __):
-    builder = AnnotationBuilder()
+    builder = AnnotationBuilder(local=True)
     my_annotations = builder.get_annotations(user=user_key)
     children = []
     for annotation in my_annotations:
@@ -33,5 +33,7 @@ def serve_ann_options(doi_str):
             html.Span(' | '),
             dcc.Link("Methods and Applications", href="/annotate/token/" + doi_str + "/SMT&CMT&PMT&APL"),
             html.Span(' | '),
-            dcc.Link("All", href="/annotate/token/" + doi_str + "/")
+            dcc.Link("All", href="/annotate/token/" + doi_str + "/"),
+            html.Span(' | '),
+            dcc.Link("diff", href="/annotate/diff/" + doi_str + "/")
     ])

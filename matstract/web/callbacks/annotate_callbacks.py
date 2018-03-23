@@ -12,7 +12,7 @@ db = open_db_connection(local=True)
 def bind(app):
     def _auth_message(n_clicks, user_key):
         if n_clicks is not None:
-            builder = AnnotationBuilder()
+            builder = AnnotationBuilder(local=True)
             if builder.get_username(user_key) is None:
                 return "Not authorised - did not save!"
         return ""
@@ -59,7 +59,7 @@ def bind(app):
         Output('auth_info', 'children'),
         [Input('user_key_input', 'value')])
     def set_user_info(user_key):
-        builder = AnnotationBuilder()
+        builder = AnnotationBuilder(local=True)
         username = builder.get_username(user_key)
         return annotate_app.serve_auth_info(username)
 
@@ -91,7 +91,7 @@ def bind(app):
         new_labels = labels
         if len(previous_labels) > 0:
             new_labels = list(set(labels).union([label["value"] for label in previous_labels]))
-        builder = AnnotationBuilder()
+        builder = AnnotationBuilder(local=True)
         if builder.get_username(user_key) is not None:
             if confirm_clicks is not None:
                 tags = [tag["value"].lower() for tag in abstract_tags] if abstract_tags is not None else None
@@ -148,7 +148,7 @@ def bind(app):
             flag = True
         else:  # either skip is clicked or first load
             return macro_ann_app.serve_plain_abstract()
-        builder = AnnotationBuilder()
+        builder = AnnotationBuilder(local=True)
         if builder.get_username(user_key) is not None:
             macro_ann = MacroAnnotation(doi, relevant, flag, abs_type, user=user_key)
             builder.insert(macro_ann, builder.MACRO_ANN_COLLECTION)
