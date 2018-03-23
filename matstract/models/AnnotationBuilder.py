@@ -2,6 +2,7 @@ from chemdataextractor.doc import Paragraph
 from chemdataextractor import Document
 from matstract.utils import open_db_connection
 from matstract.models.Annotation import TokenAnnotation
+import itertools
 
 
 class AnnotationBuilder:
@@ -66,7 +67,7 @@ class AnnotationBuilder:
     def get_tokens(self, paragraph, user_key, cems=True):
         try:
             # find annotation by the same user for the same doi
-            previous_annotation = self._db.annotations.find({'doi': paragraph['doi'], 'user': user_key}).next()
+            previous_annotation = getattr(self._db, self.ANNOTATION_COLLECTION).find({'doi': paragraph['doi'], 'user': user_key}).next()
             tokens = previous_annotation["tokens"]
             existing_labels = previous_annotation["labels"]
         except Exception as e:
@@ -77,10 +78,52 @@ class AnnotationBuilder:
             existing_labels = []
         return tokens, existing_labels
 
-    def get_annotations(self, user=None):
+    def get_diff_tokens(self, doi=None, user=None):
+        if user is None or self.get_username(user) is None:
+            return None, "Not Authenticated."
+        else:
+            annotations = self.get_annotations(doi=doi)
+            if len(annotations) == 0:
+                return None, "No annotations with this doi."
+            else:
+                return self.combine_annotations(annotations)
+
+    def combine_annotations(self, annotations):
+        def merge_anns(anns, cl=None):
+            mg = set()  # empty set
+            for ann in anns:
+                if type(ann) is not list:  # if either a string or None
+                    ann = list([ann])
+                mg = mg.union(set(ann))  # union
+                if cl is not None:
+                    mg = mg.intersection(cl)  # only consider common labels
+            if len(mg) <= 1:
+                return None  # no disagreement
+            else:
+                return list(mg)
+
+        paragraph = self.get_abstract(doi=annotations[0].doi)
+        combined_toks, _ = self.get_tokens(paragraph, None, cems=False)
+        if len(annotations) > 0:
+            for pair in itertools.combinations(annotations, r=2):
+                common_labels = set(pair[0].labels).intersection(pair[1].labels).union({None})
+                for rowIdx, tokenRow in enumerate(pair[1].tokens):
+                    for idx, token in enumerate(tokenRow):
+                        token_ann = pair[0].tokens[rowIdx][idx]["annotation"]
+                        merged = merge_anns([token_ann, token["annotation"]], common_labels)
+                        combined_toks[rowIdx][idx]["annotation"] = merge_anns([
+                            merged,
+                            combined_toks[rowIdx][idx]["annotation"]])
+            return combined_toks, "Success"
+        else:
+            return None, "No annotations."
+
+    def get_annotations(self, user=None, doi=None):
         constraints = dict()
         if user is not None:
             constraints["user"] = user
+        if doi is not None:
+            constraints["doi"] = doi
         annotations = getattr(self._db, self.ANNOTATION_COLLECTION).find(constraints)
         return [TokenAnnotation(annotation=annotation) for annotation in annotations]
 

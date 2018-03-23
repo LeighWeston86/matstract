@@ -1,4 +1,4 @@
-from matstract.web.view.annotate import token_ann_app, macro_ann_app, my_ann_app
+from matstract.web.view.annotate import token_ann_app, macro_ann_app, my_ann_app, diff_ann_app
 import dash_html_components as html
 import dash_core_components as dcc
 from textwrap import dedent as s
@@ -12,6 +12,8 @@ def serve_layout(db, user_key, path):
         ann_app = token_ann_app
     elif mode == "my_annotations":
         ann_app = my_ann_app
+    elif mode == "diff":
+        ann_app = diff_ann_app
     else:
         ann_app = macro_ann_app
 
@@ -75,6 +77,9 @@ def get_ann_mode(path):
         attrs = path.split('/')[3:]
     elif path.startswith('/annotate/token'):
         mode = path.split('/')[-1]
+        attrs = path.split('/')[3:]
+    elif path.startswith('/annotate/diff/'):
+        mode = "diff"
         attrs = path.split('/')[3:]
     elif path.startswith('/annotate/'):
         mode = path.split('/')[-1]

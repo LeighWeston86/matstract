@@ -56,6 +56,11 @@ div.instructions li {
     border-radius: 3px;
 }
 
+.highlighted.disagreement {
+    background: #333;
+    color: red;
+}
+
 .highlighted.passive {
   -webkit-filter: opacity(30%);
   filter: opacity(30%);
