@@ -10,7 +10,7 @@ from matstract.web.view import annotate_app, similar_app, \
     search_app, keyword_app, extract_app, trends_app
 from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
-    extract_callbacks, keyword_callbacks, trends_callbacks
+    extract_callbacks, keyword_callbacks, trends_callbacks, similar_callbacks
 from matstract.utils import open_db_connection
 
 import os
@@ -78,18 +78,18 @@ header = html.Div([
             'clear': "both"
         },
         children=[
-            dcc.Link("Search", href="/search", ),
-            html.Span(' • '),
+            dcc.Link("Search", href="/search"),
+            html.Span(u" \u2022 "),
             dcc.Link("Trends", href="/trends"),
-            html.Span(' • '),
+            html.Span(u" \u2022 "),
             dcc.Link("Extract", href="/extract"),
-            html.Span(' • '),
+            html.Span(u" \u2022 "),
             dcc.Link("Similar Abstracts", href="/similar"),
-            html.Span(' • '),
+            html.Span(u" \u2022 "),
             dcc.Link("Annotate", href="/annotate"),
-            html.Span(' • '),
+            html.Span(u" \u2022 "),
             dcc.Link("Keyword Extraction", href="/keyword"),
-            html.Span(' • '),
+            html.Span(u" \u2022 "),
             html.Span(html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
                              style={"color": "red"}, target="_blank"))
         ],
@@ -140,5 +140,6 @@ trends_callbacks.bind(app, cache)
 extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
+similar_callbacks.bind(app, cache)
 
 

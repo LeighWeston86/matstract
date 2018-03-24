@@ -3,7 +3,7 @@ from matstract.web.view import extract_app
 from matstract.utils import open_db_connection
 from matstract.extract.parsing import extract_materials, materials_extract
 
-db = open_db_connection(local=True)
+db = open_db_connection(local=True, db="matstract_db")
 
 
 def bind(app):

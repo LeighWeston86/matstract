@@ -128,7 +128,7 @@ def elastic_search(search="", max_results=10000):
     query = {"query": {"simple_query_string": {"query": search}}}
 
     # hits = client.search(index="tri_abstracts", body=query, _source_include=["id"], size=max_results)["hits"]["hits"]
-    hits = client.search(index="tri_abstracts", body=query, size=max_results)["hits"]["hits"]
+    hits = client.search(index="tri_abstracts", body=query, size=max_results, request_timeout=30)["hits"]["hits"]
     ids = [ObjectId(h["_id"]) for h in hits]
     return ids
 

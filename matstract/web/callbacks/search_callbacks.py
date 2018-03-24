@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 from matstract.web.view import search_app
 from matstract.utils import open_db_connection
 
-db = open_db_connection(local=True)
+db = open_db_connection(local=True, db="matstract_db")
 
 
 def bind(app, cache):
