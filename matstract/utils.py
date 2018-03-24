@@ -3,6 +3,7 @@ import json
 from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 from os import environ as env
+import certifi
 
 
 def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
@@ -55,7 +56,7 @@ def open_es_client(user_creds=None, access="read_only"):
         hosts = db_creds["elastic"]["hosts"]
         http_auth = (db_creds["elastic"]["user"], db_creds["elastic"]["pass"])
 
-    es_client = Elasticsearch(hosts=hosts, http_auth=http_auth)
+    es_client = Elasticsearch(hosts=hosts, http_auth=http_auth, use_ssl=True, ca_certs=certifi.where())
     return es_client
 
 
