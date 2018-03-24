@@ -57,7 +57,7 @@ def get_search_results(search="", material="", max_results=10000):
     return list(results)
 
 
-def find_similar(abstract="", max_results=10000):
+def find_similar(abstract="", max_results=100):
     if abstract is None or abstract == '':
         return None
 
@@ -68,7 +68,7 @@ def find_similar(abstract="", max_results=10000):
                 }
             }}
 
-    hits = client.search(index="tri_abstracts", body=query, size=max_results)["hits"]["hits"]
+    hits = client.search(index="tri_abstracts", body=query, size=max_results, request_timeout=60)["hits"]["hits"]
     ids = [ObjectId(h["_id"]) for h in hits]
     print(len(ids))
     return ids
