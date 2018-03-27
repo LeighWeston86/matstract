@@ -34,4 +34,10 @@ Definition (iii): Any measureable spectra, e.g., `absorption spectrum`, `phonon 
 
 &nbsp;
 
-Definition (iv): Properties that include another species, e.g., adsorption isotherm, band offset, or, properties that depend on a device, e.g., leakage current, are not materials properties, but will be included to improve the NLP models.
+Definition (iv): Properties that include another species, e.g., `adsorption isotherm`, `band offset`, or, properties that depend on a device, e.g., `leakage current`, are not materials properties, but will be included to improve the NLP models.
+
+&nbsp;
+
+Definition (v): Growth directions and crystal orientations
+
+i. predominant (`orientation`, PRO) (`along (311) plane`, PVL)
