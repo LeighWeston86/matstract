@@ -2,7 +2,7 @@
 
 ###### Part of speech: VB, JJ, NN, NP
 
-Special descriptions of the shape/type for the material/chemical mention. Examples are nanowire, quantum dot, dopant, ion.
+Special descriptions of the shape/type for the material/chemical mention. The vast majority of the cases this will be a **structural descriptor** or describing the **chemical environment** of the material/species. Do not confuse this with property/quality. Examples are nanowire, quantum dot, dopant, ion.
 
 i. Silicon (`doped`, VB) ZnO (`nanowires`, NN)
 
