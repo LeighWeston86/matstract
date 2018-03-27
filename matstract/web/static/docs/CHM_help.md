@@ -7,3 +7,5 @@ Anything found by chemdata extractor but not fitting Material of Interest defini
 i. (`H2O`, NN) was used as a solvent
 
 ii. (`polyethylene`, JJ) film
+
+iii. `electron`, `proton`, `Li+`, `hole`
