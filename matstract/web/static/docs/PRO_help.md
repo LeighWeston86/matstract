@@ -24,6 +24,10 @@ ii. We studied (`metallic`, JJ) Ge nanowires
 
 iii. The sample was (`stiff`, JJ)
 
+iv. (`Silicon doped`, VB) ZnO
+
+v. (`p-type`) GaAs
+
 &nbsp;
 
 Definition (iii): Any measureable spectra, e.g., `absorption spectrum`, `phonon dispersion curve`
