@@ -9,3 +9,5 @@ i. (`H2O`, NN) was used as a solvent
 ii. (`polyethylene`, JJ) film
 
 iii. `electron`, `proton`, `Li+`, `hole`
+
+iv. `A` denotes `Co+` (both are chemical mentions here)
