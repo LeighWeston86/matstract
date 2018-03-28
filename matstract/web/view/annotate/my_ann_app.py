@@ -25,11 +25,11 @@ def serve_layout(_, user_key, __):
 
 def serve_ann_options(doi_str):
     return html.Span([
-            dcc.Link("Materials", href="/annotate/token/" + doi_str + "/CHM&MAT&REF&DSC"),
+            dcc.Link("Materials", href="/annotate/token/" + doi_str + "/CHM&MAT&REF&MTC&DSC"),
             html.Span(' | '),
             dcc.Link(
                 "Properties and Conditions",
-                href="/annotate/token/" + doi_str + "/PRO&PVL&PUT&CON&CVL&CUT&QUA&SPL"),
+                href="/annotate/token/" + doi_str + "/PRO&PVL&PUT&CON&CVL&CUT&PRC&SPL"),
             html.Span(' | '),
             dcc.Link("Methods and Applications", href="/annotate/token/" + doi_str + "/SMT&CMT&PMT&APL"),
             html.Span(' | '),

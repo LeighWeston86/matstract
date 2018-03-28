@@ -57,11 +57,11 @@ def serve_ann_options():
                 html.Span('Tasks: | '),
                 dcc.Link("Macro", href="/annotate/macro", ),
                 html.Span(' | '),
-                dcc.Link("Materials", href="/annotate/token/CHM&MAT&REF&DSC"),
+                dcc.Link("Materials", href="/annotate/token/CHM&MAT&REF&MTC&DSC"),
                 html.Span(' | '),
                 dcc.Link(
                     "Properties and Conditions",
-                    href="/annotate/token/PRO&PVL&PUT&CON&CVL&CUT&QUA&SPL"),
+                    href="/annotate/token/PRO&PVL&PUT&CON&CVL&CUT&PRC&SPL"),
                 html.Span(' | '),
                 dcc.Link("Methods and Applications", href="/annotate/token/SMT&CMT&PMT&APL"),
                 html.Span(' | '),
