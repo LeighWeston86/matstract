@@ -3,7 +3,8 @@ import dash_core_components as dcc
 import random
 from matstract.utils import open_db_connection
 
-def highlight_multiple(text, materials, color = 'Yellow'):
+
+def highlight_multiple(text, materials, color='Yellow'):
     for mat in materials:
         text = text.replace(mat, "<s>html.Mark('{}')<s>".format(mat))
     split = text.split('<s>')
@@ -39,11 +40,12 @@ def highlighter(text, parsed, missed):
 
     return txt
 
+
 def random_abstract():
-    db = open_db_connection()
-    count = db.abstracts_leigh.count()
-    random_document = db.abstracts_leigh.find()[random.randrange(count)]
+    db = open_db_connection(local=True)
+    random_document = list(db.abstracts.aggregate([{"$sample": {"size": 1}}]))[0]
     return random_document['abstract']
+
 
 # The Extract App
 layout = html.Div([
@@ -53,14 +55,14 @@ layout = html.Div([
         ], style={'margin-left': '10px'}),
         html.Label('Enter text for materials extraction:'),
         html.Div(dcc.Textarea(id='extract-textarea',
-                     style={"width": "100%"},
-                     autoFocus=True,
-                     spellCheck=True,
-                     wrap=True,
-                     placeholder='Paste abstract/other text here to extract materials mentions.'
-                     )),
+                              style={"width": "100%"},
+                              autoFocus=True,
+                              spellCheck=True,
+                              wrap=True,
+                              placeholder='Paste abstract/other text here to extract materials mentions.'
+                              )),
         html.Div([html.Button('Extract Materials', id='extract-button'),
-                  html.Button('Choose a random abstract', id = 'random-abstract')]),
+                  html.Button('Choose a random abstract', id='random-abstract')]),
         # dcc.Dropdown(id='extract-dropdown',
         #              multi=True,
         #              placeholder='Material: e.g. "LiFePO4"',
@@ -74,9 +76,9 @@ layout = html.Div([
                      readOnly=True,
                      ),
         html.Div(id='extract-highlighted'
-        ),
+                 ),
         html.Div(id='highlight-random'
-        ),
+                 ),
         # dcc.Input(id='trends-material-box',
         #           placeholder='Material: e.g. "LiFePO4"',
         #           value='',
