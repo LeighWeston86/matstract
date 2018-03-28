@@ -1,10 +1,8 @@
-##### Descriptor for material
+##### Descriptor for sample
 
 ###### Part of speech: VB, JJ, NN, NP
 
-Special descriptions of the shape/type for the material/chemical mention. Examples are nanowire, quantum dot, dopant, ion.
-
-i. Silicon (`doped`, VB) ZnO (`nanowires`, NN)
+Special descriptions of the shape/type for the sample. The vast majority of the cases this will be a **structural descriptor** of the material/species. Do not confuse this with property/quality. Examples are nanowire, quantum dot, dopant, ion.
 
 ii. (`Thin film`, NN) BaTiO3 was deposited
 
@@ -15,6 +13,8 @@ iv. BeH2 (`foam`, NN)
 v. PbO - based (`glass`, NN)
 
 vi. We made a (`ceramic`, JJ) film.
+
+vii. (`thin films`, NN) of NiO.
 
 &nbsp;
 
