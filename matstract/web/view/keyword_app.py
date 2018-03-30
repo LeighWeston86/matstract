@@ -72,6 +72,7 @@ layout = html.Div([
                   type='text'),
         html.Button('Search keywords', id='keyword-button'),
     ]),
+    html.Label('Or get related themes for an abstract'),
     html.Div(dcc.Textarea(id='themes-textarea',
                           style={"width": "100%"},
                           autoFocus=True,
@@ -79,8 +80,8 @@ layout = html.Div([
                           wrap=True,
                           placeholder='Paste abstract/other text here to analyze themes.'
                           )),
-    html.Div([html.Button('Extract Themes', id='themes-button'),
-              html.Button('Analyze a random abstract', id='themes-random-abstract')]),
+    html.Div([html.Button('Analyze Themes', id='themes-button'),
+              html.Button('Get a random abstract', id='themes-random-abstract')]),
     html.Div("", id='keywords-extrated'),
     html.Div("", id='themes-extrated')
 ])
