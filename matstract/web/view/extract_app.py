@@ -62,7 +62,7 @@ layout = html.Div([
                               placeholder='Paste abstract/other text here to extract materials mentions.'
                               )),
         html.Div([html.Button('Extract Materials', id='extract-button'),
-                  html.Button('Choose a random abstract', id='random-abstract')]),
+                  html.Button('Choose a random abstract', id='extract-random-abstract')]),
         # dcc.Dropdown(id='extract-dropdown',
         #              multi=True,
         #              placeholder='Material: e.g. "LiFePO4"',

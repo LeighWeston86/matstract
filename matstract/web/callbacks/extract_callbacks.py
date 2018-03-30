@@ -35,7 +35,7 @@ def bind(app):
 
     @app.callback(
         Output('highlight-random', 'children'),
-        [Input('random-abstract', 'n_clicks')])
+        [Input('extract-random-abstract', 'n_clicks')])
     def highlight_random(n_clicks):
         if n_clicks is not None:
             text = extract_app.random_abstract()
