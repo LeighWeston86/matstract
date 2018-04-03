@@ -63,6 +63,7 @@ def highlight_colors(tag):
 
 def full_tag_names(tag):
     label_dict = {label['value']:label['text']  for label in  AnnotationBuilder.LABELS}
+    label_dict['QUA'] = 'Quality'
     return label_dict[tag]
 
 def highlight_ne(tagged_doc):
