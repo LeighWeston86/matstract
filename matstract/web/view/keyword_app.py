@@ -46,7 +46,7 @@ def get_keywords(material):
         return "No keywords for the specified material"
 
 
-def get_themes(text, es):
+def get_themes(text, es, score_cutoff=1000):
     query = {"query": {
         "more_like_this": {
             "fields": ['title', 'abstract'],
@@ -54,14 +54,49 @@ def get_themes(text, es):
         }
     }
     }
-    resp = es.search(index="tri_abstracts", body=query, size=10, request_timeout=60)
-    themes_and_scores = analyze_themes(resp, num_themes=10)
-    themes = [t[0] for t in themes_and_scores]
-    scores = [trunc(t[1]) for t in themes_and_scores]
+    resp = es.search(index="tri_abstracts", body=query, size=100, request_timeout=60)
+    themes_and_scores = analyze_themes(resp)
+
+    if len(themes_and_scores):
+        i=0
+        while themes_and_scores[i][1]>score_cutoff:
+            i+=1
+
+        themes = [t[0] for t in themes_and_scores[0:i]]
+        scores = [trunc(t[1]*1.1) if t[0] in text else trunc(t[1]) for t in themes_and_scores[0:i]]
+        df = pd.DataFrame()
+        df['related themes'] = themes
+        df['score'] = scores
+        return generate_table(df)
+    else:
+        return "No related themes found. "
+
+
+def get_themes_in_original(text, es, num_themes=10):
+    query = {"query": {
+        "more_like_this": {
+            "fields": ['title', 'abstract'],
+            "like": text
+        }
+    }
+    }
+    resp = es.search(index="tri_abstracts", body=query, size=100, request_timeout=60)
+    themes_and_scores = analyze_themes(resp)
+
+    themes = []
+    scores=[]
+    while len(themes) < num_themes and len(themes_and_scores) > 0:
+        themescore = themes_and_scores.pop(0)
+        if themescore[0] in text:
+            themes.append(themescore[0])
+            scores.append(themescore[1])
+    # themes = [t[0] for t in themes_and_scores]
+    # scores = [trunc(t[1]) for t in themes_and_scores]
     df = pd.DataFrame()
-    df['themes'] = themes
+    df['related themes'] = themes
     df['score'] = scores
     return generate_table(df)
+
 
 
 layout = html.Div([
@@ -72,6 +107,8 @@ layout = html.Div([
                   type='text'),
         html.Button('Search keywords', id='keyword-button'),
     ]),
+    html.Div("", id='keywords-extrated'),
+    html.Div(style={"padding": "10px"}),
     html.Label('Or get related themes for an abstract'),
     html.Div(dcc.Textarea(id='themes-textarea',
                           style={"width": "100%"},
@@ -82,6 +119,5 @@ layout = html.Div([
                           )),
     html.Div([html.Button('Analyze Themes', id='themes-button'),
               html.Button('Get a random abstract', id='themes-random-abstract')]),
-    html.Div("", id='keywords-extrated'),
     html.Div("", id='themes-extrated')
 ])
