@@ -92,8 +92,12 @@ div.instructions li {
     color: white;
 }
 
-.highlighted.QUA {
+.highlighted.PRC {
     background-color: #DDDDDD; /* silver */
+}
+
+.highlighted.MTC {
+    background-color: #BFFF00; /* lime */
 }
 
 .highlighted.PVL {

@@ -8,9 +8,11 @@ import certifi
 
 def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
     if 'MATSTRACT_HOST' in env and local:
+        if db == "tri_abstracts":
+            db = env['MATSTRACT_DB']
         uri = "mongodb://%s:%s/%s" % (
-            env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], env['MATSTRACT_DB'])
-        db_creds = {'db': env['MATSTRACT_DB']}
+            env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
+        db_creds = {'db': db }
     else:
         try:
             if user_creds is not None:

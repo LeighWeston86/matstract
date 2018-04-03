@@ -9,7 +9,7 @@ from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 db = open_db_connection(db = "matstract_db")
 
-def highlight_multiple(text, materials, color = 'Yellow'):
+def highlight_multiple(text, materials, color='Yellow'):
     for mat in materials:
         text = text.replace(mat, "<s>html.Mark('{}')<s>".format(mat))
     split = text.split('<s>')
@@ -139,9 +139,9 @@ def highlighter(text, parsed, missed):
 
     return txt
 
+
 def random_abstract():
-    count = db.abstracts.count()
-    random_document = db.abstracts.find()[random.randrange(count)]
+    random_document = list(db.abstracts.aggregate([{"$sample": {"size": 1}}]))[0]
     return random_document['abstract']
 
 # The Extract App
