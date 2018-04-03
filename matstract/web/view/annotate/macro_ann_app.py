@@ -22,7 +22,7 @@ def serve_plain_abstract(empty=False):
     if not empty:
         builder = AnnotationBuilder(local=True)
         # get a random paragraph]
-        random_abstract = builder.get_abstract(good_ones=True)
+        random_abstract = builder.get_abstract(good_ones=False)
         doi = random_abstract['doi']
 
     return [
