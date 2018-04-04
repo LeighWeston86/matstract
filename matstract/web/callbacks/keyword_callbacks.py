@@ -1,18 +1,37 @@
 from dash.dependencies import Input, Output, State
 from matstract.web.view import keyword_app
-from matstract.utils import open_db_connection
+from matstract.utils import open_db_connection, open_es_client
+from matstract.web.view.similar_app import random_abstract
 
 db = open_db_connection(local=True)
+es = open_es_client()
 
 
 def bind(app):
     @app.callback(
-        Output('extract-keywords', 'children'),
+        Output('keywords-extrated', 'children'),
         [Input('keyword-button', 'n_clicks')],
         [State('keyword-material', 'value')])
     def keywords_table(n_clicks, text):
         if text is not None and text != '':
             return keyword_app.get_keywords(text)
+        else:
+            return ""
+
+    @app.callback(
+        Output('themes-textarea', 'value'),
+        [Input('themes-random-abstract', 'n_clicks')])
+    def fill_random(n_clicks):
+        print("filling random")
+        return random_abstract()
+
+    @app.callback(
+        Output('themes-extrated', 'children'),
+        [Input('themes-button', 'n_clicks')],
+        [State('themes-textarea', 'value')])
+    def themes(n_clicks, text):
+        if text is not None and text != '':
+            return keyword_app.get_themes(text, es)
         else:
             return ""
 
