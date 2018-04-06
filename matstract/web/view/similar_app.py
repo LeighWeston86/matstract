@@ -10,8 +10,7 @@ db = open_db_connection(db = "matstract_db")
 client = open_es_client()
 
 def random_abstract():
-    count = db.abstracts.count()
-    random_document = db.abstracts.find()[random.randrange(count)]
+    random_document = list(db.abstracts.aggregate([{ "$sample": {"size": 1}}]))[0]
     return random_document['abstract']
 
 

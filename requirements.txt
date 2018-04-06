@@ -1,22 +1,22 @@
-flask
-pymongo
-plotly
 dash
-dash-renderer
-dash-html-components
-dash-core-components
 dash-auth
-pandas
-pymatgen
-gunicorn
-elsapy
-Flask-Caching
-nltk
-numpy
-tqdm
-sklearn
-elsapy
--e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
--e git://github.com/vtshitoyan/dash-materialsintelligence#egg=dash_materialsintelligence
+dash-core-components
+dash-html-components
+dash-renderer
 elasticsearch
 elasticsearch-dsl
+elsapy
+flask
+Flask-Caching
+gensim
+gunicorn
+nltk
+numpy
+pymongo
+plotly
+pandas
+pymatgen
+sklearn
+tqdm
+-e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
+-e git://github.com/vtshitoyan/dash-materialsintelligence#egg=dash_materialsintelligence

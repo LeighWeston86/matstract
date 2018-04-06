@@ -337,11 +337,9 @@ class TextParser:
         chem_mentions = doc.records.serialize()
         materials = []
         for chem in chem_mentions:
-            materials.append(chem["names"])
-        # print(cems)
-        # extracted_materials = []
+            if 'names' in chem.keys():
+                materials.append(chem["names"])
         return materials
-
 
 def extract_materials(text):
     P = TextParser()
