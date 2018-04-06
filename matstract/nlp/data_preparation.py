@@ -13,29 +13,38 @@ class DataPreparation:
     ABS_FIELD = "abstract"
     DOI_FIELD = "doi"
 
-    def __init__(self, db_name="matstract_db"):
-        self._db = open_db_connection(local=True, db=db_name)
+    def __init__(self, db_name="matstract_db", local=True):
+        self._db = open_db_connection(local=local, db=db_name)
     """
     Provides tools for converting the data in the database to suitable
     format for machine learning tasks
     """
-    def to_word2vec_zip(self, filepath=None, limit=None):
+    def to_word2vec_zip(self, filepath=None, limit=None, newlines=False, line_per_abstract=False):
         """
         Coverts the tokenized abstracts in the database to a zip file with a single vocabulary line.
         :param limit: number of abstracts to use. If not specified, all data will be considered
         :return: a 2d list of words from the abstract / titles, with each abstract on a separate line
         """
         abstracts = self._get_abstracts(limit=limit, col=self.TOK_ABSTRACT_COL)
-        txt = []
+        txt = ""
+        if line_per_abstract:
+            nl_tok = ""
+        elif newlines:
+            nl_tok = "\n"
+        else:
+            nl_tok = ""
+
         for abstract in abstracts:
             ttl = abstract[self.TTL_FILED]
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
-                for s in ttl:
-                    txt += s
-                for s in abs:
-                    txt += s
-        text = " ".join(txt)
+                for sentence in ttl:
+                    txt += " ".join(sentence + [nl_tok])
+                for sentence in abs:
+                    txt += " ".join(sentence + [nl_tok])
+            if line_per_abstract:
+                txt += "\n"
+        text = txt
 
         if filepath is None:
             zip_path = os.getcwd()
