@@ -48,6 +48,10 @@ div.instructions li {
     margin-left: 10px;
 }
 
+div.table-header {
+    font-weight: bold;
+}
+
 /* highlighting */
 
 .token {
