@@ -202,6 +202,36 @@ class AnnotationBuilder:
             return user["name"]
         return None
 
+    def get_leaderboard(self, user_key):
+        if self.get_username(user_key) is not None:
+            macro_counts = getattr(self._db, self.MACRO_ANN_COLLECTION).aggregate([
+                {"$group": {"_id": "$user", "abstracts": {"$sum": 1}}},
+            ])
+            macro_counts = getattr(self._db, "macro_ann").aggregate([
+                {"$group": {"_id": "$user", "abstracts": {"$sum": 1}}},
+            ])
+            leaderboard = dict()
+            for user in macro_counts:
+                leaderboard[user["_id"]] = {"macro_abstracts": user["abstracts"]}
+
+            token_counts = getattr(self._db, "annotations").aggregate([
+                {"$group":
+                     {"_id": "$user",
+                      "abstracts": {"$sum": 1},
+                      "token_labels": {"$sum": {"$size": "$labels"}}}},
+            ])
+            for user in token_counts:
+                if user["_id"] in leaderboard:
+                    leaderboard[user["_id"]]["labels"] = user["token_labels"]
+                    leaderboard[user["_id"]]["token_abstracts"] = user["abstracts"]
+                else:
+                    leaderboard[user["_id"]] = {
+                        "token_abstracts": user["abstracts"],
+                        "token_labels": user["token_labels"]
+                    }
+            return leaderboard
+        return None
+
     @staticmethod
     def prepare_tag(tag):
         return {"tag": tag}

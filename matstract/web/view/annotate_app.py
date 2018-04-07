@@ -1,4 +1,4 @@
-from matstract.web.view.annotate import token_ann_app, macro_ann_app, my_ann_app, diff_ann_app
+from matstract.web.view.annotate import token_ann_app, macro_ann_app, my_ann_app, diff_ann_app, leaderboard_app
 import dash_html_components as html
 import dash_core_components as dcc
 from textwrap import dedent as s
@@ -14,6 +14,8 @@ def serve_layout(db, user_key, path):
         ann_app = my_ann_app
     elif mode == "diff":
         ann_app = diff_ann_app
+    elif mode == "leaderboard":
+        ann_app = leaderboard_app
     else:
         ann_app = macro_ann_app
 
@@ -33,6 +35,8 @@ def serve_auth_info(username):
                          html.Span(username, style={"font-weight": "bold"}),
                          html.Span(" ( "),
                          dcc.Link("my annotations", href="/annotate/my_annotations"),
+                         html.Span(" | "),
+                         dcc.Link("leaderboard", href="/annotate/leaderboard"),
                          html.Span(" )")]
     else:
         username_info = "Not Authorised to annotate"
