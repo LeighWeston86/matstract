@@ -10,4 +10,8 @@ ii. (`0.1`, NN) nm
 
 A crystal orientation
 
-iii. predominant orientation (along (311) plane, NP)
+iii. predominant orientation (`along (311) plane`, NP)
+
+**DO NOT ANNOTATE** comparative and superlative property values, e.g.
+
+iv. higher, smaller, largest
