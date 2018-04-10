@@ -12,6 +12,10 @@ A crystal orientation
 
 iii. predominant orientation (`along (311) plane`, NP)
 
-**DO NOT ANNOTATE** comparative and superlative property values, e.g.
+A realtive value, e.g.
 
-iv. higher, smaller, largest
+iv. `high` conductivity.
+
+**Do not annotate** comparative and superlative property values, e.g.
+
+v. higher, smaller, largest
