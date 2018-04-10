@@ -2,7 +2,7 @@
 
 ###### Part of speech: VB, JJ, NN, NP
 
-Special descriptions of the shape/type for the sample. The vast majority of the cases this will be a **structural descriptor** of the material/species. Do not confuse this with property/quality. Examples are nanowire, quantum dot, dopant. **Do not annotate** ion, atom, etc., because these are descriptors for chemical mentions and not materials of interest.
+Special descriptions of the shape/type for the sample. The vast majority of the cases this will be a **structural descriptor** of the material/species. Do not confuse this with property/quality. Examples are nanowire, quantum dot, dopant. **Do not annotate** ion, atom, etc.
 
 ii. (`Thin film`, NN) BaTiO3 was deposited
 
