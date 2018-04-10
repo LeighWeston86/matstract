@@ -2,7 +2,6 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 def plot_matrix(cm, classes,
                 normalize=False,
                 show_axis_labels=False,
@@ -33,3 +32,11 @@ def plot_matrix(cm, classes,
     if show_axis_labels:
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
+
+
+def is_number(t):
+    try:
+        float(t)
+        return True
+    except ValueError:
+        return False
