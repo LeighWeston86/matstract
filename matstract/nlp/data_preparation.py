@@ -1,9 +1,10 @@
 from matstract.utils import open_db_connection
 from chemdataextractor.doc import Paragraph
 from tqdm import tqdm
+from matstract.nlp.utils import is_number
+from gensim.utils import deaccent
 import zipfile
 import os
-import string
 
 
 class DataPreparation:
@@ -12,6 +13,15 @@ class DataPreparation:
     TTL_FILED = "title"
     ABS_FIELD = "abstract"
     DOI_FIELD = "doi"
+    ELEMENTS = ['H', 'B', 'C', 'N', 'O', 'F', 'P', 'S', 'K', 'V', 'Y', 'I', 'W', 'U',
+                'He', 'Li', 'Be', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'Cl', 'Ar', 'Ca', 'Sc', 'Ti', 'Cr',
+                'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
+                'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Xe',
+                'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
+                'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
+                'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
+                'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
+                'Fl', 'Lv']
 
     def __init__(self, db_name="matstract_db", local=True):
         self._db = open_db_connection(local=local, db=db_name)
@@ -34,14 +44,26 @@ class DataPreparation:
         else:
             nl_tok = ""
 
+        def process_sentence(s):
+            for i, tok in enumerate(s):
+                if is_number(tok):
+                    tok = "<nUm>"  # replace all numbers with a string <nUm>
+                elif (len(tok) == 1 or (len(tok) > 1 and tok[0].isupper() and tok[1:].islower())) \
+                        and tok not in self.ELEMENTS:
+                    tok = deaccent(tok.lower())  # if only first letter uppercase but not an element
+                else:
+                    tok = deaccent(tok)
+                s[i] = tok
+            return s
+
         for abstract in abstracts:
             ttl = abstract[self.TTL_FILED]
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
                 for sentence in ttl:
-                    txt += " ".join(sentence + [nl_tok])
+                    txt += " ".join(process_sentence(sentence) + [nl_tok])
                 for sentence in abs:
-                    txt += " ".join(sentence + [nl_tok])
+                    txt += " ".join(process_sentence(sentence) + [nl_tok])
             if line_per_abstract:
                 txt += "\n"
         text = txt
@@ -68,8 +90,7 @@ class DataPreparation:
             for sentence in tokens:
                 toks.append([])
                 for tok in sentence:
-                    if tok.text not in string.punctuation:
-                        toks[-1].append(tok.text)
+                    toks[-1].append(tok.text)
             return toks
 
         # get the abstracts
@@ -78,27 +99,27 @@ class DataPreparation:
 
         count = abstracts.count() if limit is None else limit
 
-        # tokenize and insert into the new collection (doi as unique key)
-        for abstract in tqdm(abstracts, total=count):
-            if override or (not override and abstract[self.DOI_FIELD] not in existing_dois):
+        def insert_abstract(a):
+            if override or (not override and a[self.DOI_FIELD] not in existing_dois):
                 # saving time by not tokenizing the text if abstract already exists
                 try:
                     abs_tokens = {
-                        self.DOI_FIELD: abstract[self.DOI_FIELD],
-                        self.TTL_FILED: tokenize(abstract[self.TTL_FILED]),
-                        self.ABS_FIELD: tokenize(abstract[self.ABS_FIELD]),
+                        self.DOI_FIELD: a[self.DOI_FIELD],
+                        self.TTL_FILED: tokenize(a[self.TTL_FILED]),
+                        self.ABS_FIELD: tokenize(a[self.ABS_FIELD]),
                     }
                 except Exception as e:
-                    print("Exception type: %s, doi: %s" % (type(e).__name__, abstract[self.DOI_FIELD]))
+                    print("Exception type: %s, doi: %s" % (type(e).__name__, a[self.DOI_FIELD]))
                     abs_tokens = {
-                        self.DOI_FIELD: abstract[self.DOI_FIELD],
+                        self.DOI_FIELD: a[self.DOI_FIELD],
                         self.TTL_FILED: None,
                         self.ABS_FIELD: None,
                         "error": "%s: %s " % (type(e).__name__, str(e))
                     }
                 if override:
+                    # getattr(self._db, self.TOK_ABSTRACT_COL).insert_one(abs_tokens)
                     getattr(self._db, self.TOK_ABSTRACT_COL).replace_one({
-                        "doi": abstract[self.DOI_FIELD]},
+                        "doi": a[self.DOI_FIELD]},
                         abs_tokens,
                         upsert=True)
                 else:
@@ -106,7 +127,14 @@ class DataPreparation:
                         # we have already filtered so there should not be doi overlap
                         getattr(self._db, self.TOK_ABSTRACT_COL).insert_one(abs_tokens)
                     except Exception as e:
-                        print("Exception type: %s, doi: %s" % (type(e).__name__, abstract[self.DOI_FIELD]))
+                        print("Exception type: %s, doi: %s" % (type(e).__name__, a[self.DOI_FIELD]))
+
+        # tokenize and insert into the new collection (doi as unique key)
+        for abstract in tqdm(abstracts, total=count):
+            insert_abstract(abstract)
+
+        # # with Pool() as p:
+        # list(tqdm(parmap(insert_abstract, abstracts), total=count))
 
     def _get_abstracts(self, limit=None, col=None):
         """
