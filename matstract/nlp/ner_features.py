@@ -39,9 +39,9 @@ class FeatureGenerator:
             os.path.join(os.getcwd(), os.path.dirname(__file__)))
         self.lookup_tables =  pickle.load(open(os.path.join(__location__, 'lookup_tables.p'), 'rb'))
         #load word2vec vectors
-        __location__ = os.path.realpath(
-            os.path.join(os.getcwd(), os.path.dirname(__file__)))
-        self.w2v =  pickle.load(open(os.path.join(__location__, 'w2v_dict.p'), 'rb'))
+       # __location__ = os.path.realpath(
+       #     os.path.join(os.getcwd(), os.path.dirname(__file__)))
+       #self.w2v =  pickle.load(open(os.path.join(__location__, 'w2v_dict.p'), 'rb'))
 
     def get_feature(self, word_array, index,  NE_tagged = True):
         '''
@@ -163,11 +163,11 @@ class FeatureGenerator:
         in_spacegroup = 1 if word.lower() in self.lookup_tables['spacegroup_lookup'] else 0
         return [in_chem, in_chem_stem, in_spacegroup ]
 
-    def w2v_features(self, word):
-        try:
-            return self.w2v[word]
-        except KeyError:
-            return np.ones(128) #this should be improved
+    #def w2v_features(self, word):
+    #    try:
+    #        return self.w2v[word]
+    #    except KeyError:
+    #        return np.ones(128) #this should be improved
 
     def hot_encoder(self, data_vec):
         '''
@@ -219,12 +219,12 @@ class FeatureGenerator:
                     all_features.append(feature_vector)
                     all_outcomes.append(NE_tag)
                     #add w2vec
-                    if include_word2vec:
-                        w2v_vector = self.w2v_features(word)
-                        if 'w2v_array' in locals():
-                            w2v_array = np.vstack([w2v_array, w2v_vector])
-                        else:
-                            w2v_array = w2v_vector
+                    #if include_word2vec:
+                    #    w2v_vector = self.w2v_features(word)
+                    #    if 'w2v_array' in locals():
+                    #        w2v_array = np.vstack([w2v_array, w2v_vector])
+                    #    else:
+                    #        w2v_array = w2v_vector
 
         df = pd.DataFrame(all_features)
         #Separate numerical and categorical features - numerical go to a scaler, categorical to hot encoder
