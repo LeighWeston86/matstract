@@ -4,6 +4,8 @@ import random
 from matstract.utils import open_db_connection
 from chemdataextractor.doc import Text
 import pickle
+import _pickle
+import gzip
 import os
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
@@ -84,12 +86,14 @@ def extract_ne(abstract):
     #load in a classifier
     classifier_location = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '../../nlp/lr_classifier.p')
-    clf = pickle.load(open(classifier_location, 'rb'))
+    with gzip.open(classifier_location, 'rb') as f:
+        clf = _pickle.load(f)
 
     #load in feature generator
     feature_generator_location = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '../../nlp/feature_generator.p')
-    feature_generator = pickle.load(open(feature_generator_location, 'rb'))
+    with gzip.open(feature_generator_location, 'rb') as f:
+        feature_generator = _pickle.load(f)
 
     #tag and tokenize
     text = Text(abstract)
@@ -140,10 +144,27 @@ def highlighter(text, parsed, missed):
 
     return txt
 
-
 def random_abstract():
-    random_document = list(db.abstracts.aggregate([{"$sample": {"size": 1}}]))[0]
-    return random_document['abstract']
+    #locations for relevant/not relevant classifier and vecotrizers
+    models_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../nlp/')
+    classifier_location =  os.path.join(models_location, 'r_nr_classifier.p')
+    cv_location = os.path.join(models_location, 'cv.p')
+    tfidf_location = os.path.join(models_location, 'tfidf.p')
+
+    # load in relevant/not-relevant classifier and vectorizers
+    clf = pickle.load(open(classifier_location, 'rb'))
+    cv = pickle.load(open(cv_location, 'rb'))
+    tfidf = pickle.load(open(tfidf_location, 'rb'))
+
+    no_abstract = True
+    while no_abstract:
+        random_document = list(db.abstracts.aggregate([{"$sample": {"size": 1}}]))[0]
+        random_abstract = random_document['abstract']
+        vectorized = cv.transform([random_abstract])
+        transformed = tfidf.transform(vectorized)
+        if clf.predict(transformed):
+            no_abstract = False
+    return random_abstract
 
 # The Extract App
 layout = html.Div([
