@@ -1,19 +1,9 @@
 from matstract.utils import open_db_connection
 from chemdataextractor.doc import Paragraph
+from gensim.utils import deaccent
 from tqdm import tqdm
-from matstract.nlp.utils import process_sentence
 import zipfile
 import os
-
-ELEMENTS = ['H', 'B', 'C', 'N', 'O', 'F', 'P', 'S', 'K', 'V', 'Y', 'I', 'W', 'U',
-            'He', 'Li', 'Be', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'Cl', 'Ar', 'Ca', 'Sc', 'Ti', 'Cr',
-            'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
-            'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Xe',
-            'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
-            'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
-            'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
-            'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
-            'Fl', 'Lv']
 
 
 class DataPreparation:
@@ -22,6 +12,16 @@ class DataPreparation:
     TTL_FILED = "title"
     ABS_FIELD = "abstract"
     DOI_FIELD = "doi"
+
+    ELEMENTS = ['H', 'B', 'C', 'N', 'O', 'F', 'P', 'S', 'K', 'V', 'Y', 'I', 'W', 'U',
+                'He', 'Li', 'Be', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'Cl', 'Ar', 'Ca', 'Sc', 'Ti', 'Cr',
+                'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
+                'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Xe',
+                'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
+                'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
+                'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
+                'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
+                'Fl', 'Lv']
 
     def __init__(self, db_name="matstract_db", local=True):
         self._db = open_db_connection(local=local, db=db_name)
@@ -49,9 +49,9 @@ class DataPreparation:
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
                 for sentence in ttl:
-                    txt += " ".join(process_sentence(sentence, elements=ELEMENTS) + [nl_tok])
+                    txt += " ".join(DataPreparation.process_sentence(sentence) + [nl_tok])
                 for sentence in abs:
-                    txt += " ".join(process_sentence(sentence, elements=ELEMENTS) + [nl_tok])
+                    txt += " ".join(DataPreparation.process_sentence(sentence) + [nl_tok])
             if line_per_abstract:
                 txt += "\n"
         text = txt
@@ -137,3 +137,25 @@ class DataPreparation:
         else:
             abstracts = getattr(self._db, col).find()
         return abstracts
+
+    @staticmethod
+    def is_number(t):
+        try:
+            float(t.replace(',', ''))
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def process_sentence(s):
+        for i, tok in enumerate(s):
+            # write a script to split <nUm>UNIT tokens
+            if DataPreparation.is_number(tok):
+                tok = "<nUm>"  # replace all numbers with a string <nUm>
+            elif (len(tok) == 1 or (len(tok) > 1 and tok[0].isupper() and tok[1:].islower())) \
+                    and tok not in DataPreparation.ELEMENTS:
+                tok = deaccent(tok.lower())  # if only first letter uppercase but not an element
+            else:
+                tok = deaccent(tok)
+            s[i] = tok
+        return s
