@@ -1,6 +1,8 @@
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+from gensim.utils import deaccent
+
 
 def plot_matrix(cm, classes,
                 normalize=False,
@@ -40,3 +42,17 @@ def is_number(t):
         return True
     except ValueError:
         return False
+
+
+def process_sentence(s, elements):
+    for i, tok in enumerate(s):
+        # write a script to split <nUm>UNIT tokens
+        if is_number(tok):
+            tok = "<nUm>"  # replace all numbers with a string <nUm>
+        elif (len(tok) == 1 or (len(tok) > 1 and tok[0].isupper() and tok[1:].islower())) \
+                and tok not in elements:
+            tok = deaccent(tok.lower())  # if only first letter uppercase but not an element
+        else:
+            tok = deaccent(tok)
+        s[i] = tok
+    return s
