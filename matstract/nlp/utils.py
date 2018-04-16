@@ -36,7 +36,7 @@ def plot_matrix(cm, classes,
 
 def is_number(t):
     try:
-        float(t)
+        float(t.replace(',', ''))
         return True
     except ValueError:
         return False

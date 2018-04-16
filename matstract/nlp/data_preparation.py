@@ -44,26 +44,14 @@ class DataPreparation:
         else:
             nl_tok = ""
 
-        def process_sentence(s):
-            for i, tok in enumerate(s):
-                if is_number(tok):
-                    tok = "<nUm>"  # replace all numbers with a string <nUm>
-                elif (len(tok) == 1 or (len(tok) > 1 and tok[0].isupper() and tok[1:].islower())) \
-                        and tok not in self.ELEMENTS:
-                    tok = deaccent(tok.lower())  # if only first letter uppercase but not an element
-                else:
-                    tok = deaccent(tok)
-                s[i] = tok
-            return s
-
         for abstract in abstracts:
             ttl = abstract[self.TTL_FILED]
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
                 for sentence in ttl:
-                    txt += " ".join(process_sentence(sentence) + [nl_tok])
+                    txt += " ".join(self.process_sentence(sentence) + [nl_tok])
                 for sentence in abs:
-                    txt += " ".join(process_sentence(sentence) + [nl_tok])
+                    txt += " ".join(self.process_sentence(sentence) + [nl_tok])
             if line_per_abstract:
                 txt += "\n"
         text = txt
@@ -77,6 +65,20 @@ class DataPreparation:
         print("%s created at %s" % (filename, zip_path))
         zf = zipfile.ZipFile(os.path.join(zip_path, "abstracts.zip"), "w")
         zf.writestr("/abstracts", text)
+
+    @staticmethod
+    def process_sentence(s):
+        for i, tok in enumerate(s):
+            # write a script to split <nUm>UNIT tokens
+            if is_number(tok):
+                tok = "<nUm>"  # replace all numbers with a string <nUm>
+            elif (len(tok) == 1 or (len(tok) > 1 and tok[0].isupper() and tok[1:].islower())) \
+                    and tok not in DataPreparation.ELEMENTS:
+                tok = deaccent(tok.lower())  # if only first letter uppercase but not an element
+            else:
+                tok = deaccent(tok)
+            s[i] = tok
+        return s
 
     def tokenize_abstracts(self, limit=None, override=False):
         def tokenize(text):
