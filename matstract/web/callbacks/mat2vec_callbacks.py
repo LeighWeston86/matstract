@@ -1,4 +1,4 @@
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from matstract.utils import open_db_connection
 import dash_html_components as html
 import numpy as np
@@ -17,6 +17,7 @@ with ds.open("https://s3-us-west-1.amazonaws.com/materialsintelligence/model_phr
 
 norm = np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
 normalized_embeddings = embeddings / norm
+del embeddings, norm  # to free up some memory
 
 # # getting word embeddings from the database
 # all_embeddings = db.embeddings.find()
@@ -28,12 +29,14 @@ normalized_embeddings = embeddings / norm
 #
 # normalized_embeddings = embeddings / np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
 
+
 def bind(app):
     # updates similar words
     @app.callback(
         Output('similar_words_container', 'children'),
-        [Input('similar_words_input', 'value')])
-    def get_similar_words(word):
+        [Input('similar_words_button', 'n_clicks')],
+        [State('similar_words_input', 'value')])
+    def get_similar_words(_, word):
         if word is not None and word != "":
             word = word.replace(" ", "_")
             word = DataPreparation.process_sentence([word])[0]
@@ -57,10 +60,11 @@ def bind(app):
     # updates analogies
     @app.callback(
         Output('analogy_container', 'children'),
-        [Input('analogy_pos_1', 'value'),
-         Input('analogy_neg_1', 'value'),
-         Input('analogy_pos_2', 'value')])
-    def get_analogy(pos_1, neg_1, pos_2):
+        [Input("analogy_run", "n_clicks")],
+        [State('analogy_pos_1', 'value'),
+         State('analogy_neg_1', 'value'),
+         State('analogy_pos_2', 'value')])
+    def get_analogy(_, pos_1, neg_1, pos_2):
         def get_word_vector(word):
             if word is not None and word != "":
                 word = word.replace(" ", "_")
