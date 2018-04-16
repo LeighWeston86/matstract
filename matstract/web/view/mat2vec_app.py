@@ -6,23 +6,25 @@ from textwrap import dedent as s
 def serve_layout(db):
     """Generates the layout dynamically on every refresh"""
 
-    return html.Div([serve_analogy(), serve_similarity()], className="row")
+    return html.Div([serve_analogy(), serve_similarity()])
 
 
 def serve_similarity():
     return html.Div([
-                html.Span("Similarity", style={"fontWeight": "bold"}),
-                html.Br(),
                 html.Div([
+                    html.Span("Similarity", style={"fontWeight": "bold"}),
+                    html.Br(),
                     dcc.Input(id='similar_words_input',
                               placeholder='e.g. LiMn2O4, anode, ...',
-                              type='text')]),
+                              type='text'),
+                    html.Button("Is similar to", id="similar_words_button", className="butson-primary"),
+                    ]),
                 html.Div('', id='similar_words_container')])
 
 
 def serve_analogy():
     return html.Div([
-                html.Span("Analogies", style={"fontWeight": "bold"}),
+                html.Span("Analogy", style={"fontWeight": "bold"}),
                 html.Br(),
                 dcc.Input(id='analogy_neg_1',
                           placeholder='e.g. lithium, Co',
@@ -36,4 +38,5 @@ def serve_analogy():
                           placeholder='e.g. graphite, Al',
                           type='text'),
                 html.Span(" is to "),
-                html.Span("", id="analogy_container", style={"fontWeight": "bold"})])
+                html.Span("", id="analogy_container", style={"fontWeight": "bold"}),
+                html.Button("?", id="analogy_run", className="buton-primary")])
