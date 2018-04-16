@@ -9,6 +9,7 @@ elsapy
 flask
 Flask-Caching
 gensim
+matplotlib
 gunicorn
 nltk
 numpy

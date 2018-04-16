@@ -1,9 +1,10 @@
 from dash.dependencies import Input, Output, State
 from matstract.utils import open_db_connection
+from matstract.nlp.utils import process_sentence
 import dash_html_components as html
 import numpy as np
 from numpy import DataSource
-from matstract.nlp.data_preparation import DataPreparation
+from matstract.nlp.data_preparation import ELEMENTS
 
 db = open_db_connection(local=False)
 
@@ -36,7 +37,7 @@ def bind(app):
     def get_similar_words(word):
         if word is not None and word != "":
             word = word.replace(" ", "_")
-            word = DataPreparation.process_sentence([word])[0]
+            word = process_sentence([word], ELEMENTS)[0]
             # get all normalized word vectors
             try:
                 word_embedding = [normalized_embeddings[reverse_dictionary.index(word)]]
@@ -64,7 +65,7 @@ def bind(app):
         def get_word_vector(word):
             if word is not None and word != "":
                 word = word.replace(" ", "_")
-                word = DataPreparation.process_sentence([word])[0]
+                word = process_sentence([word], ELEMENTS)[0]
                 # get all normalized word vectors
                 try:
                     return normalized_embeddings[reverse_dictionary.index(word), :]
