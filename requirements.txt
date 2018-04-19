@@ -10,7 +10,6 @@ flask
 Flask-Caching
 gensim
 gunicorn
-nltk
 numpy
 pymongo
 plotly
