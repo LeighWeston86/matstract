@@ -69,7 +69,7 @@ def bind(app):
         def get_word_vector(word):
             if word is not None and word != "":
                 word = word.replace(" ", "_")
-                word = DataPreparation.process_sentence([word])[0]
+                word = dp.process_sentence([word])[0]
                 # get all normalized word vectors
                 try:
                     return normalized_embeddings[reverse_dictionary.index(word), :]
@@ -82,11 +82,11 @@ def bind(app):
         neg_1_vec = get_word_vector(neg_1)
         pos_2_vec = get_word_vector(pos_2)
         if pos_1_vec is not None and neg_1_vec is not None and pos_2_vec is not None:
-            diff_vec = (pos_2_vec + pos_1_vec - neg_1_vec)
+            diff_vec = pos_2_vec + pos_1_vec - neg_1_vec
             norm_diff = diff_vec / np.linalg.norm(diff_vec)  # unit length
 
             sim = np.dot([norm_diff], normalized_embeddings.T)
-            top_k = 4  # number of nearest neighbors
+            top_k = 5  # number of nearest neighbors
             nearest = (-sim[0, :]).argsort()[:top_k]
             for k in range(top_k):
                 close_word = reverse_dictionary[nearest[k]]
