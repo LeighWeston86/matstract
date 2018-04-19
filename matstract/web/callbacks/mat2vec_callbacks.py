@@ -68,7 +68,7 @@ def bind(app):
         def get_word_vector(word):
             if word is not None and word != "":
                 word = word.replace(" ", "_")
-                word = DataPreparation.process_sentence([word])[0]
+                word = dp.process_sentence([word])[0]
                 # get all normalized word vectors
                 try:
                     return normalized_embeddings[reverse_dictionary.index(word), :]
