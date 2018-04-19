@@ -8,6 +8,7 @@ from matstract.nlp.data_preparation import DataPreparation
 db = open_db_connection(local=False)
 
 ds = DataSource()
+dp = DataPreparation()
 # loading pre-trained embeddings and the dictionary
 embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_phrases_sg_w8_n10_a001_pc20.wv.vectors.npy"
 embeddings_file = ds.open(embeddings_url)
@@ -39,7 +40,7 @@ def bind(app):
     def get_similar_words(_, word):
         if word is not None and word != "":
             word = word.replace(" ", "_")
-            word = DataPreparation.process_sentence([word])[0]
+            word = dp.process_sentence([word])[0]
             # get all normalized word vectors
             try:
                 word_embedding = [normalized_embeddings[reverse_dictionary.index(word)]]
