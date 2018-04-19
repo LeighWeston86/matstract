@@ -5,6 +5,7 @@ from sympy.abc import _clash
 from chemdataextractor.doc import Document
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.composition import Composition, CompositionError
+import pubchempy as pcp
 
 
 class MaterialParser:
@@ -224,6 +225,72 @@ class MaterialParser:
             mixture[item]['fraction'] = self.__simplify(mixture[item]['fraction'])
 
         return mixture
+
+    def get_chemical_structure(self, material_name):
+        """
+        The main function to obtain the closest chemical structure associated with a given material name
+        :param material_name: string of material name
+        :return: dictionary composition and stoichiometric variables
+        """
+        chemical_structure = dict(
+            composition={},
+            mixture={},
+            fraction_vars={},
+            elements_vars={},
+            formula='',
+            chemical_name=''
+        )
+
+        material_name = re.sub('[∙⋅](.*)', '', material_name)
+
+        chemical_structure['mixture'] = self.get_mixture(material_name)
+
+        chemical_structure['formula'] = ''.join(chemical_structure['mixture'].keys())
+        if chemical_structure['formula'] == '':
+            chemical_structure['formula'] = material_name
+
+        # trying to extract chemical structure
+        try:
+            t_struct = self.get_structure_by_formula(chemical_structure['formula'])
+        except:
+            t_struct = self.__empty_structure()
+            #print('Something went wrong!' + material_name)
+            # return self.__empty_structure()
+
+        chemical_structure['composition'] = t_struct['composition']
+        # TODO: merge fraction variables
+
+        # if material name is not proper formula look for it in DB (pubchem, ICSD)
+        if not self.__is_correct_composition(chemical_structure['formula'], chemical_structure['composition']):
+            # print('Looking in pubchem ' + material_name)
+            chemical_structure['composition'] = collections.defaultdict(str)
+            # chemical_structure['stoichiometry_vars'] = collections.defaultdict(str)
+            chemical_structure['elements_vars'] = collections.defaultdict(str)
+
+            pcp_compounds = pcp.get_compounds(material_name, 'name')
+            if len(pcp_compounds) > 0:
+                try:
+                    chemical_structure['composition'] = self.get_structure_by_formula(pcp_compounds[0].molecular_formula)[
+                        'composition']
+                except:
+                    chemical_structure['composition'] = collections.defaultdict(str)
+
+        # if still cannot find composition look word by word <- this is a quick fix due to wrong tokenization,
+        # will be removed probably
+        if chemical_structure['composition'] == {}:
+            # print('Looking part by part ' + material_name)
+            for word in material_name.split(' '):
+                try:
+                    t_struct = self.get_structure_by_formula(word)
+                except:
+                    t_struct = self.__empty_structure()
+                    #print('Something went wrong!' + material_name)
+                if self.__is_correct_composition(word, t_struct['composition']):
+                    chemical_structure['composition'] = t_struct['composition']
+
+        chemical_structure['name'] = material_name
+
+        return chemical_structure
 
 
 class SimplifiedMaterialParser:
