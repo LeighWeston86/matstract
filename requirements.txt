@@ -21,5 +21,6 @@ sklearn
 tqdm
 sympy
 monty
+regex
 -e git://github.com/materialsintelligence/ChemDataExtractor#egg=chemdataextractor
 -e git://github.com/vtshitoyan/dash-materialsintelligence#egg=dash_materialsintelligence
