@@ -1,36 +1,60 @@
 import re
 import collections
-from chemdataextractor.doc import Document, Paragraph, Title
-import os
-import json
-from pymongo import MongoClient
+import sympy
+from sympy.abc import _clash
+from chemdataextractor.doc import Document
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.composition import Composition, CompositionError
 
 
 class MaterialParser:
     def __init__(self):
-        self.list_of_elements_1 = ['H', 'B', 'C', 'N', 'O', 'F', 'P', 'S', 'K', 'V', 'Y', 'I', 'W', 'U']
-        self.list_of_elements_2 = ['He', 'Li', 'Be', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'Cl', 'Ar', 'Ca', 'Sc', 'Ti', 'Cr',
-                                   'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
-                                   'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Xe',
-                                   'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
-                                   'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
-                                   'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
-                                   'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
-                                   'Fl', 'Lv']
+        self.__list_of_elements_1 = ['H', 'B', 'C', 'N', 'O', 'F', 'P', 'S', 'K', 'V', 'Y', 'I', 'W', 'U']
+        self.__list_of_elements_2 = ['He', 'Li', 'Be', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'Cl', 'Ar', 'Ca', 'Sc', 'Ti', 'Cr',
+                                     'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
+                                     'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Xe',
+                                     'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
+                                     'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
+                                     'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
+                                     'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
+                                     'Fl', 'Lv']
+        self.__list_of_trash_words = ['bulk', 'coated', 'rare', 'earth', 'ceramics', 'undoped']
+        self.__greek_letters = ['α', 'δ', 'χ']
 
-    def get_sym_dict(self, f, factor):
-        '''Returns a normalized, alphabetized dictionary of the chemical formula'''
+    ###################################################################################################################
+    ### Methods to build chemical structure
+    ###################################################################################################################
+
+    def __simplify(self, value):
+
+        """
+        simplifying stoichiometric expression
+        :param value: string
+        :return: string
+        """
+
+        for l in self.__greek_letters:
+            _clash[l] = sympy.Symbol(l)
+
+        new_value = value
+        for i, m in enumerate(re.finditer('(?<=[0-9])([a-z'+''.join(self.__greek_letters)+'])', new_value)):
+            new_value = new_value[0:m.start(1) + i] + '*' + new_value[m.start(1) + i:]
+        new_value = sympy.simplify(sympy.sympify(new_value, _clash))
+        if new_value.is_Float:
+            new_value = round(float(new_value), 3)
+
+        return str(new_value)
+
+    def __get_sym_dict(self, f, factor):
         sym_dict = collections.defaultdict(str)
-        r = "([A-Z]{1}[a-z]{0,1})\s*([-*\.\da-z\+/]*)"
-        for m in re.finditer(r, f):
+        r = "([A-Z]{1}[a-z]{0,1})\s*([-*\.\da-z"+''.join(self.__greek_letters)+"\+/]*)"
 
+        for m in re.finditer(r, f):
             """
             checking for correct elements names
             """
-            el_bin = "{0}{1}".format(str(int(m.group(1)[0] in self.list_of_elements_1 + ['M'])), str(
-                int(m.group(1) in self.list_of_elements_1 + self.list_of_elements_2 + ['Ln', 'M'])))
+            el_bin = "{0}{1}".format(str(int(m.group(1)[0] in self.__list_of_elements_1 + ['M'])), str(
+                int(m.group(1) in self.__list_of_elements_1 + self.__list_of_elements_2 + ['Ln', 'M'])))
             if el_bin in ['01', '11']:
                 el = m.group(1)
                 amt = m.group(2)
@@ -45,14 +69,14 @@ class MaterialParser:
             sym_dict[el] = '(' + sym_dict[el] + ')' + '+' + '(' + amt + ')' + '*' + '(' + str(factor) + ')'
             f = f.replace(m.group(), "", 1)
         if f.strip():
-            print("{} is an invalid formula!".format(f))
+            return collections.defaultdict(str)
+            # print("{} is an invalid formula!".format(f))
 
         """
         refinement of non-variable values
         """
         for el, amt in sym_dict.items():
-            if len(re.findall('[a-z]', amt)) == 0:
-                sym_dict[el] = str(round(eval(amt), 3))
+            sym_dict[el] = self.__simplify(amt)
 
         return sym_dict
 
@@ -60,28 +84,29 @@ class MaterialParser:
         """
         Args:
             formula (str): A string formula, e.g. Fe2O3, Li3Fe2(PO4)3
-
         Returns:
             Composition with that formula.
         """
         formula_dict = collections.defaultdict(str)
-        r = "\(([^\(\)]+)\)\s*([-*\.\da-z\+/]*)"
+        r = "\(([^\(\)]+)\)\s*([-*\.\da-z"+''.join(self.__greek_letters)+"\+/]*)"
 
-        for m in re.finditer(r, formula):
-            factor = "1"
-            if m.group(2) != "":
-                factor = m.group(2)
-            unit_sym_dict = self.get_sym_dict(m.group(1), factor)
-            for el, amt in unit_sym_dict.items():
-                if len(formula_dict[el]) == 0:
-                    formula_dict[el] = amt
-                else:
-                    formula_dict[el] = '(' + formula_dict[el] + ')' + '+' + '(' + amt + ')'
-
-            formula = formula.replace('(' + m.group(1) + ')' + m.group(2), '', 1)
+        while len(re.findall(r, formula)) > 0:
+            for m in re.finditer(r, formula):
+                factor = "1"
+                if m.group(2) != "":
+                    factor = m.group(2)
+                unit_sym_dict = self.__get_sym_dict(m.group(1), factor)
+                for el in formula_dict:
+                    formula_dict[el] = '(' + formula_dict[el] + ')' + '*' + factor
+                for el, amt in unit_sym_dict.items():
+                    if len(formula_dict[el]) == 0:
+                        formula_dict[el] = amt
+                    else:
+                        formula_dict[el] = '(' + formula_dict[el] + ')' + '+' + '(' + amt + ')'
+                formula = formula.replace('(' + m.group(1) + ')' + m.group(2), '', 1)
 
         # if there is coefficient before formula, change factor
-        unit_sym_dict = self.get_sym_dict(formula, "1")
+        unit_sym_dict = self.__get_sym_dict(formula, "1")
         for el, amt in unit_sym_dict.items():
             if len(formula_dict[el]) == 0:
                 formula_dict[el] = amt
@@ -93,8 +118,7 @@ class MaterialParser:
         """
         incorrect = []
         for el, amt in formula_dict.items():
-            if len(re.findall('[a-z]', amt)) == 0:
-                formula_dict[el] = str(round(eval(amt), 3))
+            formula_dict[el] = self.__simplify(amt)
             if any(len(c) > 1 for c in re.findall('[A-Za-z]+', formula_dict[el])):
                 incorrect.append(el)
 
@@ -103,13 +127,13 @@ class MaterialParser:
 
         return formula_dict
 
-    def get_formula_structure(self, formula):
-        # check if material name or formula
-        # check [/, :] in formula
+    def get_structure_by_formula(self, formula):
 
         init_formula = formula
         formula = formula.replace(' ', '')
         formula = formula.replace('−', '-')
+        formula = formula.replace('[', '(')
+        formula = formula.replace(']', ')')
 
         elements_variables = collections.defaultdict(str)
         stoichiometry_variables = collections.defaultdict(str)
@@ -127,9 +151,9 @@ class MaterialParser:
 
         # looking for variables in elements and stoichiometry
         for el, amt in composition.items():
-            if el not in self.list_of_elements_1 + self.list_of_elements_2 + list(elements_variables.keys()):
+            if el not in self.__list_of_elements_1 + self.__list_of_elements_2 + list(elements_variables.keys()):
                 elements_variables[el] = []
-            for var in re.findall('[a-z]', amt):
+            for var in re.findall('[a-z'+''.join(self.__greek_letters)+']', amt):
                 stoichiometry_variables[var] = []
 
         formula_structure = dict(
@@ -143,144 +167,63 @@ class MaterialParser:
 
         return formula_structure
 
-    def get_values(self, string, mode, count=None, default_value=0.1, incr=None):
-        values = []
+    def __empty_structure(self):
+        return dict(
+            formula_='',
+            formula='',
+            composition=collections.defaultdict(str),
+            stoichiometry_vars=collections.defaultdict(str),
+            elements_vars=collections.defaultdict(str),
+            targets=[]
+        )
 
-        """
-        given range
-        """
-        if mode == 'range' and len(string) != 0:
-            string = string[0]
-            if any(c in string for c in ['-', '–']):
-                interval = re.split('[-–]', string)
-            else:
-                interval = [string[0], string[1]]
+    def __is_correct_composition(self, formula, chem_compos):
+        if chem_compos == {}:
+            return False
+        if any(el not in formula + 'M' or amt == '' for el, amt in chem_compos.items()):
+            return False
 
-            if len(interval) > 0:
-                start = float(interval[0])
-                end = float(interval[1])
-                if incr != None:
-                    values = [round(start + i * incr, 2) for i in range(round((end - start) / incr))]
+        return True
 
-                if count != None:
-                    incr = (end - start) / count
-                    values = [round(start + i * incr, 2) for i in range(count)]
+    def get_mixture(self, material_name):
 
-                if incr == None and count == None:
-                    values = [default_value]
+        mixture = {}
 
-        """
-        given list
-        """
-        if mode == 'values' and len(string) != 0:
-            values = [round(float(c), 2) for c in re.findall('[0-9.]+', string[0])]
+        for m in re.finditer('\(1-x\)(.*)-\({0,1}x\){0,1}(.*)', material_name.replace(' ', '')):
+            mixture[m.group(1)] = {}
+            mixture[m.group(2)] = {}
+            mixture[m.group(1)]['fraction'] = '1-x'
+            mixture[m.group(1)]['composition'] = self.get_structure_by_formula(m.group(1))['composition']
+            mixture[m.group(2)]['fraction'] = 'x'
+            mixture[m.group(2)]['composition'] = self.get_structure_by_formula(m.group(2))['composition']
 
-        return values
+            for i in [1, 2]:
+                if m.group(i)[0] == '(' and m.group(i)[-1] == ')':
+                    line = m.group(i)[1:-1]
+                    parts = [s for s in re.split('[-+]{1}([\d\.]*[A-Z][^-+]*)', line) if s != '' and s != line]
+                    for s in parts:
+                        name = re.findall('([\d\.]*)([A-Z].*)', s.strip(' -+()'))[0]
+                        mixture[name[1]] = {}
+                        fraction = name[0]
+                        if fraction == '': fraction = '1'
+                        mixture[name[1]]['fraction'] = '('+fraction+')*'+mixture[m.group(i)]['fraction']
+                        mixture[name[1]]['composition'] = self.get_structure_by_formula(name[1])['composition']
+                    del mixture[m.group(i)]
 
-    def get_stoichiometric_values(self, var, sentence):
-        values = []
-        # equal to exact values
-        if len(values) == 0:
-            values = self.get_values(re.findall(var + '\s*=\s*([0-9.,and\s]+)[\s\)\]]', sentence), mode='values')
-        # equal to range
-        if len(values) == 0:
-            values = self.get_values(re.findall(var + '\s*=\s*([0-9-–.\s]+)[\s\)\]]', sentence), mode='range', count=5)
-        # within range
-        if len(values) == 0:
-            values = self.get_values(
-                re.findall('([0-9\.\s]*)\s*[<≤]{0,1}\s*' + var + '\s*[<≤>]{1}\s*([0-9.\s]+)[\s\)\]\.]', sentence),
-                mode='range', count=5)
+        if mixture == {}:
+            parts = [s for s in re.split('[-+]{1}([\d\.]*[A-Z][^-+]*)', material_name.replace(' ', '')) if s != '' and s != material_name.replace(' ', '')]
+            for s in parts:
+                name = re.findall('([\d\.]*)([A-Z].*)', s.strip(' -+()'))[0]
+                mixture[name[1]] = {}
+                fraction = name[0]
+                if fraction == '': fraction = '1'
+                mixture[name[1]]['fraction'] = fraction
+                mixture[name[1]]['composition'] = self.get_structure_by_formula(name[1])['composition']
 
-        return values
+        for item in mixture:
+            mixture[item]['fraction'] = self.__simplify(mixture[item]['fraction'])
 
-    def get_elements_values(self, var, sentence):
-        values = re.findall(var + '\s*=\s*([A-Za-z,\s]+)', sentence)
-        if len(values) > 0:
-            values = [c for c in re.split('[,\s]', values[0]) if c in self.list_of_elements_1 + self.list_of_elements_2]
-
-        return values
-
-    def replace_stoichiometry(self, string, variable, amount):
-        new_string = '0'
-        if len(re.findall('([0-9]*[a-z]*)' + variable, string)) != 0:
-            if re.findall('([0-9]*[a-z]*)' + variable, string)[0] != '':
-                new_string = string.replace(variable, '*' + str(amount))
-        else:
-            new_string = string.replace(variable, str(amount))
-
-        return new_string
-
-    def substitute_elements(self, structure):
-        output = []
-        for elem, values in structure['elements_vars'].items():
-            # print('For element', elem, values)
-            for v in values:
-                target = dict(structure['composition'])
-                target[v] = target[elem]
-                del target[elem]
-                output.append(dict(
-                    formula_=structure['formula_'],
-                    formula=structure['formula'],
-                    composition=dict(target),
-                    stoichiometry_vars=structure['stoichiometry_vars'],
-                    elements_vars=structure['elements_vars'],
-                    targets=structure['targets']
-                ))
-
-        return output
-
-    def substitute_stoichiometry(self, structure):
-        output = []
-        for var, amounts in structure['stoichiometry_vars'].items():
-            for amt in amounts:
-                target_var = dict(structure['composition'])
-                for el in target_var:
-                    target_var[el] = eval(self.replace_stoichiometry(target_var[el], var, amt))
-                output.append(target_var)
-
-        return output
-
-    def test_parsing(self, material_name, sentence):
-        formula_structure = self.get_formula_structure(material_name)
-
-        # find stoichiometric variables in text
-        for var in list(formula_structure['stoichiometry_vars'].keys()):
-            if len(formula_structure['stoichiometry_vars'][var]) == 0:
-                formula_structure['stoichiometry_vars'][var] = self.get_stoichiometric_values(var, sentence)
-
-        # find element variables
-        for var in list(formula_structure['elements_vars'].keys()):
-            if len(formula_structure['elements_vars'][var]) == 0:
-                formula_structure['elements_vars'][var] = self.get_elements_values(var, sentence)
-
-        # substitute
-        targets = self.substitute_elements(formula_structure)
-
-        if len(targets) == 0:
-            targets.append(dict(
-                formula_=formula_structure['formula_'],
-                formula=formula_structure['formula'],
-                composition=formula_structure['composition'],
-                stoichiometry_vars=formula_structure['stoichiometry_vars'],
-                elements_vars=formula_structure['elements_vars'],
-                targets=formula_structure['targets']
-            ))
-
-        for target in targets:
-            formula_structure['targets'].extend(dict(t) for t in self.substitute_stoichiometry(target))
-
-        return formula_structure
-
-    def make_pretty(self, formula):
-        pretty_formula = ''
-        for key in formula.keys():
-            if formula[key] == "1":
-                pretty_formula += key
-            else:
-                pretty_formula += key + formula[key]
-        # pretty_formula = [key+formula[key] if formula[key] != 1 else key for key in formula.keys()]
-        print(pretty_formula)
-        return pretty_formula
+        return mixture
 
 
 class SimplifiedMaterialParser:
