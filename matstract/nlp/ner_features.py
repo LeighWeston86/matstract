@@ -10,6 +10,8 @@ from scipy import sparse
 import pickle
 import os
 from numbers import Number
+from matstract.extract.parsing import MaterialParser, TextParser
+from matstract.models.AnnotationBuilder import AnnotationBuilder
 
 class FeatureGenerator:
     '''
@@ -33,6 +35,7 @@ class FeatureGenerator:
         self.encoders = []
         self.scalers = []
         self._features_outcomes = None
+        self.words_per_doc = None
         self.train_test_split = train_test_split
         #load in lookup tables
         __location__ = os.path.realpath(
@@ -92,6 +95,7 @@ class FeatureGenerator:
                      next_pos2]
         if NE_tagged:
             features.append(previous_ne)
+            #pass
         return features
 
     def syntactical_features(self, word):
@@ -123,8 +127,8 @@ class FeatureGenerator:
             is_number = 0
 
         #Check if word is a chemical formula
-        parser = parsing.SimpleParser()
-        is_formula = 1 if parser.matgen_parser(word) else 0
+        #parser = parsing.SimpleParser()
+        #is_formula = 1 if parser.matgen_parser(word) else 0
 
         #Check if punctuation due tokenization
         is_punct = 1 if word in string.punctuation else 0
@@ -144,8 +148,49 @@ class FeatureGenerator:
             is_title,
             is_digit,
             is_alnum,
-            is_formula,
+            #is_formula,
             is_punct
+        ]
+        return features
+
+    def is_material_features(self, word, chems_in_sent, sent, idx, NE_tagged = True):
+
+        #Check if can be parsed by pymatgen
+        parser = parsing.SimpleParser()
+        matgen_parsed = 1 if parser.matgen_parser(word) else 0
+        #Check if word before or after can be parsed
+        if NE_tagged:
+            (previous_word, previous_pos), previous_ne = self.get_feature(sent, idx - 1, NE_tagged)
+            (next_word, next_pos), next_ne = self.get_feature(sent, idx + 1, NE_tagged)
+        else:
+            previous_word, previous_pos= self.get_feature(sent, idx - 1, NE_tagged)
+            next_word, next_pos = self.get_feature(sent, idx + 1, NE_tagged)
+        prev_matgen_parsed = 1 if parser.matgen_parser(previous_word) else 0
+        next_matgen_parsed = 1 if parser.matgen_parser(next_word) else 0
+
+
+
+        #Check if can be parsed by Olga's parser
+        #mp = MaterialParser()
+        #try:
+        #    olga_parsed = 1 if mp.get_chemical_structure(word)['formula'] else 0
+        #except:
+        #    olga_parsed = 0
+
+        #Check if chem_data_extractor thinks inside a mention (Need entire sent, idx)
+        cde_parsed  = 1 if word in chems_in_sent else 0
+        #prev_cde_parsed = 1 if previous_word in chems_in_sent else 0
+        #next_cde_parsed = 1 if next_word in chems_in_sent else 0
+        #Add can be parsed for word before (need entire send, idx)
+
+        features = [
+            matgen_parsed,
+            #olga_parsed,
+            cde_parsed,
+            prev_matgen_parsed,
+            next_matgen_parsed,
+            #prev_cde_parsed,
+            #next_cde_parsed
         ]
         return features
 
@@ -208,13 +253,20 @@ class FeatureGenerator:
         :param tagged_documents: pos and NE tagged documents as a list.
         :return: returns a tuple (features, outcomes). Feature array as is a scipy sparse array.
         '''
+        self.words_per_doc = [len([word for sent in doc for word in sent]) for doc in tagged_documents] #This is for train-test splitting
         all_features = []
         all_outcomes = []
         for doc in tagged_documents:
             for sent in doc:
+                parser = TextParser()
+                reconstructed = ' '.join([word for (word, pos), ne_tag in sent])  # Should use raw sent not reconstruct tokenized
+                parsed = parser.extract_chemdata(reconstructed)
+                flatten = [cem[0].split() for cem in parsed]
+                chems_in_sent = [item for sublist in flatten for item in sublist]
                 for n, ((word, pos), NE_tag) in enumerate(sent):
                     feature_vector  = self.contextual_features(sent, n)
                     feature_vector += self.syntactical_features(word)
+                    feature_vector += self.is_material_features(word, chems_in_sent, sent, n)
                     feature_vector += self.lookup_features(word)
                     all_features.append(feature_vector)
                     all_outcomes.append(NE_tag)
@@ -265,9 +317,18 @@ class FeatureGenerator:
         :return: feature vector representation of word
         '''
         word, tag = word_tag
+
+        parser = TextParser()
+        reconstructed = ' '.join(
+            [word for (word, pos) in sent])  # Should use raw sent not reconstruct tokenized
+        parsed = parser.extract_chemdata(reconstructed)
+        flatten = [cem[0].split() for cem in parsed]
+        chems_in_sent = [item for sublist in flatten for item in sublist]
+
         feature_vector = self.contextual_features(sent, idx,  NE_tagged = False)
         feature_vector += [prev_bio]
         feature_vector += self.syntactical_features(word)
+        feature_vector += self.is_material_features(word, chems_in_sent, sent, idx, NE_tagged = False)
         feature_vector += self.lookup_features(word)
         # Separate numerical and categorical features - numerical go to a scaler, categorical to hot encoder
         numerical   = [feature for feature in feature_vector if isinstance(feature, Number)]
@@ -323,6 +384,8 @@ class FeatureGenerator:
     def train_test_set(self):
         features, outcomes = self._features_outcomes
         cutoff = int(self.train_test_split*len(outcomes))
+        cumulative_wordcount = np.cumsum(self.words_per_doc)
+        cutoff =  min(cumulative_wordcount, key=lambda x: abs(x - cutoff))
         X_train = features.tocsr()[:cutoff]
         X_test = features.tocsr()[cutoff:]
         y_train = outcomes[:cutoff]
@@ -330,16 +393,9 @@ class FeatureGenerator:
         return (X_train, y_train), (X_test, y_test)
 
 if __name__ == '__main__':
-    from matstract.models.AnnotationBuilder import AnnotationBuilder
     builder = AnnotationBuilder()
-    annotations = builder.get_annotations(user='leighmi6')  #### Add user name
+    annotations = builder.get_annotations(user='leighmi6')
     annotations = [annotated.to_iob()[0] for annotated in annotations]
-    annotations = [[[((word, pos), tag) for word, pos, tag in sent] for sent in doc] for doc in annotations]
-    feature_generator = FeatureGenerator()
+    annotations = [[[((word, pos), tag) for word, pos, tag in sent] for sent in doc] for doc in annotations]  # this line makes my code compatible with Vahe's
+    feature_generator = FeatureGenerator(train_test_split=0.75)
     features, outcomes = feature_generator.fit_transform(annotations)
-    #Download new abstract
-    #word = ('GaN', 'NN')
-    #sent = [('We', 'DT'), ('grew', 'VB'), ('GaN', 'NN'), ('films', 'NNS')]
-    #idx = 2
-    #prev_bio = 'O'
-    #print(feature_generator.transform(word, sent, idx, prev_bio))
