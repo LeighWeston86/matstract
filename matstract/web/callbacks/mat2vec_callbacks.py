@@ -1,11 +1,10 @@
+from matstract.utils import tr
 from dash.dependencies import Input, Output, State
-from matstract.utils import open_db_connection
 import dash_html_components as html
 import numpy as np
 from numpy import DataSource
 from matstract.nlp.data_preparation import DataPreparation
 
-db = open_db_connection(local=False)
 
 ds = DataSource()
 dp = DataPreparation()
@@ -19,16 +18,6 @@ with ds.open("https://s3-us-west-1.amazonaws.com/materialsintelligence/model_phr
 norm = np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
 normalized_embeddings = embeddings / norm
 del embeddings, norm  # to free up some memory
-
-# # getting word embeddings from the database
-# all_embeddings = db.embeddings.find()
-# embeddings = np.empty((all_embeddings.count(), 200))
-# for i, embedding in enumerate(all_embeddings):
-#     print("Getting embedding #{}".format(i), end='\r')
-#     embeddings[embedding["index"], :] = embedding["vector"]
-# reverse_dictionary = db.embeddings.dictionary.find_one()["dict"]
-#
-# normalized_embeddings = embeddings / np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
 
 
 def bind(app):
@@ -94,3 +83,7 @@ def bind(app):
                     return close_word
         else:
             return ""
+
+
+print("Difference after loading Mat2Vec")
+tr.print_diff()

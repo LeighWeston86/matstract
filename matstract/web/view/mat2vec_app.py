@@ -1,6 +1,5 @@
 import dash_html_components as html
 import dash_core_components as dcc
-from textwrap import dedent as s
 
 
 def serve_layout(db):
