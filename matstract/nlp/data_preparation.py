@@ -60,17 +60,29 @@ class DataPreparation:
         self.parser = parsing.MaterialParser()
         self.simple_parser = parsing.SimpleParser()
         self.mat_list = []
+
+        models_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
+        classifier_location = os.path.join(models_location, 'r_nr_classifier.p')
+        cv_location = os.path.join(models_location, 'cv.p')
+        tfidf_location = os.path.join(models_location, 'tfidf.p')
+
+        # load in relevant/not-relevant classifier and vectorizers
+        self.clf = pickle.load(open(classifier_location, 'rb'))
+        self.cv = pickle.load(open(cv_location, 'rb'))
+        self.tfidf = pickle.load(open(tfidf_location, 'rb'))
+
     """
     Provides tools for converting the data in the database to suitable
     format for machine learning tasks
     """
-    def to_word2vec_zip(self, filepath=None, limit=None, newlines=False, line_per_abstract=False):
+    def to_word2vec_zip(self, filepath=None, limit=None, newlines=False, line_per_abstract=False, doi=None,
+                        only_relevant=False):
         """
         Coverts the tokenized abstracts in the database to a zip file with a single vocabulary line.
         :param limit: number of abstracts to use. If not specified, all data will be considered
         :return: a 2d list of words from the abstract / titles, with each abstract on a separate line
         """
-        abstracts = self._get_abstracts(limit=limit, col=self.TOK_ABSTRACT_COL)
+        abstracts = self._get_abstracts(limit=limit, col=self.TOK_ABSTRACT_COL, doi=doi)
         txt = ""
         if line_per_abstract:
             nl_tok = ""
@@ -84,12 +96,13 @@ class DataPreparation:
             ttl = abstract[self.TTL_FILED]
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
-                for sentence in ttl:
-                    txt += " ".join(self.process_sentence(sentence) + [nl_tok])
-                for sentence in abs:
-                    txt += " ".join(self.process_sentence(sentence) + [nl_tok])
-            if line_per_abstract:
-                txt += "\n"
+                if not only_relevant or self.is_relevant(abs):
+                    for sentence in ttl:
+                        txt += " ".join(self.process_sentence(sentence) + [nl_tok])
+                    for sentence in abs:
+                        txt += " ".join(self.process_sentence(sentence) + [nl_tok])
+                    if line_per_abstract:
+                        txt += "\n"
         text = txt
 
         if filepath is None:
@@ -163,18 +176,21 @@ class DataPreparation:
         # # with Pool() as p:
         # list(tqdm(parmap(insert_abstract, abstracts), total=count))
 
-    def _get_abstracts(self, limit=None, col=None):
+    def _get_abstracts(self, limit=None, col=None, doi=None):
         """
         Returns a cursor of abstracts form mongodb
         :param limit:
         :return:
         """
+        conditions = dict()
+        if doi is not None:
+            conditions["doi"] = {"$in": doi}
         if col is None:
             col = self.RAW_ABSTRACT_COL
         if limit is not None:
             abstracts = getattr(self._db, col).aggregate([{"$sample": {"size": limit}}], allowDiskUse=True)
         else:
-            abstracts = getattr(self._db, col).find()
+            abstracts = getattr(self._db, col).find(conditions)
         return abstracts
 
     @staticmethod
@@ -264,6 +280,17 @@ class DataPreparation:
             return integer_formula
         except Exception:
             return text
+
+    def is_relevant(self, abstract):
+        txt = ""
+        for sentence in abstract:
+            txt += " ".join(sentence)
+
+        vectorized = self.cv.transform([txt])
+        transformed = self.tfidf.transform(vectorized)
+        if self.clf.predict(transformed):
+            return True
+        return False
 
     @staticmethod
     def save_obj(obj, name):

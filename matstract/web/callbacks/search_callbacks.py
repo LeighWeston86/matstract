@@ -1,9 +1,6 @@
 from dash.dependencies import Input, Output, State
 from matstract.web.view import search_app
-from matstract.utils import open_db_connection
-
-db = open_db_connection(local=True, db="matstract_db")
-
+from matstract.utils import tr
 
 def bind(app, cache):
     @cache.memoize(timeout=600)
@@ -17,6 +14,9 @@ def bind(app, cache):
             table = search_app.generate_table(search, material)
         else:
             table = search_app.generate_table(search)
+        # Add highlights and reconstruct
+        print("Difference after loading search results")
+        tr.print_diff()
         return table
 
     @cache.memoize(timeout=600)

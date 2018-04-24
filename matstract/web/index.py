@@ -1,3 +1,5 @@
+from matstract.utils import tr
+from pympler import muppy, summary
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -14,7 +16,6 @@ from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
 from matstract.utils import open_db_connection
 
 import os
-import numpy as np
 
 db = open_db_connection(local=True)
 
@@ -114,6 +115,7 @@ app.layout = html.Div([
     [Input('url', 'pathname')],
     [State('user_key', 'children')])
 def display_page(path, user_key):
+    # tr.print_diff()
     path = str(path)
     if path == "/search":
         return search_app.layout
@@ -148,5 +150,10 @@ annotate_callbacks.bind(app)
 similar_callbacks.bind(app, cache)
 mat2vec_callbacks.bind(app)
 
+print("Remaining Difference")
+tr.print_diff()
 
 
+print("Memory taken by all objects")
+all_objects = muppy.get_objects()
+summary.print_(summary.summarize(all_objects))
