@@ -1,5 +1,3 @@
-from matstract.utils import tr
-from pympler import muppy, summary
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -9,10 +7,10 @@ from flask_caching import Cache
 
 from flask import send_from_directory
 from matstract.web.view import annotate_app, similar_app, \
-    search_app, keyword_app, extract_app, trends_app, mat2vec_app
+    search_app, keyword_app, trends_app
 from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
-    extract_callbacks, keyword_callbacks, trends_callbacks, similar_callbacks, mat2vec_callbacks
+    keyword_callbacks, trends_callbacks, similar_callbacks
 from matstract.utils import open_db_connection
 
 import os
@@ -121,16 +119,16 @@ def display_page(path, user_key):
         return search_app.layout
     elif path == "/trends":
         return trends_app.layout
-    elif path == "/extract":
-        return extract_app.layout
+    # elif path == "/extract":
+    #     return extract_app.layout
     elif path == "/similar":
         return similar_app.layout
     elif path.startswith("/annotate"):
         return annotate_app.serve_layout(db, user_key, path)
     elif path == "/keyword":
         return keyword_app.layout
-    elif path == "/mat2vec":
-        return mat2vec_app.serve_layout(db)
+    # elif path == "/mat2vec":
+    #     return mat2vec_app.serve_layout(db)
     else:
         return search_app.layout
 
@@ -144,16 +142,8 @@ def get_stylesheet(path):
 # App Callbacks
 search_callbacks.bind(app, cache)
 trends_callbacks.bind(app, cache)
-extract_callbacks.bind(app)
+# extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
 similar_callbacks.bind(app, cache)
-mat2vec_callbacks.bind(app)
-
-print("Remaining Difference")
-tr.print_diff()
-
-
-print("Memory taken by all objects")
-all_objects = muppy.get_objects()
-summary.print_(summary.summarize(all_objects))
+# mat2vec_callbacks.bind(app)

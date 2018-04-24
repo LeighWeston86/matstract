@@ -4,9 +4,6 @@ from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 from os import environ as env
 import certifi
-from pympler import tracker
-
-tr = tracker.SummaryTracker()
 
 
 def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):

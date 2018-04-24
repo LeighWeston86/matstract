@@ -1,4 +1,3 @@
-from matstract.utils import tr
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import numpy as np
@@ -83,7 +82,3 @@ def bind(app):
                     return close_word
         else:
             return ""
-
-
-print("Difference after loading Mat2Vec")
-tr.print_diff()
