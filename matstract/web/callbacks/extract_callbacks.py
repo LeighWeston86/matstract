@@ -7,7 +7,6 @@ import _pickle
 import gzip
 import os
 from matstract.models.AnnotationBuilder import AnnotationBuilder
-from matstract.utils import tr  # tracker
 
 db = open_db_connection(local=True, db="matstract_db")
 # load in a classifier
@@ -99,8 +98,6 @@ def extract_ne(abstract):
         marked = html.Span(full_tag_names(tag), className="highlighted " + tag)
         tags_highlighted.append(marked)
     #Add highlights and reconstruct
-    print("Difference after extracting named entities")
-    tr.print_diff()
 
     return reconstruct_text(highlight_ne(tagged_doc)), tags_highlighted
 
