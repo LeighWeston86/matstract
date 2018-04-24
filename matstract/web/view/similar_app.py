@@ -1,7 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
-import random
 from matstract.utils import open_db_connection, open_es_client
 from matstract.extract import parsing
 from bson import ObjectId
