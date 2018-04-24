@@ -9,10 +9,6 @@ from bson import ObjectId
 db = open_db_connection(db="matstract_db")
 client = open_es_client()
 
-# Add highlights and reconstruct
-print("Difference after loading search app")
-tr.print_diff()
-
 
 def highlight_material(body, material):
     highlighted_phrase = html.Mark(material)
