@@ -9,7 +9,8 @@ class AnnotationBuilder:
     _db = None
     ANNOTATION_COLLECTION = "annotations"
     MACRO_ANN_COLLECTION = "macro_ann"
-    ABSTRACT_COLLECTION = "elsevier"
+    ABSTRACT_COLLECTION = "abstracts"
+    RELEVANCE_COLLECTION = "abstract_relevance"
     GOOD_ABSTRACTS = ["10.1016/S0025-5408(98)00200-1",
                       "10.1016/j.ceramint.2017.03.121",
                       "10.1016/j.matlet.2010.05.014",
@@ -77,39 +78,53 @@ class AnnotationBuilder:
     ]
 
     def __init__(self, local=False):
-        self._db = open_db_connection(access="annotator", local=local)
+        self._db = open_db_connection(access="annotator", local=local, db="matstract_db")
 
-    def get_abstract(self, doi=None, good_ones=False, user_key=None):
+    def get_abstract(self, doi=None, good_ones=False, user_key=None, only_relevant=False):
         if doi is not None:
             return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"doi": doi})
         # THIS IS FOR ANNOTATION SESSION ONLY!
         if user_key is not None and len(user_key) > 0:
-            pro_user = self._db.pro_users.find_one({"user_key": user_key})
+            admin = self._db.user_keys.find_one({"user_key": user_key, "admin": {"$exists": True}})
         else:
-            pro_user = None
-        if pro_user is not None:  # Vahe Leigh or John
+            admin = None
+        if admin is not None:  # Admin User
             if good_ones:
                 return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
                     {"$match": {"doi": {"$in": self.GOOD_ABSTRACTS}}},
                     {"$sample": {"size": 1}}
                 ]).next()
             else:
-                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+                # return a random abstract
+                return self.get_random_abstract(only_relevant)
         else:
             user = self.get_username(user_key)
             if user is not None:
+                # someone is logged in but it is not an admin
                 existing_count = getattr(self._db, self.ANNOTATION_COLLECTION).\
                     find({"doi": {"$in": self.MOST_AGREED}, "user": user_key}).count()
                 if existing_count > 2:
                     # return a random abstract
-                    return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+                    return self.get_random_abstract(only_relevant)
                 else:
                     return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
                         {"$match": {"doi": {"$in": self.MOST_AGREED}}},
                         {"$sample": {"size": 1}}
                     ]).next()
             else:
-                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+                # return a random abstract (nobody is logged in)
+                return self.get_random_abstract(only_relevant)
+
+    def get_random_abstract(self, only_relevant=False):
+        if only_relevant:
+            the_abstract = getattr(self._db, self.RELEVANCE_COLLECTION).aggregate([
+                {"$match": {"relevant": True}},
+                {"$sample": {"size": 1}}
+            ]).next()
+            abs_id = the_abstract["abstract_id"]
+            return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"_id": abs_id})
+        else:
+            return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
 
     def get_tokens(self, paragraph, user_key, cems=True):
         try:
@@ -222,14 +237,15 @@ class AnnotationBuilder:
                     print(e)
 
     def get_username(self, user_key):
-        user = self._db.user_keys.find_one({"user_key": user_key})
-        if user is not None:
-            return user["name"]
+        if user_key is not None and len(user_key) > 0:
+            user = self._db.user_keys.find_one({"user_key": user_key})
+            if user is not None:
+                return user["name"]
         return None
 
     def get_leaderboard(self, user_key):
         if self.get_username(user_key) is not None:
-            macro_counts = getattr(self._db, "macro_ann").aggregate([
+            macro_counts = getattr(self._db, self.MACRO_ANN_COLLECTION).aggregate([
                 {"$group": {"_id": "$user", "abstracts": {"$sum": 1}}},
             ])
             leaderboard = dict()
