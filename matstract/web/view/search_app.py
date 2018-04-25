@@ -1,4 +1,3 @@
-from matstract.utils import tr
 import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
@@ -8,10 +7,6 @@ from bson import ObjectId
 
 db = open_db_connection(db="matstract_db")
 client = open_es_client()
-
-# Add highlights and reconstruct
-print("Difference after loading search app")
-tr.print_diff()
 
 
 def highlight_material(body, material):
