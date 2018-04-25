@@ -41,7 +41,7 @@ def serve_abstract(db,
     else:
         builder = AnnotationBuilder(local=True)
         # get a random paragraph
-        random_abstract = builder.get_abstract(good_ones=True, doi=doi)
+        random_abstract = builder.get_abstract(good_ones=True, doi=doi, user_key=user_key)
         doi = random_abstract['doi']
         # tokenize and get initial annotation
         cems = False

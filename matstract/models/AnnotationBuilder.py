@@ -52,6 +52,10 @@ class AnnotationBuilder:
                       '10.1016/j.jssc.2010.01.006',
                       '10.1016/j.matdes.2008.09.017']
 
+    MOST_AGREED = ["10.1016/j.ceramint.2013.05.129",
+                   "10.1016/j.ceramint.2017.03.121",
+                   "10.1016/S0025-5408(98)00200-1"]
+
     LABELS = [
         {'text': 'Chemical mention', 'value': 'CHM'},
         {'text': 'Material of interest', 'value': 'MAT'},
@@ -75,16 +79,30 @@ class AnnotationBuilder:
     def __init__(self, local=False):
         self._db = open_db_connection(access="annotator", local=local)
 
-    def get_abstract(self, doi=None, good_ones=False):
+    def get_abstract(self, doi=None, good_ones=False, user_key=None):
         if doi is not None:
             return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"doi": doi})
-        if good_ones:
-            return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
-                {"$match": {"doi": {"$in": self.GOOD_ABSTRACTS}}},
-                {"$sample": {"size": 1}}
-            ]).next()
+        # THIS IS FOR ANNOTATION SESSION ONLY!
+        user = self._db.pro_users.find_one({"user_key": user_key})
+        if user is not None:  # Vahe Leigh or John
+            if good_ones:
+                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
+                    {"$match": {"doi": {"$in": self.GOOD_ABSTRACTS}}},
+                    {"$sample": {"size": 1}}
+                ]).next()
+            else:
+                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
         else:
-            return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+            existing_count = getattr(self._db, self.ANNOTATION_COLLECTION).\
+                find({"doi": {"$in": self.MOST_AGREED}, "user": user_key}).count()
+            if existing_count > 2:
+                # return a random abstract
+                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+            else:
+                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
+                    {"$match": {"doi": {"$in": self.MOST_AGREED}}},
+                    {"$sample": {"size": 1}}
+                ]).next()
 
     def get_tokens(self, paragraph, user_key, cems=True):
         try:

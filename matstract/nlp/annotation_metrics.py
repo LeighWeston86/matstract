@@ -112,7 +112,7 @@ class AnnotationMetrics:
 
         return accuracies
 
-    def _annotation_pairs(self, labels=None, annotators=None):
+    def _annotation_pairs(self, labels=None, annotators=None, doi=None):
         """
         Get's all annotation list pairs to be used for annotator agreement measures
         :param labels:              A set or list of labels to consider. If None, all occurring labels will
@@ -127,6 +127,8 @@ class AnnotationMetrics:
             constraints["labels"] = {"$in": list(labels)}
         if annotators is not None:
             constraints["user"] = {"$in": list(annotators)}
+        if doi is not None:
+            constraints["doi"] = {"$in": list(doi)}
 
         relevant_annotations = getattr(self._db, AnnotationBuilder.ANNOTATION_COLLECTION).find(constraints)
 
