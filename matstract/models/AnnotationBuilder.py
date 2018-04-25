@@ -83,8 +83,11 @@ class AnnotationBuilder:
         if doi is not None:
             return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"doi": doi})
         # THIS IS FOR ANNOTATION SESSION ONLY!
-        user = self._db.pro_users.find_one({"user_key": user_key})
-        if user is not None:  # Vahe Leigh or John
+        if user_key is not None and len(user_key) > 0:
+            pro_user = self._db.pro_users.find_one({"user_key": user_key})
+        else:
+            pro_user = None
+        if pro_user is not None:  # Vahe Leigh or John
             if good_ones:
                 return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
                     {"$match": {"doi": {"$in": self.GOOD_ABSTRACTS}}},
@@ -93,16 +96,20 @@ class AnnotationBuilder:
             else:
                 return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
         else:
-            existing_count = getattr(self._db, self.ANNOTATION_COLLECTION).\
-                find({"doi": {"$in": self.MOST_AGREED}, "user": user_key}).count()
-            if existing_count > 2:
-                # return a random abstract
-                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+            user = self.get_username(user_key)
+            if user is not None:
+                existing_count = getattr(self._db, self.ANNOTATION_COLLECTION).\
+                    find({"doi": {"$in": self.MOST_AGREED}, "user": user_key}).count()
+                if existing_count > 2:
+                    # return a random abstract
+                    return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+                else:
+                    return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
+                        {"$match": {"doi": {"$in": self.MOST_AGREED}}},
+                        {"$sample": {"size": 1}}
+                    ]).next()
             else:
-                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([
-                    {"$match": {"doi": {"$in": self.MOST_AGREED}}},
-                    {"$sample": {"size": 1}}
-                ]).next()
+                return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
 
     def get_tokens(self, paragraph, user_key, cems=True):
         try:
