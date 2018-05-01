@@ -119,16 +119,16 @@ def display_page(path, user_key):
         return search_app.layout
     elif path == "/trends":
         return trends_app.layout
-    # elif path == "/extract":
-    #     return extract_app.layout
+    elif path == "/extract":
+        return extract_app.layout
     elif path == "/similar":
         return similar_app.layout
     elif path.startswith("/annotate"):
         return annotate_app.serve_layout(db, user_key, path)
     elif path == "/keyword":
         return keyword_app.layout
-    # elif path == "/mat2vec":
-    #     return mat2vec_app.serve_layout(db)
+    elif path == "/mat2vec":
+        return mat2vec_app.serve_layout(db)
     else:
         return search_app.layout
 
