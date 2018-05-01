@@ -7,10 +7,11 @@ from flask_caching import Cache
 
 from flask import send_from_directory
 from matstract.web.view import annotate_app, similar_app, \
-    search_app, keyword_app, trends_app
+    search_app, keyword_app, trends_app, extract_app, mat2vec_app
 from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
-    keyword_callbacks, trends_callbacks, similar_callbacks
+    keyword_callbacks, trends_callbacks, similar_callbacks, extract_callbacks, \
+    mat2vec_callbacks
 from matstract.utils import open_db_connection
 
 import os
