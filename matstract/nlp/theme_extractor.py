@@ -11,7 +11,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 STOPWORDS = set(stopwords.words('english'))
-unuseful = ["discussed", "results", "various", "detail", "discussed detail","proposed", "proposed discussed",
+unuseful = ["discussed", "results", "various", "detail", "discussed detail", "proposed", "proposed discussed",
             "studied", "field", "investigated", "time", "phase", "phases", "property", "overall property",
             "overall", "best overall property", "process", "numbers", "materials", "transitions", "applications",
             "law", "centers", "center", "eV", "shifts", "obtained", "spectra", "perform", "attribute",
@@ -37,7 +37,9 @@ unuseful = ["discussed", "results", "various", "detail", "discussed detail","pro
             "monitoring", "test", "boundaries", "values", "cm−3", "concentration", "coefficient",
             "advanced applications", "various advanced applications", "materials various advanced applications",
             "occurs", "also discussed", "design", "design summarized", "summarized", "component", "regime",
-            "also studied", "investigated detail", "interest", ""
+            "also studied", "investigated detail", "interest", "applicability", "practical applicability",
+            "proving practical applicability", "ppm/°C", "GHz", "°C 4 h", "superior properties",
+            "systems superior properties", "dependence", "given", "parameters given",
             ]
 
 killers = ["research article", "article", "took place"]
