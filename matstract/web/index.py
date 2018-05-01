@@ -142,8 +142,8 @@ def get_stylesheet(path):
 # App Callbacks
 search_callbacks.bind(app, cache)
 trends_callbacks.bind(app, cache)
-# extract_callbacks.bind(app)
+extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
 similar_callbacks.bind(app, cache)
-# mat2vec_callbacks.bind(app)
+mat2vec_callbacks.bind(app)
