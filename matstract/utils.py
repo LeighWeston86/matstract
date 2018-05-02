@@ -4,7 +4,6 @@ from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 from os import environ as env
 import certifi
-from gensim.models.callbacks import CallbackAny2Vec
 
 
 def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
@@ -63,18 +62,5 @@ def open_es_client(user_creds=None, access="read_only"):
     es_client = Elasticsearch(hosts=hosts, http_auth=http_auth, use_ssl=True, ca_certs=certifi.where())
     return es_client
 
-
-class EpochSaver(CallbackAny2Vec):
-    """Callback to save model after every epoch"""
-
-    def __init__(self, path_prefix):
-        self.path_prefix = path_prefix
-        self.epoch = 0
-
-    def on_epoch_end(self, m):
-        output_path = '{}_epoch{}.model'.format(self.path_prefix, self.epoch)
-        print("Save model to {}".format(output_path))
-        m.save("tmp/" + output_path)
-        self.epoch += 1
 
 
