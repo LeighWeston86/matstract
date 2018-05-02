@@ -8,17 +8,15 @@ import gzip
 import os
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
-db = open_db_connection(local=True, db="matstract_db")
-# load in a classifier
 classifier_location = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '../../nlp/lr_classifier.p')
-with gzip.open(classifier_location, 'rb') as f:
+with open(classifier_location, 'rb') as f:
     clf = _pickle.load(f)
 
 # load in feature generator
 feature_generator_location = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '../../nlp/feature_generator.p')
-with gzip.open(feature_generator_location, 'rb') as f:
+with open(feature_generator_location, 'rb') as f:
     feature_generator = _pickle.load(f)
 
 #locations for relevant/not relevant classifier and vecotrizers
@@ -77,6 +75,20 @@ def highlight_ne(tagged_doc):
 
 
 def extract_ne(abstract):
+    # load in a classifier
+    #classifier_location = os.path.join(
+    #    os.path.dirname(os.path.abspath(__file__)), '../../nlp/lr_classifier.p')
+    #with gzip.open(classifier_location, 'rb') as f:
+    #with open(classifier_location, 'rb') as f:
+    #    clf = _pickle.load(f)
+
+    # load in feature generator
+    #feature_generator_location = os.path.join(
+    #    os.path.dirname(os.path.abspath(__file__)), '../../nlp/feature_generator.p')
+    #with gzip.open(feature_generator_location, 'rb') as f:
+    #with open(feature_generator_location, 'rb') as f:
+    #    feature_generator = _pickle.load(f)
+
     #tag and tokenize
     text = Text(abstract)
     tagged_tokens = text.pos_tagged_tokens
@@ -128,6 +140,7 @@ def highlighter(text, parsed, missed):
 def random_abstract():
     no_abstract = True
     random_abs = None
+    db = open_db_connection(local=True, db="matstract_db")
     while no_abstract:
         random_document = list(db.abstracts.aggregate([{"$sample": {"size": 1}}]))[0]
         random_abs = random_document['abstract']
