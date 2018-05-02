@@ -7,11 +7,10 @@ from flask_caching import Cache
 
 from flask import send_from_directory
 from matstract.web.view import annotate_app, similar_app, \
-    search_app, keyword_app, trends_app, summary_app, extract_app, mat2vec_app
+    search_app, keyword_app, trends_app, summary_app, mat2vec_app #extract_app,
 from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
-    keyword_callbacks, trends_callbacks, similar_callbacks, extract_callbacks, \
-    mat2vec_callbacks, summary_callbacks
+    keyword_callbacks, trends_callbacks, similar_callbacks, summary_callbacks, mat2vec_callbacks #extract_callbacks,
 from matstract.utils import open_db_connection
 
 import os
@@ -122,8 +121,8 @@ def display_page(path, user_key):
         return search_app.layout
     elif path == "/trends":
         return trends_app.layout
-    elif path == "/extract":
-         return extract_app.layout
+    #elif path == "/extract":
+    #     return extract_app.layout
     elif path == "/summary":
          return summary_app.layout
     elif path == "/similar":
@@ -147,9 +146,8 @@ def get_stylesheet(path):
 # App Callbacks
 search_callbacks.bind(app, cache)
 trends_callbacks.bind(app, cache)
-extract_callbacks.bind(app)
+#extract_callbacks.bind(app)
 summary_callbacks.bind(app)
-extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
 similar_callbacks.bind(app, cache)
