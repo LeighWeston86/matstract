@@ -8,11 +8,15 @@ from matstract.nlp.data_preparation import DataPreparation
 ds = DataSource()
 dp = DataPreparation()
 # loading pre-trained embeddings and the dictionary
-embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_phrases_sg_w8_n10_a001_pc20.wv.vectors.npy"
+embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
 embeddings_file = ds.open(embeddings_url)
 embeddings = np.load(ds.abspath(embeddings_url))
-with ds.open("https://s3-us-west-1.amazonaws.com/materialsintelligence/model_phrases_sg_w8_n10_a001_pc20.tsv") as f:
+with ds.open("https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.tsv") as f:
     reverse_dictionary = [x.strip('\n') for x in f.readlines()]
+
+word2index = dict()
+for i, word in enumerate(reverse_dictionary):
+    word2index[word] = i
 
 norm = np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
 normalized_embeddings = embeddings / norm

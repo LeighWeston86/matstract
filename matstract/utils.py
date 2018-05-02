@@ -8,8 +8,8 @@ import certifi
 
 def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
     if 'MATSTRACT_HOST' in env and local:
-        if db == "tri_abstracts":
-            db = env['MATSTRACT_DB']
+        # if db == "tri_abstracts":
+        #     db = env['MATSTRACT_DB']
         uri = "mongodb://%s:%s/%s" % (
             env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
         db_creds = {'db': db }
@@ -22,6 +22,7 @@ def open_db_connection(user_creds=None, local=False, access="read_only", db="tri
                     os.path.dirname(os.path.abspath(__file__)), '_config.json')
             with open(db_creds_filename) as f:
                 db_creds = json.load(f)["mongo"]
+            db_creds["db"] = db
         except:
             if access == "read_only":
                 db_creds = {"user": os.environ["ATLAS_USER"],
@@ -60,5 +61,6 @@ def open_es_client(user_creds=None, access="read_only"):
 
     es_client = Elasticsearch(hosts=hosts, http_auth=http_auth, use_ssl=True, ca_certs=certifi.where())
     return es_client
+
 
 
