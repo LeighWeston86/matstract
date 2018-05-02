@@ -7,10 +7,10 @@ from flask_caching import Cache
 
 from flask import send_from_directory
 from matstract.web.view import annotate_app, similar_app, \
-    search_app, keyword_app, trends_app
+    search_app, keyword_app, trends_app, mat2vec_app, matsearch_app, extract_app
 from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
-    keyword_callbacks, trends_callbacks, similar_callbacks
+    keyword_callbacks, trends_callbacks, similar_callbacks, mat2vec_callbacks, matsearch_callbacks, extract_callbacks
 from matstract.utils import open_db_connection
 
 import os
@@ -92,6 +92,8 @@ header = html.Div([
             html.Span(u" \u2022 "),
             dcc.Link("Mat2Vec", href="/mat2vec"),
             html.Span(u" \u2022 "),
+            dcc.Link("MatSearch", href="/matsearch"),
+            html.Span(u" \u2022 "),
             html.Span(html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
                              style={"color": "red"}, target="_blank"))
         ],
@@ -119,16 +121,18 @@ def display_page(path, user_key):
         return search_app.layout
     elif path == "/trends":
         return trends_app.layout
-    # elif path == "/extract":
-    #     return extract_app.layout
+    elif path == "/extract":
+        return extract_app.layout
     elif path == "/similar":
         return similar_app.layout
     elif path.startswith("/annotate"):
         return annotate_app.serve_layout(db, user_key, path)
     elif path == "/keyword":
         return keyword_app.layout
-    # elif path == "/mat2vec":
-    #     return mat2vec_app.serve_layout(db)
+    elif path == "/mat2vec":
+        return mat2vec_app.serve_layout(db)
+    elif path == "/matsearch":
+        return matsearch_app.serve_layout(db)
     else:
         return search_app.layout
 
@@ -142,8 +146,9 @@ def get_stylesheet(path):
 # App Callbacks
 search_callbacks.bind(app, cache)
 trends_callbacks.bind(app, cache)
-# extract_callbacks.bind(app)
+extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
 similar_callbacks.bind(app, cache)
-# mat2vec_callbacks.bind(app)
+mat2vec_callbacks.bind(app)
+matsearch_callbacks.bind(app)
