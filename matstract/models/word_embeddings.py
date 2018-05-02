@@ -17,7 +17,7 @@ class EmbeddingEngine:
 
         # loading pre-trained embeddings and the dictionary
         embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
-        embeddings_file = ds.open(embeddings_url)
+        ds.open(embeddings_url)
         embeddings = np.load(ds.abspath(embeddings_url))
         with ds.open(
                 "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.tsv") as f:
@@ -45,7 +45,7 @@ class EmbeddingEngine:
         self._dp = DataPreparation()
         # loading pre-trained embeddings and the dictionary
         formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_matnorm_lower_punct_units_formula.pkl"
-        formulas_file = ds.open(formulas_url)
+        ds.open(formulas_url)
         self.formulas = self._dp.load_obj(ds.abspath(formulas_url[:-4]))
         for abbr in self.ABBR_LIST:
             self.formulas.pop(abbr, None)
@@ -54,9 +54,16 @@ class EmbeddingEngine:
         for i, formula in enumerate(self.formulas):
             for writing in self.formulas[formula]:
                 self.formula_counts[i] += self.formulas[formula][writing]
+        del ds
 
     def close_words(self, word, top_k=8, exclude_self=True):
-        """word can be either a numeric vector or a string"""
+        """
+        Returns a list of close words
+        :param word: can be either a numeric vector or a string
+        :param top_k: number of close words to return
+        :param exclude_self: boolean, if the supplied word should be excluded or not
+        :return:
+        """
         if isinstance(word, str):
             word = word.replace(" ", "_")
             word = self._dp.process_sentence([word])[0]
@@ -76,6 +83,11 @@ class EmbeddingEngine:
         return close_words
 
     def get_word_vector(self, word):
+        """
+        Gets the embedding for the given word
+        :param word: a string word
+        :return:
+        """
         if word is not None and word != "":
             word = word.replace(" ", "_")
             word = self._dp.process_sentence([word])[0]
@@ -88,7 +100,13 @@ class EmbeddingEngine:
         else:
             return None
 
-    def find_similar_materials(self, sentence, min_count):
+    def find_similar_materials(self, sentence, min_count=10):
+        """
+        Finds materials that match the best with the context of the sentence
+        :param sentence: a list of words
+        :param min_count: the minimum number of occurances for the formula to be considered
+        :return:
+        """
         similarities = dict()
         avg_embedding = np.zeros(200)
         for word in sentence:
@@ -100,9 +118,14 @@ class EmbeddingEngine:
                 similarities[formla] = np.dot(avg_embedding, self.normalized_embeddings[self.word2index[formla]])
         return sorted(similarities.items(), key=lambda x: x[1], reverse=True)
 
-    def most_common_form(self, form_list):
+    def most_common_form(self, form_dict):
+        """
+        Return the most common form of the formula given a dictionary with values as form: count dictionary
+        :param form_dict: the dictionary
+        :return:
+        """
         common_form_score_cout = []
-        for formla in form_list:
+        for formla in form_dict:
             most_common_form = max(self.formulas[formla[0]].items(), key=operator.itemgetter(1))[0]
             common_form_score_cout.append((most_common_form, formla[1], sum(self.formulas[formla[0]].values())))
         return common_form_score_cout
