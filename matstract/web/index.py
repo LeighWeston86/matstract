@@ -7,11 +7,11 @@ from flask_caching import Cache
 
 from flask import send_from_directory
 from matstract.web.view import annotate_app, similar_app, \
-    search_app, keyword_app, trends_app, extract_app, mat2vec_app
+    search_app, keyword_app, trends_app, summary_app, extract_app, mat2vec_app
 from dash.dependencies import Input, Output, State
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, \
     keyword_callbacks, trends_callbacks, similar_callbacks, extract_callbacks, \
-    mat2vec_callbacks
+    mat2vec_callbacks, summary_callbacks
 from matstract.utils import open_db_connection
 
 import os
@@ -93,6 +93,8 @@ header = html.Div([
             html.Span(u" \u2022 "),
             dcc.Link("Mat2Vec", href="/mat2vec"),
             html.Span(u" \u2022 "),
+            dcc.Link("Material Summary", href="/summary"),
+            html.Span(u" \u2022 "),
             html.Span(html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
                              style={"color": "red"}, target="_blank"))
         ],
@@ -121,7 +123,9 @@ def display_page(path, user_key):
     elif path == "/trends":
         return trends_app.layout
     elif path == "/extract":
-        return extract_app.layout
+         return extract_app.layout
+    elif path == "/summary":
+         return summary_app.layout
     elif path == "/similar":
         return similar_app.layout
     elif path.startswith("/annotate"):
@@ -143,6 +147,8 @@ def get_stylesheet(path):
 # App Callbacks
 search_callbacks.bind(app, cache)
 trends_callbacks.bind(app, cache)
+extract_callbacks.bind(app)
+summary_callbacks.bind(app)
 extract_callbacks.bind(app)
 keyword_callbacks.bind(app)
 annotate_callbacks.bind(app)
