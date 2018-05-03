@@ -18,7 +18,7 @@ def generate_trends_graph(search='', material=''):
                 histdata[year] += 1
             else:
                 histdata[year] = 1
-        for year in range(min(2000, min(histdata.keys())), min(histdata.keys(), 2017)):
+        for year in range(min(2000, min(histdata.keys())), 2017):
             if not year in histdata.keys():
                 histdata[year] = 0
         histdata = sorted(histdata.items(), key=operator.itemgetter(0))
