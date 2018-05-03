@@ -69,7 +69,7 @@ def get_entities(material):
 
 layout = html.Div([
     html.Label('Enter formula for material summary'),
-    'Demo only: search BaTiO3, GaN, or LiFePO4',
+    'Demo only: search BaTiO3, GaN, or LiFePO4 (other materials won't work!)',
     html.Div([
         dcc.Input(id='summary-material',
                   placeholder='Material: e.g. "LiFePO4"',
