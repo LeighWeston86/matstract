@@ -26,7 +26,7 @@ def serve_analogy():
                 html.Span("Analogy", style={"fontWeight": "bold"}),
                 html.Br(),
                 dcc.Input(id='analogy_neg_1',
-                          placeholder='e.g. lithium, Co',
+                          placeholder='e.g. LiCoO2, Co',
                           type='text'),
                 html.Span(" is to "),
                 dcc.Input(id='analogy_pos_1',

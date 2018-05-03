@@ -1,0 +1,42 @@
+{
+  "mongo": {
+    "admin": {
+      "production": {
+        "name": "<<First Last>>",
+        "db": "<<db_name>>",
+        "user": "<<username>>",
+        "pass": "<<password>>",
+        "rest": "<<atlas connection string>>"
+      },
+      "testing": {
+        "name": "<<First Last>>",
+        "db": "<<db_name>>",
+        "user": "<<username>>",
+        "pass": "<<password>>",
+        "rest": "<<atlas connection string>>"
+      }
+    },
+    "readonly": {
+      "mongo": {
+        "name": "<<First Last>>",
+        "db": "<<db_name>>",
+        "user": "<<readonly username>>",
+        "pass": "<<readonly password>>",
+        "rest": "<<atlas connection string>>"
+      }
+    },
+    "annotation": {
+    }
+  },
+  "elastic": {
+    "admin": {
+      "production": {
+        "hosts": [
+          "<<elasticsearch DB hostname>>"
+        ],
+        "user": "<<username>>",
+        "pass": "<<password>>"
+      }
+    }
+  }
+}

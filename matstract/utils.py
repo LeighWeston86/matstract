@@ -6,7 +6,7 @@ from os import environ as env
 import certifi
 
 
-def open_db_connection(user_creds=None, local=False, access="read_only", db="tri_abstracts"):
+def open_db_connection(user_creds=None, local=True, access="read_only", db="matstract_db"):
     if 'MATSTRACT_HOST' in env and local:
         uri = "mongodb://%s:%s/%s" % (
             env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)

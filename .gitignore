@@ -33,6 +33,9 @@ matstract/db_atlas.json
 matstract/atlas_creds.json
 matstract/_config.json
 
+# Config Files
+matstract/config/db_creds.json
+
 # build related #
 *.egg-info/
 dist/
