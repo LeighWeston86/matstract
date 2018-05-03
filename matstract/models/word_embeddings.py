@@ -64,23 +64,20 @@ class EmbeddingEngine:
         :param exclude_self: boolean, if the supplied word should be excluded or not
         :return:
         """
+        close_words = []
         if isinstance(word, str):
-            word = word.replace(" ", "_")
-            word = self._dp.process_sentence([word])[0]
-            # get all normalized word vectors
-            try:
-                word_embedding = [self.normalized_embeddings[self.reverse_dictionary.index(word)]]
-            except Exception:
-                return "Word not found in the dictionary"
+            word_embedding = self.get_word_vector(word)
         else:
             word_embedding = word
 
-        sim = np.dot(word_embedding, self.normalized_embeddings.T)
-        nearest = (-sim[0, :]).argsort()[1:top_k + 1] if exclude_self else (-sim[0, :]).argsort()[:top_k]
-        close_words = []
-        for k in range(top_k):
-            close_words.append(self.reverse_dictionary[nearest[k]])
-        return close_words
+        if word_embedding is not None:
+            sim = np.dot([word_embedding], self.normalized_embeddings.T)
+            nearest = (-sim[0, :]).argsort()[1:top_k + 1] if exclude_self else (-sim[0, :]).argsort()[:top_k]
+            for k in range(top_k):
+                close_words.append(self.reverse_dictionary[nearest[k]])
+            return close_words
+        else:
+            return []
 
     def get_word_vector(self, word):
         """
