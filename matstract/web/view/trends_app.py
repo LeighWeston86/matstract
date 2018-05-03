@@ -6,13 +6,6 @@ from matstract.utils import open_db_connection
 
 db = open_db_connection(db="matstract_db")
 
-total_papers = {}
-for year in range(1950, 2019):
-    count = db.abstracts.find({"year":year}).count()
-    total_papers[year] = count if count > 0 else 1
-print(total_papers)
-
-
 def generate_trends_graph(search='', material=''):
 
     results = get_search_results(search, material, max_results=100000)
@@ -22,9 +15,9 @@ def generate_trends_graph(search='', material=''):
         years = [int(r["year"]) for r in results]
         for year in years:
             if year in histdata.keys():
-                histdata[year] += 1/total_papers[year]
+                histdata[year] += 1
             else:
-                histdata[year] = 1/total_papers[year]
+                histdata[year] = 1
         for year in range(min(2000, min(histdata.keys())), max(histdata.keys())):
             if not year in histdata.keys():
                 histdata[year] = 0
