@@ -1,27 +1,30 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import operator
-from matstract.web.view.search_app import search_for_material, search_for_topic
+from matstract.web.view.search_app import get_search_results
+from matstract.utils import open_db_connection
+
+db = open_db_connection(db="matstract_db")
+
+total_papers = {}
+for year in range(1950, 2019):
+    count = db.abstracts.find({"year":year}).count()
+    total_papers[year] = count if count > 0 else 1
+print(total_papers)
 
 
 def generate_trends_graph(search='', material=''):
-    if search is None:
-        search = ''
-    if material is None:
-        material = ''
-    if len(search) and not len(material):
-        results = search_for_topic(search)
-    else:
-        results = search_for_material(material=material, search=search)
+
+    results = get_search_results(search, material, max_results=100000)
 
     if len(results) > 0:
         histdata = {}
-        years = [r["year"] for r in results]
+        years = [int(r["year"]) for r in results]
         for year in years:
             if year in histdata.keys():
-                histdata[year] += 1
+                histdata[year] += 1/total_papers[year]
             else:
-                histdata[year] = 1
+                histdata[year] = 1/total_papers[year]
         for year in range(min(2000, min(histdata.keys())), max(histdata.keys())):
             if not year in histdata.keys():
                 histdata[year] = 0

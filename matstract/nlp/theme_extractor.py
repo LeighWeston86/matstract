@@ -39,7 +39,8 @@ unuseful = ["discussed", "results", "various", "detail", "discussed detail", "pr
             "occurs", "also discussed", "design", "design summarized", "summarized", "component", "regime",
             "also studied", "investigated detail", "interest", "applicability", "practical applicability",
             "proving practical applicability", "ppm/°C", "GHz", "°C 4 h", "superior properties",
-            "systems superior properties", "dependence", "given", "parameters given",
+            "systems superior properties", "dependence", "given", "parameters given", "behaviour", "suggested",
+            "elements", "retarded", "could retarded", "increased", "devices",
             ]
 
 killers = ["research article", "article", "took place"]

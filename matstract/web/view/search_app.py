@@ -75,16 +75,14 @@ def sort_results(results, ids):
     return results_sorted
 
 
-def get_search_results(search=None, material=None, max_results=1001):
-    if search is None and material is None:
+def get_search_results(search=None, materials=None, max_results=1001):
+    if search is None and materials is None:
         return None
     else:
         search_engine = MatstractSearch()
         ids = None if search is None else elastic_search(search, max_results)[:1000]
-        if material is not None:
-            parser = parsing.SimpleParser()
-            material = parser.matgen_parser(material)
-            results = search_engine.get_abstracts_by_material(material, ids=ids)
+        if materials is not None:
+            results = search_engine.get_abstracts_by_material(materials, ids=ids)
         else:
             results = sort_results(db.abstracts.find({"_id": {"$in": ids[:1000]}}), ids[:1000])
         return list(results)
@@ -126,29 +124,58 @@ def generate_nr_results(n, search=None, material=None):
         return ''
 
 
-def generate_table(search=None, materials=None, columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
+# def generate_table(search=None, materials=None, columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
+#     results = get_search_results(search, materials)
+#     if results is not None:
+#         print("{} search results".format(len(results)))
+#     if materials:
+#         df = pd.DataFrame(results[:max_rows])
+#         if not df.empty:
+#             df = sort_df(df, materials)
+#     else:
+#         df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
+#     if not df.empty:
+#         format_authors = lambda author_list: ", ".join(author_list)
+#         df['authors'] = df['authors'].apply(format_authors)
+#         hm = highlight_material
+#         return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"), html.Table(
+#             # Header
+#             [html.Tr([html.Th(col) for col in columns])] +
+#             # Body
+#             [html.Tr([
+#                 html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
+#                                href=df.iloc[i]["link"], target="_blank")) if col == "title"
+#                 else html.Td(
+#                     hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
+#                 else html.Td(df.iloc[i][col]) for col in columns])
+#                 for i in range(min(len(df), max_rows))],
+#             id="table-element")]
+#     return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"), html.Table(id="table-element")]
+
+
+def generate_table(search=None, materials=None, columns=('title', 'authors', 'journal', 'year', 'abstract'), max_rows=100):
     results = get_search_results(search, materials)
     if results is not None:
         print("{} search results".format(len(results)))
     if materials:
         df = pd.DataFrame(results[:max_rows])
         if not df.empty:
-            df = sort_df(df, materials)
+            if isinstance(materials, list) and len(materials) == 1:
+                df = sort_df(df, materials)
     else:
         df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
     if not df.empty:
         format_authors = lambda author_list: ", ".join(author_list)
         df['authors'] = df['authors'].apply(format_authors)
-        hm = highlight_material
         return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"), html.Table(
             # Header
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
             [html.Tr([
-                html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
+                html.Td(html.A(str(df.iloc[i][col]),
                                href=df.iloc[i]["link"], target="_blank")) if col == "title"
                 else html.Td(
-                    hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
+                    str(df.iloc[i][col])) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))],
             id="table-element")]
