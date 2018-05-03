@@ -8,7 +8,7 @@ db = open_db_connection(db="matstract_db")
 
 def generate_trends_graph(search='', material=''):
 
-    results = get_search_results(search, material, max_results=100000)
+    results = get_search_results(search, material, max_results=10000)
 
     if len(results) > 0:
         histdata = {}
