@@ -7,7 +7,7 @@ from matstract.utils import open_db_connection
 db = open_db_connection(db="matstract_db")
 
 total_papers = {}
-for year in range(1950, 2019):
+for year in range(1950, 2018):
     count = db.abstracts.find({"year":year}).count()
     total_papers[year] = count if count > 0 else 1
 print(total_papers)
