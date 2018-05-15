@@ -41,19 +41,39 @@ class DataPreparation:
              'Ks−1', 'mgdm−3', 'mms−1', 'ks', 'appm', 'ºC', 'HV', 'kDa', 'Da', 'kG',
              'kGy', 'MGy', 'Gy', 'mGy', 'Gbps']
 
-    ELEMENTS = ['H', 'B', 'C', 'N', 'O', 'F', 'P', 'S', 'K', 'V', 'Y', 'I', 'W', 'U',
-                'He', 'Li', 'Be', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'Cl', 'Ar', 'Ca', 'Sc', 'Ti', 'Cr',
-                'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
-                'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Xe',
-                'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
-                'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
-                'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
-                'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
-                'Fl', 'Lv']
+    ELEMENTS = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K',
+                'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
+                'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I',
+                'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb',
+                'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr',
+                'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf',
+                'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og', 'Uue']
+    ELEMENT_NAMES = ['hydrogen', 'helium', 'lithium', 'beryllium', 'boron', 'carbon', 'nitrogen', 'oxygen', 'fluorine',
+                     'neon', 'sodium', 'magnesium', 'aluminium', 'silicon', 'phosphorus', 'sulfur', 'chlorine', 'argon',
+                     'potassium', 'calcium', 'scandium', 'titanium', 'vanadium', 'chromium', 'manganese', 'iron',
+                     'cobalt', 'nickel', 'copper', 'zinc', 'gallium', 'germanium', 'arsenic', 'selenium', 'bromine',
+                     'krypton', 'rubidium', 'strontium', 'yttrium', 'zirconium', 'niobium', 'molybdenum', 'technetium',
+                     'ruthenium', 'rhodium', 'palladium', 'silver', 'cadmium', 'indium', 'tin', 'antimony', 'tellurium',
+                     'iodine', 'xenon', 'cesium', 'barium', 'lanthanum', 'cerium', 'praseodymium', 'neodymium',
+                     'promethium', 'samarium', 'europium', 'gadolinium', 'terbium', 'dysprosium', 'holmium', 'erbium',
+                     'thulium', 'ytterbium', 'lutetium', 'hafnium', 'tantalum', 'tungsten', 'rhenium', 'osmium',
+                     'iridium', 'platinum', 'gold', 'mercury', 'thallium', 'lead', 'bismuth', 'polonium', 'astatine',
+                     'radon', 'francium', 'radium', 'actinium', 'thorium', 'protactinium', 'uranium', 'neptunium',
+                     'plutonium', 'americium', 'curium', 'berkelium', 'californium', 'einsteinium', 'fermium',
+                     'mendelevium', 'nobelium', 'lawrencium', 'rutherfordium', 'dubnium', 'seaborgium', 'bohrium',
+                     'hassium', 'meitnerium', 'darmstadtium', 'roentgenium', 'copernicium', 'nihonium', 'flerovium',
+                     'moscovium', 'livermorium', 'tennessine', 'oganesson', 'ununennium']
 
     NR_UNIT = regex.compile(r'^([\d.?]+)([\p{script=Latin}]+.*)', regex.DOTALL)
 
-    ROMAN_NR_PR = regex.compile(r'\(I+V?\)')
+    # elemement with the valence state in parenthesis
+    ELEMENT_VALENCE_IN_PAR = regex.compile(r'^('+'|'.join(ELEMENTS + ELEMENT_NAMES + [en.capitalize() for en in ELEMENT_NAMES]) +
+                                           ')(\(([IV|iv]|[Vv]?[Ii]{0,3})\))$')
+
+    # exactly IV, VI or has 2 consecutive II, or roman in parenthesis: is not a simple formula
+    VALENCE_INFO = regex.compile(r'(II+|^IV$|^VI$|\(IV\)|\(V?I{0,3}\))')
+
+    # ROMAN_NR_PR = regex.compile(r'\((IV|V?I{0,3})\)')
 
     def __init__(self, db_name="matstract_db", local=True):
         self._db = open_db_connection(local=local, db=db_name)
@@ -91,8 +111,8 @@ class DataPreparation:
         else:
             nl_tok = ""
 
-        for i, abstract in enumerate(abstracts):
-            print("processing abstract {}".format(i), end="\r")
+        for abstract in tqdm(abstracts, total=abstracts.count()):
+            # print("processing abstract {}".format(i), end="\r")
             ttl = abstract[self.TTL_FILED]
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
@@ -208,7 +228,21 @@ class DataPreparation:
             if DataPreparation.is_number(tok):
                 tok = "<nUm>"  # replace all numbers with a string <nUm>
             else:
-                if self.is_simple_formula(tok):
+                elem_with_valence = self.ELEMENT_VALENCE_IN_PAR.match(tok)
+                if elem_with_valence is not None:
+                    # change element name to symbol
+                    try:
+                        formula = self.ELEMENTS[self.ELEMENT_NAMES.index(elem_with_valence.group(1).lower())]
+                        matmention = elem_with_valence.group(1).lower()
+                    except:
+                        formula = elem_with_valence.group(1)  # this was already the symbol
+                        matmention = elem_with_valence.group(1)
+                    self.mat_list.append((matmention, formula))  # exclude the valence state from name
+                    # split this for word2vec
+                    st.append(elem_with_valence.group(1))
+                    tok = elem_with_valence.group(2)
+                    # add this to matlist / formulas
+                elif self.is_simple_formula(tok):
                     formula = self.get_norm_formula(tok)
                     self.mat_list.append((tok, formula))
                     tok = formula
@@ -224,7 +258,7 @@ class DataPreparation:
                     else:
                         # splitting the unit from number
                         st.append("<nUm>")
-                        tok = deaccent(nr_unit.group(2))
+                        tok = deaccent(nr_unit.group(2))  # the unit
             st.append(tok)
         return st
 
@@ -241,8 +275,8 @@ class DataPreparation:
         return counts
 
     def is_simple_formula(self, text):
-        if self.ROMAN_NR_PR.search(text) is not None:
-            # contains roman numbers up to IV in parenthesis
+        if self.VALENCE_INFO.search(text) is not None:
+            # 2 consecutive II, IV or VI should not be parsed as formula
             # related to valence state, so dont want to mix with I and V elements
             return False
         elif any(char.isdigit() or char.islower() for char in text):

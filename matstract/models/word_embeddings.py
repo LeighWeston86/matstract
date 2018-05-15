@@ -122,7 +122,7 @@ class EmbeddingEngine:
         :return:
         """
         common_form_score_cout = []
-        for formla in form_dict:
-            most_common_form = max(self.formulas[formla[0]].items(), key=operator.itemgetter(1))[0]
-            common_form_score_cout.append((most_common_form, formla[1], sum(self.formulas[formla[0]].values())))
+        for formula in form_dict:
+            most_common_form = max(self.formulas[formula[0]].items(), key=operator.itemgetter(1))[0]
+            common_form_score_cout.append((most_common_form, formula[1], sum(self.formulas[formula[0]].values())))
         return common_form_score_cout
