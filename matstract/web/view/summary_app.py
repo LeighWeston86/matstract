@@ -23,12 +23,11 @@ def gen_output(most_common, size, entity_type, width = '350px'):
     return html.Div(
         [html.Div([html.Label(entity_type)] + [html.Div(prop) for prop, score in most_common],
             style={'float':'left'}),
-        html.Div( [html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
-            style={'float':'right'})],
-        style={'width':width})
+        html.Div([html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
+            style={'float':'right'})],)
 
 def get_entities(material):
-    db = open_db_connection(db="tri_abstracts")
+    db = open_db_connection(db="tri_abstracts", local=False)
     test_ne = db.test_ne
     #parser = SimpleParser()
     #material = parser.matgen_parser(material) #For now comment this out - put back in later
@@ -56,13 +55,17 @@ def get_entities(material):
         cmt = [p for pp in cmt for p in pp if len(p) > 2]
         cmt = nltk.FreqDist(cmt).most_common(10)
 
-        return [html.Div([html.Div(gen_output(pro, num_entities, 'Property', '350px'), id="first", style={'float':'left', 'width':'400px'}),
-                   html.Div(gen_output(spl, num_entities, 'Phase', '200px'), id="second", style={'float':'left', 'width':'250px'}),
-                   html.Div(gen_output(smt, num_entities, 'Synthesis'),  id="third", style={'float':'left', 'width':'350px'})], id = 'wrapper', style={'width':'1500px'}),
-                html.Div(style={"padding": "280px"}),
-                html.Div([html.Div(gen_output(cmt, num_entities, 'Characterization', '350px'), id="first", style={'float': 'left', 'width': '400px'}),
-                   html.Div(html.Label('Application (coming soon...)'), id="second", style={'float': 'left', 'width': '250px'}),
-                   html.Div(html.Label('Sample descriptor (coming soon...)'), id="third", style={'float': 'left', 'width': '350px'})], id='wrapper', style={'width': '1200px'})]
+        return [
+            html.Div([
+                html.Div(gen_output(pro, num_entities, 'Property', '350px'), className="four columns"),
+                html.Div(gen_output(spl, num_entities, 'Phase', '200px'), className="four columns"),
+                html.Div(gen_output(smt, num_entities, 'Synthesis'), className="four columns")],
+                    className='row'),
+                html.Div([
+                    html.Div(gen_output(cmt, num_entities, 'Characterization', '350px'), className="four columns"),
+                    html.Div(html.Label('Application (coming soon...)'), className="four columns"),
+                    html.Div(html.Label('Sample descriptor (coming soon...)'), className="four columns")],
+                    className='row')]
 
     else:
         return "No keywords for the specified material"
