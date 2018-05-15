@@ -27,31 +27,35 @@ def gen_output(most_common, size, entity_type, width = '350px'):
             style={'float':'right'})],)
 
 def get_entities(material):
+    #Normalize the material
+    parser = SimpleParser()
+    material = parser.matgen_parser(material)
+
+    #Open connection and get NEs associated with the material
     db = open_db_connection(db="tri_abstracts", local=False)
     test_ne = db.test_ne
-    #parser = SimpleParser()
-    #material = parser.matgen_parser(material) #For now comment this out - put back in later
-    #print("number of materials is", db.keywords.count())
-    entities = list(test_ne.find({'mat': material}))
+    dois = db.mats_.find({'unique_mats': material}).distinct('doi')
+    entities = list(db.test_ne.find({'doi': {'$in': dois}}))
     num_entities = len(entities)
+
+    #Extract the entities
     if entities is not None:
-        #Get the properties
-        pro = [doc['PRO'] for doc in entities]
+        pro, spl, smt, cmt = [], [], [], []
+        for doc in entities:
+            # Get the properties
+            pro .append(doc['PRO'])
+            #Get the phase label
+            spl.append(doc['SPL'])
+            #Get the synthesis method
+            smt.append(doc['SMT'])
+            #Get the characterization method
+            cmt.append(doc['CMT'])
         pro = [p for pp in pro for p in pp if len(p) > 2]
         pro = nltk.FreqDist(pro).most_common(20)
-
-        #Get the phase label
-        spl = [doc['SPL'] for doc in entities]
         spl = [p for pp in spl for p in pp if len(p) > 2]
         spl = nltk.FreqDist(spl).most_common(3)
-
-        #Get the synthesis method
-        smt = [doc['SMT'] for doc in entities]
         smt = [p for pp in smt for p in pp if len(p) > 2]
         smt = nltk.FreqDist(smt).most_common(5)
-
-        #Get the characterization method
-        cmt = [doc['CMT'] for doc in entities]
         cmt = [p for pp in cmt for p in pp if len(p) > 2]
         cmt = nltk.FreqDist(cmt).most_common(10)
 
@@ -68,11 +72,11 @@ def get_entities(material):
                     className='row')]
 
     else:
-        return "No keywords for the specified material"
+        return "No entities for the specified material"
 
 layout = html.Div([
     html.Label('Enter formula for material summary'),
-    html.Div("Demo only: search BaTiO3, GaN, or LiFePO4 (other materials won't work!)"),
+    html.Div("Work in progress... needs more data!!!"),
     html.Div([
         dcc.Input(id='summary-material',
                   placeholder='Material: e.g. "LiFePO4"',
