@@ -1,12 +1,13 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import operator
-from matstract.web.view.search_app import get_search_results
+from matstract.models.search import MatstractSearch
 import plotly.graph_objs as go
 
 
 def generate_trends_graph(search=None, material=None, layout=None):
-    results = get_search_results(search, material, max_results=10000)
+    MS = MatstractSearch()
+    results = list(MS.search(search, material, max_results=10000))
     hist = dict()
     if len(results) > 0:
         histdata = {}
@@ -28,7 +29,6 @@ def generate_trends_graph(search=None, material=None, layout=None):
     if layout is not None:
         hist["layout"] = layout
     return hist
-#
 
 
 figure = {"data": [{

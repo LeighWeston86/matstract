@@ -1,7 +1,7 @@
 from chemdataextractor.doc import Paragraph
 from chemdataextractor import Document
-from matstract.utils import open_db_connection
-from matstract.models.Annotation import TokenAnnotation
+from matstract.models.database import AtlasConnection
+from matstract.models.annotation import TokenAnnotation
 import itertools
 
 
@@ -68,7 +68,7 @@ class AnnotationBuilder:
     ]
 
     def __init__(self, local=False):
-        self._db = open_db_connection(access="annotator", local=local, db="matstract_db")
+        self._db = AtlasConnection(access="annotator", local=local, db="production").db
 
     def get_abstract(self, doi=None, good_ones=False, user_key=None, only_relevant=False):
         if doi is not None:

@@ -2,9 +2,9 @@ import itertools
 
 from sklearn.metrics import cohen_kappa_score, confusion_matrix
 import numpy as np
-from matstract.utils import open_db_connection
-from matstract.models.Annotation import TokenAnnotation
-from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.models.database import open_db_connection
+from matstract.models.annotation import TokenAnnotation
+from matstract.models.annotation_builder import AnnotationBuilder
 
 
 class AnnotationMetrics:

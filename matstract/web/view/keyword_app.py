@@ -1,6 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 from matstract.extract.parsing import SimpleParser
 from matstract.nlp.theme_extractor import analyze_themes
 import pandas as pd
@@ -27,7 +27,7 @@ def generate_table(dataframe, max_rows=100):
 
 
 def get_keywords(material):
-    db = open_db_connection(db="tri_abstracts")
+    db = AtlasConnection(db="test").db
     print(db.info)
     parser = SimpleParser()
     material = parser.matgen_parser(material)

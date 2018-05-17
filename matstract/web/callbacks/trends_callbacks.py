@@ -1,6 +1,8 @@
 from dash.dependencies import Input, Output, State
 from matstract.web.view import trends_app
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
+
+db = AtlasConnection().db
 
 
 def bind(app, cache):

@@ -1,6 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
-from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.models.annotation_builder import AnnotationBuilder
 
 
 def serve_layout(_, __, ___):

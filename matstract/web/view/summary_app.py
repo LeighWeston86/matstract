@@ -1,6 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 from matstract.extract.parsing import SimpleParser
 from matstract.nlp.theme_extractor import analyze_themes
 import pandas as pd
@@ -19,13 +19,13 @@ def generate_table(dataframe, max_rows=100):
         ]) for i in range(min(len(dataframe), max_rows))]
     )
 
-
-def gen_output(most_common, size, entity_type):
+def gen_output(most_common, size, entity_type, width = '350px'):
     return html.Div(
         [html.Div([html.Label(entity_type)] + [html.Div(prop) for prop, score in most_common],
-            style={'float': 'left'}),
-        html.Div([html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
-            style={'float': 'right'})], className="summary-float-div")
+            style={'float':'left'}),
+        html.Div( [html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
+            style={'float':'right'})],
+        style={'width':width})
 
 def get_entities(material):
     #Normalize the material
@@ -33,7 +33,7 @@ def get_entities(material):
     material = parser.matgen_parser(material)
 
     #Open connection and get NEs associated with the material
-    db = open_db_connection(db="tri_abstracts", local=False)
+    db = AtlasConnection(db="test").db
     test_ne = db.test_ne
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
     entities = list(db.test_ne.find({'doi': {'$in': dois}}))
@@ -60,14 +60,14 @@ def get_entities(material):
         cmt = [p for pp in cmt for p in pp if len(p) > 2]
         cmt = nltk.FreqDist(cmt).most_common(10)
 
-        return html.Div([
-            gen_output(pro, num_entities, 'Property'),
-            gen_output(cmt, num_entities, 'Characterization'),
-            gen_output(smt, num_entities, 'Synthesis'),
-            gen_output(spl, num_entities, 'Phase'),
-            gen_output([], num_entities, 'Application (coming soon...)'),
-            gen_output([], num_entities, 'Sample descriptor (coming soon...)'),
-        ])
+        return [html.Div([html.Div(gen_output(pro, num_entities, 'Property', '350px'), id="first", style={'float':'left', 'width':'400px'}),
+                   html.Div(gen_output(spl, num_entities, 'Phase', '200px'), id="second", style={'float':'left', 'width':'250px'}),
+                   html.Div(gen_output(smt, num_entities, 'Synthesis'),  id="third", style={'float':'left', 'width':'350px'})], id = 'wrapper', style={'width':'1500px'}),
+                html.Div(style={"padding": "280px"}),
+                html.Div([html.Div(gen_output(cmt, num_entities, 'Characterization', '350px'), id="first", style={'float': 'left', 'width': '400px'}),
+                   html.Div(html.Label('Application (coming soon...)'), id="second", style={'float': 'left', 'width': '250px'}),
+                   html.Div(html.Label('Sample descriptor (coming soon...)'), id="third", style={'float': 'left', 'width': '350px'})], id='wrapper', style={'width': '1200px'})]
+
     else:
         return "No entities for the specified material"
 

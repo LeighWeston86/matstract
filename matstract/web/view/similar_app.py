@@ -1,13 +1,13 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
-from matstract.utils import open_db_connection, open_es_client
-from matstract.models.search import MatstractSearch
+from matstract.models.database import AtlasConnection, ElasticConnection
 from matstract.extract import parsing
+from matstract.models.search import MatstractSearch
 from bson import ObjectId
 
-db = open_db_connection(db = "matstract_db")
-client = open_es_client()
+db = AtlasConnection(db="production").db
+client = ElasticConnection()
 
 def random_abstract():
     random_document = list(db.abstracts.aggregate([{ "$sample": {"size": 1}}]))[0]
@@ -32,18 +32,28 @@ def highlight_material(body, material):
     return body
 
 
-def get_search_results(search=None, materials=None, max_results=100):
-    if search is None and materials is None:
-        return None
+def get_search_results(search="", material="", max_results=10000):
+    results = None
+    if material is None:
+        material = ''
     else:
-        search_engine = MatstractSearch()
-        ids = None if search is None else find_similar(search, max_results)
-        if materials is not None:
-            max_results = 1000
-            results = search_engine.get_abstracts_by_material(materials, ids=ids)
-        else:
-            results = sort_results(db.abstracts.find({"_id": {"$in": ids}}), ids)
-        return list(results)
+        parser = parsing.SimpleParser()
+    if search is None:
+        search = ''
+    if search == '' and material == '':
+        return None
+    if material and not search:
+        results = db.abstracts_leigh.find({"normalized_cems": parser.matgen_parser(material)})
+    elif search and not material:
+        ids = find_similar(search, max_results)
+        results = sort_results(db.abstracts.find({"_id": {"$in": ids[0:1000]}}), ids)
+    elif search and material:
+        ids = find_similar(search, max_results)[0:1000]
+        results = db.abstracts_leigh.aggregate([
+            {"$match": {"_id": {"$in": ids}}},
+            {"$match": {"normalized_cems": parser.matgen_parser(material)}}
+        ])
+    return list(results)
 
 
 def find_similar(abstract="", max_results=100):
@@ -79,24 +89,29 @@ def sort_df(test_df, materials):
 
 
 def generate_table(search='', materials='', columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
-    results = get_search_results(search, materials)
+    MS = MatstractSearch()
+    results = MS.more_like_this(search, materials, max_results=max_rows)
     if results is not None:
         print(len(results))
     if materials:
         df = pd.DataFrame(results[:max_rows])
-        # if not df.empty:
-        #     df = sort_df(df, materials)
+        if not df.empty:
+            df = sort_df(df, materials)
     else:
         df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
     if not df.empty:
         format_authors = lambda author_list: ", ".join(author_list)
         df['authors'] = df['authors'].apply(format_authors)
+        if len(materials.split(' ')) > 0:
+            hm = highlight_material
+        else:
+            hm = highlight_material
         return html.Table(
             # Header
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
             [html.Tr([
-                html.Td(html.A(str(df.iloc[i][col]),
+                html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
                                href=df.iloc[i]["link"], target="_blank")) if col == "title"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))]

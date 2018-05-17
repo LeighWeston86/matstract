@@ -11,11 +11,11 @@ from matstract.web.view import annotate_app, similar_app, \
 from matstract.web.callbacks import search_callbacks, annotate_callbacks, summary_callbacks, \
     keyword_callbacks, trends_callbacks, similar_callbacks, mat2vec_callbacks, matsearch_callbacks, extract_callbacks
 from dash.dependencies import Input, Output, State
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 
 import os
 
-db = open_db_connection(local=True)
+db = AtlasConnection().db
 
 app = dash.Dash()
 server = app.server
