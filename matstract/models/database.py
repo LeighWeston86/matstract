@@ -7,7 +7,7 @@ import certifi
 from bson import ObjectId
 
 #Change this variable to True for easy offline testing.
-local = True
+local = False
 
 
 def sort_results(results, ids):
