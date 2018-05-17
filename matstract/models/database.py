@@ -23,33 +23,38 @@ class AtlasConnection():
         Args:
             local (bool): True to use local config file, False for environment variables. Default: False
             access (str): Level of access. e.g. "admin", "read_only", or "annotator"
-            db (str): Desired database. e.g. "testing" or "production"
+            db (str): Desired database. e.g. "test" or "production"
 
         Returns: pymongo Client.
 
         """
-
-        if not local:
-            env_vars = ["ATLAS_USER", "ATLAS_USER_PASSWORD", "ANNOTATOR_USER", "ANNOTATOR_PASSWORD", "ATLAS_REST"]
-            if not all([ev in env for ev in env_vars]):
-                raise ConnectionError("Required environment variables not found.")
-
-            if access == "read_only":
-                user_creds = {"user": os.environ["ATLAS_USER"],
-                            "pass": os.environ["ATLAS_USER_PASSWORD"],
-                            "rest": os.environ["ATLAS_REST"],
-                            "db": db}
-            elif access == "annotator":
-                user_creds = {"user": os.environ["ANNOTATOR_USER"],
-                            "pass": os.environ["ANNOTATOR_PASSWORD"],
-                            "rest": os.environ["ATLAS_REST"],
-                            "db": db}
-
+        if 'MATSTRACT_HOST' in env and local:
+            uri = "mongodb://%s:%s/%s" % (
+                env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
+            user_creds = {'db': db}
+        
         else:
-            db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
-            user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
+            try:
+                db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
+                user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
+                uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
+            except:
+                env_vars = ["ATLAS_USER", "ATLAS_USER_PASSWORD", "ANNOTATOR_USER", "ANNOTATOR_PASSWORD", "ATLAS_REST"]
+                if not all([ev in env for ev in env_vars]):
+                    raise ConnectionError("Required environment variables not found.")
 
-        uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
+                if access == "read_only":
+                    user_creds = {"user": os.environ["ATLAS_USER"],
+                                "pass": os.environ["ATLAS_USER_PASSWORD"],
+                                "rest": os.environ["ATLAS_REST"],
+                                "db": db}
+                elif access == "annotator":
+                    user_creds = {"user": os.environ["ANNOTATOR_USER"],
+                                "pass": os.environ["ANNOTATOR_PASSWORD"],
+                                "rest": os.environ["ATLAS_REST"],
+                                "db": db}
+                uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
+
         client = MongoClient(uri, connect=False)
         self.db = client[user_creds["db"]]
 
