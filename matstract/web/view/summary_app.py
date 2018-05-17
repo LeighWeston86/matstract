@@ -19,13 +19,13 @@ def generate_table(dataframe, max_rows=100):
         ]) for i in range(min(len(dataframe), max_rows))]
     )
 
-def gen_output(most_common, size, entity_type, width = '350px'):
+
+def gen_output(most_common, size, entity_type):
     return html.Div(
         [html.Div([html.Label(entity_type)] + [html.Div(prop) for prop, score in most_common],
-            style={'float':'left'}),
-        html.Div( [html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
-            style={'float':'right'})],
-        style={'width':width})
+            style={'float': 'left'}),
+        html.Div([html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
+            style={'float': 'right'})], className="summary-float-div")
 
 def get_entities(material):
     #Normalize the material
@@ -60,14 +60,14 @@ def get_entities(material):
         cmt = [p for pp in cmt for p in pp if len(p) > 2]
         cmt = nltk.FreqDist(cmt).most_common(10)
 
-        return [html.Div([html.Div(gen_output(pro, num_entities, 'Property', '350px'), id="first", style={'float':'left', 'width':'400px'}),
-                   html.Div(gen_output(spl, num_entities, 'Phase', '200px'), id="second", style={'float':'left', 'width':'250px'}),
-                   html.Div(gen_output(smt, num_entities, 'Synthesis'),  id="third", style={'float':'left', 'width':'350px'})], id = 'wrapper', style={'width':'1500px'}),
-                html.Div(style={"padding": "280px"}),
-                html.Div([html.Div(gen_output(cmt, num_entities, 'Characterization', '350px'), id="first", style={'float': 'left', 'width': '400px'}),
-                   html.Div(html.Label('Application (coming soon...)'), id="second", style={'float': 'left', 'width': '250px'}),
-                   html.Div(html.Label('Sample descriptor (coming soon...)'), id="third", style={'float': 'left', 'width': '350px'})], id='wrapper', style={'width': '1200px'})]
-
+        return html.Div([
+            gen_output(pro, num_entities, 'Property'),
+            gen_output(cmt, num_entities, 'Characterization'),
+            gen_output(smt, num_entities, 'Synthesis'),
+            gen_output(spl, num_entities, 'Phase'),
+            gen_output([], num_entities, 'Application (coming soon...)'),
+            gen_output([], num_entities, 'Sample descriptor (coming soon...)'),
+        ])
     else:
         return "No entities for the specified material"
 
