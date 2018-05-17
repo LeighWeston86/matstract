@@ -61,12 +61,12 @@ def get_entities(material):
         cmt = nltk.FreqDist(cmt).most_common(10)
 
         return html.Div([
-            html.Div(gen_output(pro, num_entities, 'Property')),
-            html.Div(gen_output(cmt, num_entities, 'Characterization')),
-            html.Div(gen_output(smt, num_entities, 'Synthesis')),
-            html.Div(gen_output(spl, num_entities, 'Phase')),
-            html.Div(gen_output([], num_entities, 'Application (coming soon...)')),
-            html.Div(gen_output([], num_entities, 'Sample descriptor (coming soon...)')),
+            gen_output(pro, num_entities, 'Property'),
+            gen_output(cmt, num_entities, 'Characterization'),
+            gen_output(smt, num_entities, 'Synthesis'),
+            gen_output(spl, num_entities, 'Phase'),
+            gen_output([], num_entities, 'Application (coming soon...)'),
+            gen_output([], num_entities, 'Sample descriptor (coming soon...)'),
         ])
     else:
         return "No entities for the specified material"

@@ -16,20 +16,20 @@ class EmbeddingEngine:
         ds = np.DataSource()
 
         # loading pre-trained embeddings and the dictionary
-        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
+        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
         ds.open(embeddings_url)
         embeddings = np.load(ds.abspath(embeddings_url))
         with ds.open(
-                "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.tsv") as f:
+                "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.tsv") as f:
             self.reverse_dictionary = [x.strip('\n') for x in f.readlines()]
 
         self.word2index = dict()
         for i, word in enumerate(self.reverse_dictionary):
             self.word2index[word] = i
 
-        norm = np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
-        self.normalized_embeddings = embeddings / norm
-        del embeddings, norm  # to free up some memory
+        self.norm = np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
+        self.normalized_embeddings = embeddings / self.norm
+        del embeddings  # to free up some memory
 
         phrases = Phrases(threshold=0.0001, min_count=1)
         vocab = defaultdict(int)
@@ -44,7 +44,7 @@ class EmbeddingEngine:
 
         self._dp = DataPreparation()
         # loading pre-trained embeddings and the dictionary
-        formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_matnorm_lower_punct_units_formula.pkl"
+        formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_matnorm_lower_punct_units_valence_formula.pkl"
         ds.open(formulas_url)
         self.formulas = self._dp.load_obj(ds.abspath(formulas_url[:-4]))
         for abbr in self.ABBR_LIST:
@@ -65,6 +65,7 @@ class EmbeddingEngine:
         :return:
         """
         close_words = []
+        scores = []
         if isinstance(word, str):
             word_embedding = self.get_word_vector(word)
         else:
@@ -75,7 +76,8 @@ class EmbeddingEngine:
             nearest = (-sim[0, :]).argsort()[1:top_k + 1] if exclude_self else (-sim[0, :]).argsort()[:top_k]
             for k in range(top_k):
                 close_words.append(self.reverse_dictionary[nearest[k]])
-            return close_words
+                scores.append(sim[0, nearest[k]])
+            return close_words, scores
         else:
             return []
 
@@ -123,6 +125,13 @@ class EmbeddingEngine:
         """
         common_form_score_cout = []
         for formula in form_dict:
-            most_common_form = max(self.formulas[formula[0]].items(), key=operator.itemgetter(1))[0]
-            common_form_score_cout.append((most_common_form, formula[1], sum(self.formulas[formula[0]].values())))
+            if formula[0] in self._dp.ELEMENTS:
+                most_common_form = formula[0]
+            else:
+                most_common_form = max(self.formulas[formula[0]].items(), key=operator.itemgetter(1))[0]
+            common_form_score_cout.append((
+                most_common_form,
+                formula[1],
+                sum(self.formulas[formula[0]].values()),
+                self.norm[self.word2index[formula[0]]][0]))
         return common_form_score_cout

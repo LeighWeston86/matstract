@@ -29,7 +29,7 @@ a {
     cursor: pointer;
 }
 
-div.summary-float-div {
+.summary-float-div {
     float: left;
     margin: 10px;
     border: 1px solid #aaa;
@@ -37,10 +37,15 @@ div.summary-float-div {
     padding: 10px;
 }
 
-div.summary-float-div div {
+.summary-float-div div {
     padding: 2px 5px;
 }
 
-div.summary-float-div label {
+.summary-float-div label {
     border-bottom: 1px solid #aaa;
+}
+
+#material_summary_div .summary-float-div {
+    max-height: 200px;
+    overflow: scroll;
 }
