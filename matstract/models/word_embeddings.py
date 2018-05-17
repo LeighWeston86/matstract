@@ -10,7 +10,10 @@ class EmbeddingEngine:
                  "CsPSV", "CsOPV", "CsIOS", "BCsIS", "CsPrS", "CEsH", "KP307", "AsOV", "CEsS",
                  "COsV", "CNoO", "BEsF", "I2P3", "KP115", "BCsIS", "C9705IS", "ISC0501", "B349S",
                  "CISe", "CISSe", "CsIPS", "CEsP", "BCsF", "CsFOS", "BCY10", "C12P", "EsHP", "CsHP",
-                 "C2K8", "CsOP", "EsHS", "CsHS", "C3P", "C50I", "CEs"]
+                 "C2K8", "CsOP", "EsHS", "CsHS", "C3P", "C50I", "CEs", "CSm", "BF", "EsN", "BN50S", "AsCP",
+                 "CPo", "LiPb17", "CsS", "EsIS", "AsCU", "CCsHS", "CsHPU", "AsOS", "AsCI", "EsF", "FV448",
+                 "CNS", "CP5", "AsFP", "EsOP", "NS", "NS2"]
+
 
     def __init__(self):
         ds = np.DataSource()
@@ -99,7 +102,7 @@ class EmbeddingEngine:
         else:
             return None
 
-    def find_similar_materials(self, sentence, min_count=10):
+    def find_similar_materials(self, sentence, n_sentence=None, min_count=10):
         """
         Finds materials that match the best with the context of the sentence
         :param sentence: a list of words
@@ -108,10 +111,19 @@ class EmbeddingEngine:
         """
         similarities = dict()
         avg_embedding = np.zeros(200)
+        nr_words = 0
+        # positive contribution
         for word in sentence:
             if word in self.word2index:
                 avg_embedding += self.normalized_embeddings[self.word2index[word]]
-        avg_embedding = avg_embedding / len(sentence)
+                nr_words += 1
+        # negative contribution
+        if n_sentence is not None:
+            for n_word in n_sentence:
+                if n_word in self.word2index:
+                    avg_embedding -= self.normalized_embeddings[self.word2index[n_word]]
+                    nr_words += 1
+        avg_embedding = avg_embedding / nr_words
         for i, formla in enumerate(self.formulas):
             if self.formula_counts[i] > min_count:
                 similarities[formla] = np.dot(avg_embedding, self.normalized_embeddings[self.word2index[formla]])
@@ -135,3 +147,39 @@ class EmbeddingEngine:
                 sum(self.formulas[formula[0]].values()),
                 self.norm[self.word2index[formula[0]]][0]))
         return common_form_score_cout
+
+    def filter_by_elements(self, formula_list, plus_elems=None, minus_elems=None, max=50):
+        if plus_elems is None:
+            plus_elems = []
+        if minus_elems is None:
+            minus_elems = []
+        pe = set(plus_elems) - set(minus_elems)
+        minus_elems = set(minus_elems) - set(plus_elems)
+        plus_elems = pe
+
+        def has_plus(composition, plus_elems):
+            if plus_elems is None or len(plus_elems) == 0:
+                return True
+            for elem in composition:
+                if elem in plus_elems:
+                    return True
+            return False
+
+        def has_minus(composition, minus_elems):
+            if minus_elems is None or len(minus_elems) == 0:
+                return False
+            for elem in composition:
+                if elem in minus_elems:
+                    return True
+            return False
+
+        matched = 0
+        matched_formula = []
+        for form in formula_list:
+            composition = self._dp.parser.parse_formula(form[0])
+            if has_plus(composition, plus_elems) and not has_minus(composition, minus_elems):
+                matched_formula.append(form)
+                matched += 1
+            if matched >= max:
+                return matched_formula
+        return matched_formula

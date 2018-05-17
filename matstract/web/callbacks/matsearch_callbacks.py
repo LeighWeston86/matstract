@@ -13,14 +13,19 @@ def bind(app):
     @app.callback(
         Output('material_metrics', 'figure'),
         [Input('matsearch_button', 'n_clicks')],
-        [State('matsearch_input', 'value')])
-    def get_relevant_materials(_, search_text):
+        [State('matsearch_input', 'value'), State('matsearch_negative_input', 'value'),
+         State('has_elements', 'value'), State('n_has_elements', 'value')])
+    def get_relevant_materials(_, search_text, n_search_text, plus_elems, minus_elems):
         if search_text is not None and search_text != "":
             dp = DataPreparation()
             ee = EmbeddingEngine()
             sentence = ee.phraser[dp.process_sentence(search_text.split())]
-            most_similar = ee.find_similar_materials(sentence, min_count=15)
-            matlist = ee.most_common_form(most_similar[:50])
+            n_sentence = None
+            if n_search_text is not None and len(n_search_text) > 0:
+                n_sentence = ee.phraser[dp.process_sentence(n_search_text.split())]
+            most_similar = ee.find_similar_materials(sentence, n_sentence=n_sentence, min_count=15)
+            elem_filtered = ee.filter_by_elements(most_similar, plus_elems, minus_elems, max=50)
+            matlist = ee.most_common_form(elem_filtered[:50])
             material_names, material_scores, material_counts, _ = zip(*matlist)
             return matlist_figure(material_names, material_scores, material_counts)
         else:
@@ -31,7 +36,7 @@ def bind(app):
         [Input('material_metrics', 'clickData'),
          Input('matsearch_button', 'n_clicks')],
         [State('matsearch_input', 'value')])
-    def display_trends(click_data, n_clicks, material):
+    def display_trends(click_data, n_clicks, input_text):
         if click_data is not None:
             material = click_data["points"][0]["y"]  # name of the material
             layout = {"height": 300,
@@ -58,7 +63,7 @@ def bind(app):
                             "fontWeight": "bold",
                             "marginTop": "20px"}),
                         html.Div(get_entities(material))])]
-        elif n_clicks is not None and material is not None and len(material) > 0:
+        elif n_clicks is not None and input_text is not None and len(input_text) > 0:
             return "Click the graph to load material info."
         else:
             return ""
