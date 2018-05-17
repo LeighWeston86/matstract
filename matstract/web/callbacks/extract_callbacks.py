@@ -1,12 +1,12 @@
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 from chemdataextractor.doc import Text
 import pickle
 import _pickle
 import gzip
 import os
-from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.models.annotation_builder import AnnotationBuilder
 
 def highlight_multiple(text, materials, color='Yellow'):
     for mat in materials:
@@ -125,7 +125,7 @@ def random_abstract():
     tfidf = pickle.load(open(tfidf_location, 'rb'))
     no_abstract = True
     random_abs = None
-    db = open_db_connection(local=True, db="matstract_db")
+    db = AtlasConnection.db(local=True, db="production").db
     while no_abstract:
         random_document = list(db.abstracts.aggregate([{"$sample": {"size": 1}}]))[0]
         random_abs = random_document['abstract']

@@ -1,6 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 from matstract.extract.parsing import SimpleParser
 from matstract.nlp.theme_extractor import analyze_themes
 import pandas as pd
@@ -33,7 +33,7 @@ def get_entities(material):
     material = parser.matgen_parser(material)
 
     #Open connection and get NEs associated with the material
-    db = open_db_connection(db="tri_abstracts")
+    db = AtlasConnection(db="test").db
     test_ne = db.test_ne
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
     entities = list(db.test_ne.find({'doi': {'$in': dois}}))

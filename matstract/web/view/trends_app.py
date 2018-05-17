@@ -6,7 +6,6 @@ from matstract.models.search import MatstractSearch
 
 def generate_trends_graph(search='', materials=''):
     MS = MatstractSearch()
-
     if search is None:
         search = ''
     if materials is None:

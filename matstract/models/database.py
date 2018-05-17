@@ -4,11 +4,18 @@ import json
 from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 import certifi
+from bson import ObjectId
 
 #Change this variable to True for easy offline testing.
 local = True
 
-class AtlasConnection(MongoClient):
+
+def sort_results(results, ids):
+    results_sorted = sorted(results, key=lambda k: ids.index(k['_id']))
+    return results_sorted
+
+
+class AtlasConnection():
     """ Class representing a connection to the Atlas cluster (MongoDB)"""
 
     def __init__(self, local=local, access="read_only", db="production"):
@@ -43,8 +50,8 @@ class AtlasConnection(MongoClient):
             user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
 
         uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
-        super(AtlasConnection, self).__init__(uri, connect=False)
-        self.db = self[user_creds["db"]]
+        client = MongoClient(uri, connect=False)
+        self.db = client[user_creds["db"]]
 
 
     def query(self, mongo_query):
@@ -57,7 +64,13 @@ class AtlasConnection(MongoClient):
         Returns:
 
         """
-        return self.db.query(mongo_query)
+        return self.db.abstracts.query(mongo_query)
+
+    def get_documents_by_id(self, ids):
+        return sort_results(self.db.abstracts.find({"_id": {"$in":ids}}), ids)
+
+    def get_documents_by_doi(self, dois):
+        return sort_results(self.db.abstracts.find({"doi": {"$in":dois}}), dois)
 
 
 class ElasticConnection(Elasticsearch):
@@ -68,7 +81,7 @@ class ElasticConnection(Elasticsearch):
         Args:
             local (bool): True to use local config file, False for environment variables. Default: False
             access (str): Level of access. e.g. "admin", "read_only", or "annotator"
-            db (str): Desired database. e.g. "testing" or "production"
+            db (str): Desired database. e.g. "test" or "production"
 
         Returns: pymongo Client.
 
@@ -90,6 +103,23 @@ class ElasticConnection(Elasticsearch):
             user_creds = json.load(open(db_creds, 'r'))["elastic"][access]
             hosts = user_creds["hosts"]
             http_auth = (user_creds["user"], user_creds["pass"])
-
         super(ElasticConnection, self).__init__(hosts=hosts, http_auth=http_auth,
                                                 use_ssl=True, ca_certs=certifi.where())
+
+    def query(self, text=None, max_results=10000):
+        """
+        Wrapper for ElasticSearch search that enforces correct db.
+
+        Args:
+            text (str): text to be searched on
+
+        Returns:
+            list of ObjectIDs of the seach results
+
+        """
+        if text is None:
+            return None
+        query = {"query": {"simple_query_string": {"query": text}}}
+        hits = self.search(index="tri_abstracts", body=query, size=max_results, request_timeout=30)["hits"]["hits"]
+        ids = [ObjectId(h["_id"]) for h in hits]
+        return ids

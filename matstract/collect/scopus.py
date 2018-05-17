@@ -3,7 +3,7 @@ import json
 import xml.etree.ElementTree as ET
 from requests.exceptions import HTTPError
 from elsapy.elsclient import ElsClient
-from matstract.models.database import open_db_connection
+from matstract.models.database import AtlasConnection
 from elsapy.elssearch import ElsSearch
 import datetime
 from tqdm import tqdm
@@ -45,7 +45,7 @@ def check_scopus_collection(year, issn):
         (bool) True if status of the year/journal pair is "complete"
 
     """
-    db = open_db_connection()
+    db = AtlasConnection(access='admin', db="test").db
     log = db.elsevier_log
     entry = log.find({"year": year, "issn": issn})[0]
     if entry["status"] == "complete":

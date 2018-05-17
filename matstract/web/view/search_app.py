@@ -5,6 +5,7 @@ from matstract.models.database import AtlasConnection, ElasticConnection
 from matstract.extract import parsing
 from matstract.models.search import MatstractSearch
 
+
 db = AtlasConnection(db="production").db
 client = ElasticConnection()
 
@@ -79,10 +80,9 @@ def generate_table(search=None, materials=None,
                    columns=('title', 'authors', 'year', 'journal', 'abstract'),
                    max_rows=100):
     MS = MatstractSearch()
-    response = MS.get_abstracts_by_material(search, materials)
-    results = list(response[0])
+    results = list(MS.search(search, materials))
     if results is not None:
-        print("{} search results".format(response[1]))
+        print("{} search results".format(len(results)))
     if materials:
         df = pd.DataFrame(results[:max_rows])
         if not df.empty:

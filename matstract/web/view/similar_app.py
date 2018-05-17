@@ -3,6 +3,7 @@ import dash_core_components as dcc
 import pandas as pd
 from matstract.models.database import AtlasConnection, ElasticConnection
 from matstract.extract import parsing
+from matstract.models.search import MatstractSearch
 from bson import ObjectId
 
 db = AtlasConnection(db="production").db
@@ -88,7 +89,8 @@ def sort_df(test_df, materials):
 
 
 def generate_table(search='', materials='', columns=('title', 'authors', 'year', 'abstract'), max_rows=100):
-    results = get_search_results(search, materials)
+    MS = MatstractSearch()
+    results = MS.more_like_this(search, materials, max_results=max_rows)
     if results is not None:
         print(len(results))
     if materials:
