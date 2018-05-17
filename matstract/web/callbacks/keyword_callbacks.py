@@ -1,10 +1,10 @@
 from dash.dependencies import Input, Output, State
 from matstract.web.view import keyword_app
-from matstract.utils import open_db_connection, open_es_client
+from matstract.models.database import AtlasConnection, ElasticConnection
 from matstract.web.view.similar_app import random_abstract
 
-db = open_db_connection(local=True)
-es = open_es_client()
+db = AtlasConnection().db
+es = ElasticConnection()
 
 
 def bind(app):

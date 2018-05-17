@@ -2,27 +2,32 @@
   "mongo": {
     "admin": {
       "production": {
-        "name": "<<First Last>>",
-        "db": "<<db_name>>",
-        "user": "<<username>>",
-        "pass": "<<password>>",
-        "rest": "<<atlas connection string>>"
+        "name": "John Dagdelen",
+        "db": "matstract_db",
+        "user": "<<USER>>",
+        "pass": "<<PASSWORD>>",
+        "rest": "matstract-shard-00-00-kve41.mongodb.net:27017,matstract-shard-00-01-kve41.mongodb.net:27017,matstract-shard-00-02-kve41.mongodb.net:27017/test?ssl=true&replicaSet=matstract-shard-0&authSource=admin"
       },
-      "testing": {
-        "name": "<<First Last>>",
-        "db": "<<db_name>>",
-        "user": "<<username>>",
-        "pass": "<<password>>",
-        "rest": "<<atlas connection string>>"
+      "test": {
+        "name": "John Dagdelen",
+        "db": "tri_abstracts",
+        "user": "<<USER>>",
+        "pass": "<<PASSWORD>>",
+        "rest": "matstract-shard-00-00-kve41.mongodb.net:27017,matstract-shard-00-01-kve41.mongodb.net:27017,matstract-shard-00-02-kve41.mongodb.net:27017/test?ssl=true&replicaSet=matstract-shard-0&authSource=admin"
       }
     },
-    "readonly": {
-      "mongo": {
-        "name": "<<First Last>>",
-        "db": "<<db_name>>",
-        "user": "<<readonly username>>",
-        "pass": "<<readonly password>>",
-        "rest": "<<atlas connection string>>"
+    "read_only": {
+      "production": {
+        "db": "matstract_db",
+        "user": "<<READ ONLY USER>>",
+        "pass": "<<PASSWORD>>",
+        "rest": "matstract-shard-00-00-kve41.mongodb.net:27017,matstract-shard-00-01-kve41.mongodb.net:27017,matstract-shard-00-02-kve41.mongodb.net:27017/test?ssl=true&replicaSet=matstract-shard-0&authSource=admin"
+      },
+      "test": {
+        "db": "tri_abstracts",
+        "user": "<<READ ONLY USER>>",
+        "pass": "<<PASSWORD>>",
+        "rest": "matstract-shard-00-00-kve41.mongodb.net:27017,matstract-shard-00-01-kve41.mongodb.net:27017,matstract-shard-00-02-kve41.mongodb.net:27017/test?ssl=true&replicaSet=matstract-shard-0&authSource=admin"
       }
     },
     "annotation": {
@@ -30,13 +35,18 @@
   },
   "elastic": {
     "admin": {
-      "production": {
-        "hosts": [
-          "<<elasticsearch DB hostname>>"
-        ],
-        "user": "<<username>>",
-        "pass": "<<password>>"
-      }
+      "hosts": [
+        "https://7092c099e3d606dec7363473782f6e83.us-west-1.aws.found.io:9243"
+      ],
+      "user": "<<USER>>",
+      "pass": "<<PASSWORD>>"
+    },
+    "read_only": {
+      "hosts": [
+        "https://7092c099e3d606dec7363473782f6e83.us-west-1.aws.found.io:9243"
+      ],
+      "user": "<<READ ONLY USER>>",
+      "pass": "<<PASSWORD>>"
     }
   }
 }

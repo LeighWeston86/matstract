@@ -4,7 +4,7 @@ from operator import itemgetter
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
-from matstract.utils import open_db_connection
+from matstract.models.database import open_db_connection
 
 class TermFrequency(object):
     '''

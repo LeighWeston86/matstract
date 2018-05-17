@@ -1,4 +1,4 @@
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 from chemdataextractor.doc import Paragraph
 from gensim.utils import deaccent
 from matstract.extract import parsing
@@ -56,7 +56,8 @@ class DataPreparation:
     ROMAN_NR_PR = regex.compile(r'\(I+V?\)')
 
     def __init__(self, db_name="matstract_db", local=True):
-        self._db = open_db_connection(local=local, db=db_name)
+        db = "production" if db_name == "matstract_db" else "testing"
+        self._db = AtlasConnection(local=local, db=db).db
         self.parser = parsing.MaterialParser()
         self.simple_parser = parsing.SimpleParser()
         self.mat_list = []

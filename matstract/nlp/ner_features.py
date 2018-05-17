@@ -11,7 +11,7 @@ import pickle
 import os
 from numbers import Number
 from matstract.extract.parsing import MaterialParser, TextParser
-from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.models.annotation_builder import AnnotationBuilder
 
 class FeatureGenerator:
     '''

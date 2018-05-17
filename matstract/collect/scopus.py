@@ -1,11 +1,9 @@
-import os
 import requests
-import sys
 import json
 import xml.etree.ElementTree as ET
 from requests.exceptions import HTTPError
 from elsapy.elsclient import ElsClient
-from matstract.utils import open_db_connection
+from matstract.models.database import open_db_connection
 from elsapy.elssearch import ElsSearch
 import datetime
 from tqdm import tqdm

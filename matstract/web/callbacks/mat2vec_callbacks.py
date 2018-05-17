@@ -33,7 +33,7 @@ def bind(app):
         if pos_1_vec is not None and neg_1_vec is not None and pos_2_vec is not None:
             diff_vec = pos_2_vec + pos_1_vec - neg_1_vec
             norm_diff = diff_vec / np.linalg.norm(diff_vec, axis=0)  # unit length
-            close_words = ee.close_words([norm_diff], exclude_self=False)
+            close_words = ee.close_words(norm_diff, exclude_self=False)
             for close_word in close_words:
                 if close_word not in [pos_1, neg_1, pos_2]:
                     return close_word

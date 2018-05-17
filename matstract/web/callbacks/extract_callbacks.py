@@ -8,29 +8,6 @@ import gzip
 import os
 from matstract.models.AnnotationBuilder import AnnotationBuilder
 
-classifier_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/lr_classifier.p')
-with open(classifier_location, 'rb') as f:
-    clf = _pickle.load(f)
-
-# load in feature generator
-feature_generator_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/feature_generator.p')
-with open(feature_generator_location, 'rb') as f:
-    feature_generator = _pickle.load(f)
-
-#locations for relevant/not relevant classifier and vecotrizers
-models_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../nlp/')
-classifier_location =  os.path.join(models_location, 'r_nr_classifier.p')
-cv_location = os.path.join(models_location, 'cv.p')
-tfidf_location = os.path.join(models_location, 'tfidf.p')
-
-# load in relevant/not-relevant classifier and vectorizers
-r_nr_clf = pickle.load(open(classifier_location, 'rb'))
-cv = pickle.load(open(cv_location, 'rb'))
-tfidf = pickle.load(open(tfidf_location, 'rb'))
-
-
 def highlight_multiple(text, materials, color='Yellow'):
     for mat in materials:
         text = text.replace(mat, "<s>html.Mark('{}')<s>".format(mat))
@@ -75,19 +52,18 @@ def highlight_ne(tagged_doc):
 
 
 def extract_ne(abstract):
-    # load in a classifier
-    #classifier_location = os.path.join(
-    #    os.path.dirname(os.path.abspath(__file__)), '../../nlp/lr_classifier.p')
-    #with gzip.open(classifier_location, 'rb') as f:
-    #with open(classifier_location, 'rb') as f:
-    #    clf = _pickle.load(f)
+
+    # load classifier
+    classifier_location = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '../../nlp/lr_classifier.p')
+    with open(classifier_location, 'rb') as f:
+        clf = _pickle.load(f)
 
     # load in feature generator
-    #feature_generator_location = os.path.join(
-    #    os.path.dirname(os.path.abspath(__file__)), '../../nlp/feature_generator.p')
-    #with gzip.open(feature_generator_location, 'rb') as f:
-    #with open(feature_generator_location, 'rb') as f:
-    #    feature_generator = _pickle.load(f)
+    feature_generator_location = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '../../nlp/feature_generator.p')
+    with open(feature_generator_location, 'rb') as f:
+        feature_generator = _pickle.load(f)
 
     #tag and tokenize
     text = Text(abstract)
@@ -101,7 +77,6 @@ def extract_ne(abstract):
             predicted_BIO = clf.predict(feature_generator.transform(word_tag, sent, idx, prev_BIO))
             prev_BIO = predicted_BIO
             tagged_doc.append((word_tag[0], predicted_BIO[0]))
-
 
     #Unique list of NE tags found
     tags_found = list(set([BIO_tag[-3:] for word, BIO_tag in tagged_doc if BIO_tag != 'O']))
@@ -138,6 +113,16 @@ def highlighter(text, parsed, missed):
 
 
 def random_abstract():
+    # locations for relevant/not relevant classifier and vecotrizers
+    models_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../nlp/')
+    classifier_location = os.path.join(models_location, 'r_nr_classifier.p')
+    cv_location = os.path.join(models_location, 'cv.p')
+    tfidf_location = os.path.join(models_location, 'tfidf.p')
+
+    # load in relevant/not-relevant classifier and vectorizers
+    r_nr_clf = pickle.load(open(classifier_location, 'rb'))
+    cv = pickle.load(open(cv_location, 'rb'))
+    tfidf = pickle.load(open(tfidf_location, 'rb'))
     no_abstract = True
     random_abs = None
     db = open_db_connection(local=True, db="matstract_db")

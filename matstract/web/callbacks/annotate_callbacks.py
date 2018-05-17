@@ -1,13 +1,12 @@
 from dash.dependencies import Input, Output, State
 import os
-from matstract.models.AnnotationBuilder import AnnotationBuilder
-from matstract.models.Annotation import TokenAnnotation, MacroAnnotation
+from matstract.models.annotation_builder import AnnotationBuilder
+from matstract.models.annotation import TokenAnnotation, MacroAnnotation
 from matstract.web.view import annotate_app
 from matstract.web.view.annotate import token_ann_app, macro_ann_app
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 
-db = open_db_connection(local=True)
-
+db = AtlasConnection().db
 
 def bind(app):
     def _auth_message(n_clicks, user_key):

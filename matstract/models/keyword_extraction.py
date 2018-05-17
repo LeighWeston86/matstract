@@ -1,10 +1,10 @@
-from matstract.web.view.search_app import get_search_results
+from matstract.models.search import MatstractSearch
 from sklearn.feature_extraction.text import CountVectorizer
 from operator import itemgetter
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
-from matstract.utils import open_db_connection
+from matstract.models.database import AtlasConnection
 
 class TermFrequency(object):
     '''
@@ -151,9 +151,10 @@ def extract_tfidf(list_of_abstracts, db_l, count=5):
 
 
 if __name__ == '__main__':
-    db = open_db_connection()
+    db = AtlasConnection().db
     material = 'GaN'
-    result = get_search_results(material=material)
+    MS = MatstractSearch()
+    result = MS.material_search(material=material)
     abstracts = [doc['abstract'] for doc in result]
     # Extract term frequencies
     term_frequencies = extract_tf(abstracts, count=5)

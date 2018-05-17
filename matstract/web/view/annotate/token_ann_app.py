@@ -1,6 +1,6 @@
 import dash_html_components as html
 import dash_materialsintelligence as dmi
-from matstract.models.AnnotationBuilder import AnnotationBuilder
+from matstract.models.annotation_builder import AnnotationBuilder
 from urllib.parse import unquote
 
 
