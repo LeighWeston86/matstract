@@ -49,8 +49,8 @@ class AtlasConnection():
             db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
             user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
 
-        print(db_creds, user_creds, uri)
         uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
+        print(user_creds, uri)
         client = MongoClient(uri, connect=False)
         self.db = client[user_creds["db"]]
 
