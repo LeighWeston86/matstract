@@ -63,11 +63,12 @@ class DataPreparation:
                      'mendelevium', 'nobelium', 'lawrencium', 'rutherfordium', 'dubnium', 'seaborgium', 'bohrium',
                      'hassium', 'meitnerium', 'darmstadtium', 'roentgenium', 'copernicium', 'nihonium', 'flerovium',
                      'moscovium', 'livermorium', 'tennessine', 'oganesson', 'ununennium']
+    ELEMENTS_AND_NAMES = ELEMENTS + ELEMENT_NAMES + [en.capitalize() for en in ELEMENT_NAMES]
 
     NR_UNIT = regex.compile(r'^([\d.?]+)([\p{script=Latin}]+.*)', regex.DOTALL)
 
     # elemement with the valence state in parenthesis
-    ELEMENT_VALENCE_IN_PAR = regex.compile(r'^('+'|'.join(ELEMENTS + ELEMENT_NAMES + [en.capitalize() for en in ELEMENT_NAMES]) +
+    ELEMENT_VALENCE_IN_PAR = regex.compile(r'^('+'|'.join(ELEMENTS_AND_NAMES) +
                                            ')(\(([IV|iv]|[Vv]?[Ii]{0,3})\))$')
 
     # exactly IV, VI or has 2 consecutive II, or roman in parenthesis: is not a simple formula
@@ -80,6 +81,9 @@ class DataPreparation:
         self.parser = parsing.MaterialParser()
         self.simple_parser = parsing.SimpleParser()
         self.mat_list = []
+        self.elem_name_dict = dict()
+        for i, elem in enumerate(self.ELEMENTS):
+            self.elem_name_dict[self.ELEMENT_NAMES[i]] = elem
 
         models_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
         classifier_location = os.path.join(models_location, 'r_nr_classifier.p')
@@ -231,17 +235,26 @@ class DataPreparation:
                 elem_with_valence = self.ELEMENT_VALENCE_IN_PAR.match(tok)
                 if elem_with_valence is not None:
                     # change element name to symbol
+                    elem_mention = elem_with_valence.group(1)
                     try:
-                        formula = self.ELEMENTS[self.ELEMENT_NAMES.index(elem_with_valence.group(1).lower())]
-                        matmention = elem_with_valence.group(1).lower()
+                        formula = self.elem_name_dict[elem_mention.lower()]
+                        matmention = elem_mention.lower()
                     except:
-                        formula = elem_with_valence.group(1)  # this was already the symbol
-                        matmention = elem_with_valence.group(1)
+                        formula = elem_mention  # this was already the symbol
+                        matmention = elem_mention
                     self.mat_list.append((matmention, formula))  # exclude the valence state from name
                     # split this for word2vec
-                    st.append(elem_with_valence.group(1))
+                    st.append(matmention)
                     tok = elem_with_valence.group(2)
-                    # add this to matlist / formulas
+                elif tok in self.ELEMENTS_AND_NAMES:  # add element names to formulae
+                    try:
+                        formula = self.elem_name_dict[tok.lower()]
+                        matmention = tok.lower()
+                        tok = matmention
+                    except:
+                        formula = tok  # this was already the symbol
+                        matmention = tok
+                    self.mat_list.append((matmention, formula))
                 elif self.is_simple_formula(tok):
                     formula = self.get_norm_formula(tok)
                     self.mat_list.append((tok, formula))

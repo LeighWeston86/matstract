@@ -6,7 +6,7 @@ class MatstractSearch:
     """The class running all search queries"""
 
     def __init__(self):
-        self._db = open_db_connection(db="matstract_db")
+        self._db = open_db_connection(db="matstract_db", local=False)
 
     def get_abstracts_by_material(self, materials, ids=None):
         pipeline = list()

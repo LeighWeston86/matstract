@@ -2,8 +2,6 @@ from dash.dependencies import Input, Output, State
 from matstract.web.view import trends_app
 from matstract.utils import open_db_connection
 
-db = open_db_connection(local=True)
-
 
 def bind(app, cache):
     @cache.memoize(timeout=600)
