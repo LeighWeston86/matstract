@@ -58,23 +58,13 @@ class AnnotationBuilder:
                    "10.1016/S0025-5408(98)00200-1"]
 
     LABELS = [
-        {'text': 'Chemical mention', 'value': 'CHM'},
         {'text': 'Material of interest', 'value': 'MAT'},
-        {'text': 'Material reference', 'value': 'REF'},
-        {'text': 'Material class', 'value': 'MTC'},
+        {'text': 'Sample descriptor', 'value': 'DSC'},
         {'text': 'Property', 'value': 'PRO'},
-        {'text': 'Property unit', 'value': 'PUT'},
-        {'text': 'Property value', 'value': 'PVL'},
-        {'text': 'Property class', 'value': 'PRC'},
-        {'text': 'Condition', 'value': 'CON'},
-        {'text': 'Condition unit', 'value': 'CUT'},
-        {'text': 'Condition value', 'value': 'CVL'},
-        {'text': 'Descriptor / Modifier', 'value': 'DSC'},
-        {'text': 'Structure / Phase label', 'value': 'SPL'},
-        {'text': 'Synthesis method', 'value': 'SMT'},
-        {'text': 'Post processing method', 'value': 'PMT'},
+        {'text': 'Structure / phase label', 'value': 'SPL'},
+        {'text': 'Synthesis / processing method', 'value': 'SMT'},
         {'text': 'Characterization method', 'value': 'CMT'},
-        {'text': 'Application / Device', 'value': 'APL'},
+        {'text': 'Application / device', 'value': 'APL'},
     ]
 
     def __init__(self, local=False):
@@ -126,7 +116,7 @@ class AnnotationBuilder:
         else:
             return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
 
-    def get_tokens(self, paragraph, user_key, cems=True):
+    def get_tokens(self, paragraph, user_key, cems=False):
         try:
             # find annotation by the same user for the same doi
             previous_annotation = getattr(self._db, self.ANNOTATION_COLLECTION).find({'doi': paragraph['doi'], 'user': user_key}).next()
@@ -191,7 +181,7 @@ class AnnotationBuilder:
 
 
     @staticmethod
-    def tokenize(text, cems=True):
+    def tokenize(text, cems=False):
         if cems:
             # getting initial annotation
             cde_cem_starts = [cem.start for cem in Document(text).cems]

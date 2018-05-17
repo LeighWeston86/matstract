@@ -1,6 +1,7 @@
 from dash.dependencies import Input, Output, State
 from matstract.web.view import summary_app
 
+
 def bind(app):
     @app.callback(
         Output('summary-extrated', 'children'),
@@ -11,5 +12,3 @@ def bind(app):
             return summary_app.get_entities(text)
         else:
             return ""
-
-

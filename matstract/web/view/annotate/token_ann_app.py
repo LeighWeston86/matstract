@@ -45,8 +45,8 @@ def serve_abstract(db,
         doi = random_abstract['doi']
         # tokenize and get initial annotation
         cems = False
-        if show_labels is not None and "MAT" in show_labels:
-            cems = True
+        # if show_labels is not None and "MAT" in show_labels:
+        #     cems = True
         tokens, existing_labels = builder.get_tokens(random_abstract, user_key, cems)
         if past_tokens is not None:
             tokens = past_tokens

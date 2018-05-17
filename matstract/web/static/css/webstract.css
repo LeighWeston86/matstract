@@ -28,3 +28,24 @@ table{
 a {
     cursor: pointer;
 }
+
+.summary-float-div {
+    float: left;
+    margin: 10px;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    padding: 10px;
+}
+
+.summary-float-div div {
+    padding: 2px 5px;
+}
+
+.summary-float-div label {
+    border-bottom: 1px solid #aaa;
+}
+
+#material_summary_div .summary-float-div {
+    max-height: 200px;
+    overflow: scroll;
+}

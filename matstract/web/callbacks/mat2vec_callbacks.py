@@ -13,8 +13,8 @@ def bind(app):
     def get_similar_words(_, word):
         if word is not None and word != "":
             ee = EmbeddingEngine()
-            close_words = ee.close_words(word)
-            return [html.Span([close_word, html.Br()]) for close_word in close_words]
+            close_words, scores = ee.close_words(word)
+            return [html.Span(["{} ({})".format(close_word, scores[i]), html.Br()]) for i, close_word in enumerate(close_words)]
         else:
             return ""
 
