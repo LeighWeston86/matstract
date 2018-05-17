@@ -1,6 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import plotly.graph_objs as go
+from matstract.nlp.data_preparation import DataPreparation
 
 
 def serve_layout(db):
@@ -12,11 +13,28 @@ def serve_layout(db):
 def serve_searchbox():
     return html.Div([
                 html.Div([
+                    html.Span("+"),
                     dcc.Input(id='matsearch_input',
-                              placeholder='e.g. Li-ion batteries',
+                              placeholder='e.g. ferroelectric',
                               type='text'),
+                    html.Span("-"),
+                    dcc.Input(id='matsearch_negative_input',
+                              placeholder='e.g. perovskite',
+                              type='text'),
+                    html.Span("+"),
+                    dcc.Dropdown(id='has_elements',
+                                 options=[{'label': el, "value": el} for el in DataPreparation.ELEMENTS],
+                                 className="element_select",
+                                 value=None,
+                                 multi=True),
+                    html.Span("-"),
+                    dcc.Dropdown(id='n_has_elements',
+                                 options=[{'label': el, "value": el} for el in DataPreparation.ELEMENTS],
+                                 className="element_select",
+                                 value=None,
+                                 multi=True),
                     html.Button("Search", id="matsearch_button"),
-                    ], className="row"),
+                    ], className="row matsearch-div"),
                 html.Div([html.Div(
                     serve_matlist([]),
                     id='relevant_materials_container',

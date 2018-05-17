@@ -49,3 +49,17 @@ a {
     max-height: 200px;
     overflow: scroll;
 }
+
+#view_abstracts {
+    cursor: pointer;
+    color: #1EAEDB;
+}
+#view_abstracts:hover {
+    color:#0FA0CE;
+}
+
+#has_elements, #n_has_elements {
+    display: inline-grid;
+    width: 200px;
+    margin: 0px 3px;
+}

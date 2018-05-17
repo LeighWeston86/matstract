@@ -111,8 +111,8 @@ class TokenAnnotation(Annotation):
         """
         if labels is None:
             labels = tuple(value for value in self.labels if value in ann2.labels)
-        self_nltk = nltk.chunk.conllstr2tree(self.to_iob(), chunk_types=labels)
-        ann2_nltk = nltk.chunk.conllstr2tree(ann2.to_iob(), chunk_types=labels)
+        self_nltk = nltk.chunk.conllstr2tree(self.to_iob()[1], chunk_types=labels)
+        ann2_nltk = nltk.chunk.conllstr2tree(ann2.to_iob()[1], chunk_types=labels)
 
         chunk_score = ChunkScore()
         chunk_score.score(self_nltk, ann2_nltk)
