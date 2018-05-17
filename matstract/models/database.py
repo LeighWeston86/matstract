@@ -32,17 +32,20 @@ class AtlasConnection():
             uri = "mongodb://%s:%s/%s" % (
                 env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
             user_creds = {'db': db}
-        
+
         else:
             try:
                 db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
                 user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
                 uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
             except:
+                if db=="production":
+                    db = "matstract_db"
+                elif db == "test":
+                    db = "tri_abstracts"
                 env_vars = ["ATLAS_USER", "ATLAS_USER_PASSWORD", "ANNOTATOR_USER", "ANNOTATOR_PASSWORD", "ATLAS_REST"]
                 if not all([ev in env for ev in env_vars]):
                     raise ConnectionError("Required environment variables not found.")
-
                 if access == "read_only":
                     user_creds = {"user": os.environ["ATLAS_USER"],
                                 "pass": os.environ["ATLAS_USER_PASSWORD"],
@@ -92,7 +95,12 @@ class ElasticConnection(Elasticsearch):
 
         """
 
-        if not local:
+        try:
+            db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
+            user_creds = json.load(open(db_creds, 'r'))["elastic"][access]
+            hosts = user_creds["hosts"]
+            http_auth = (user_creds["user"], user_creds["pass"])
+        except:
             env_vars = ["ELASTIC_HOST", "ELASTIC_USER", "ELASTIC_PASS"]
             if not all([ev in env for ev in env_vars]):
                 raise ConnectionError("Required environment variables not found.")
@@ -103,11 +111,6 @@ class ElasticConnection(Elasticsearch):
             else:
                 raise PermissionError("Remote access to ES cluster is not allowed.")
 
-        else:
-            db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
-            user_creds = json.load(open(db_creds, 'r'))["elastic"][access]
-            hosts = user_creds["hosts"]
-            http_auth = (user_creds["user"], user_creds["pass"])
         super(ElasticConnection, self).__init__(hosts=hosts, http_auth=http_auth,
                                                 use_ssl=True, ca_certs=certifi.where())
 

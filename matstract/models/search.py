@@ -39,7 +39,6 @@ class MatstractSearch:
             pipeline.append({ "$limit": max_results})
         if text:
             ids = self._ec.query(text, max_results=max_results)
-            print(len(ids))
             self.document_filter = DocumentFilter(ids)
             if not materials or not len(materials):
                 return self._ac.get_documents_by_id(ids)
@@ -91,7 +90,6 @@ class MaterialFilter(Filter):
                     exclude.append(parsed if parsed else material)
                 else:
                     parsed = parser.parse(material)
-                    print(parsed)
                     include.append(parsed if parsed else material)
             if len(include):
                 conditions.append({"$match": {"unique_mats": {"$in": include}}})
