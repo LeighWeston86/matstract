@@ -119,8 +119,8 @@ app.layout = html.Div([
 def display_page(path, user_key):
     # tr.print_diff()
     path = str(path)
-    if path == "/search":
-        return search_app.layout
+    if path.startswith("/search"):
+        return search_app.serve_layout(path)
     elif path == "/trends":
         return trends_app.layout
     elif path == "/extract":
@@ -138,7 +138,7 @@ def display_page(path, user_key):
     elif path == "/matsearch":
         return matsearch_app.serve_layout(db)
     else:
-        return search_app.layout
+        return search_app.serve_layout(path)
 
 
 @app.server.route('/static/css/<path:path>')
