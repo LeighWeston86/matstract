@@ -4,7 +4,7 @@ import pandas as pd
 from matstract.models.database import AtlasConnection, ElasticConnection
 from matstract.extract import parsing
 from matstract.models.search import MatstractSearch
-
+import re
 
 db = AtlasConnection(db="production").db
 client = ElasticConnection()
@@ -105,41 +105,53 @@ def generate_table(search=None, materials=None,
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))],
             id="table-element")]
-    return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"), html.Table(id="table-element")]
+    return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"),
+            html.Table(id="table-element")]
 
-# The Search app
-layout = html.Div([
-    html.Div([
+def serve_layout(path):
+    if len(path) > len("/search"):
+        path = path[len("/search")+1::]
+        path = path.replace("%20", " ")
+    else:
+        path = None
+    # The Search app
+    layout = html.Div([
         html.Div([
-            html.P('Welcome to the Matstract Database!')
-        ], style={'margin-left': '10px'}),
+            html.Div([
+                html.P('Welcome to the Matstract Database!')
+            ], style={'margin-left': '10px'}),
 
-        html.Label('Search the database ({:,} abstracts!):'.format(db.abstracts.find({}).count())),
-        dcc.Textarea(id='search-box',
-                     autoFocus=True,
-                     spellCheck=True,
-                     wrap=True,
-                     style={"width": "100%"},
-                     placeholder='Search: e.g. "Li-ion battery"'),
-    ]),
-
-    html.Div([
-        dcc.Input(id='material-box',
-                  placeholder='Material: e.g. "LiFePO4"',
-                  type='text'),
-        html.Button('Submit', id='search-button'),
-    ]),
-    # Row 2:
-    html.Div([
+            html.Label('Search the database ({:,} abstracts!):'.format(db.abstracts.find({}).count())),
+            dcc.Textarea(id='search-box',
+                         autoFocus=True,
+                         spellCheck=True,
+                         wrap=True,
+                         style={"width": "100%"},
+                         placeholder='Search: e.g. "Li-ion battery"'),
+        ]),
 
         html.Div([
+            dcc.Input(id='material-box',
+                      placeholder='Material: e.g. "LiFePO4"',
+                      type='text'),
+            html.Button('Submit', id='search-button'),
+        ]),
+        # Row 2:
+        html.Div([
 
-        ], className='nine columns', style=dict(textAlign='center')),
+            html.Div([
 
-    ], className='row'),
+            ], className='nine columns', style=dict(textAlign='center')),
 
-    html.Div([
-        html.Label(id='number_results'),
-        html.Table(id='table-element')
-    ], className='row', style={"overflow": "scroll"}, id="search_results")
-])
+        ], className='row'),
+        html.Div([
+            html.Label(id='number_results'),
+            html.Table(id='table-element')
+        ], className='row', style={"overflow": "scroll"}, id="search_results"),
+
+        html.Div([
+            dcc.Textarea(id='linked_search_box',
+                         value=path),
+        ], className='row', style={"display": "none"}, id="search_invisible")
+    ])
+    return layout
