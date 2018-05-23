@@ -12,6 +12,8 @@ class MatstractSearch:
         self.filters = []
 
     def search(self, text='', materials=(), max_results=1000):
+        if len(materials):
+            max_results = 10000
         print("searching for {} and {}".format(text, materials))
         pipeline = list()
         if materials:
