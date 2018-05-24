@@ -32,13 +32,13 @@ class AtlasConnection():
             uri = "mongodb://%s:%s/%s" % (
                 env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
             user_creds = {'db': db}
-
         else:
             try:
                 db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
                 user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
                 uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
-            except:
+            except Exception as e:
+                print(str(e))
                 if db=="production":
                     db = "matstract_db"
                 elif db == "test":
