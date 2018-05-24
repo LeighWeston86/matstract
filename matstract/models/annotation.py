@@ -1,6 +1,7 @@
 import datetime
 import nltk
 from nltk.chunk.util import ChunkScore
+from matstract.models.word_embeddings import EmbeddingEngine
 
 
 class Annotation:
@@ -56,15 +57,18 @@ class TokenAnnotation(Annotation):
         self.labels = dictionary["labels"]
         self.tags = dictionary["tags"]
 
-    def to_iob(self):
+    def to_iob(self, phrases=False):
         """
         Converts the annotation object to CoNNL IOB annotation text string, with
         each row corresponding to a single token.
+        :param phrases: if set to true, will run the phraser of the most recent word2vec model and convert tokens
+        to phrases. Only useful if using these particular word embeddings as features
         :return: the string in CoNNL IOB annotation format
         """
         iob = []
         iob_str = []
-        for row_idx, tokenRow in enumerate(self.tokens):
+        tokens = self.phrase_tokens() if phrases else self.tokens
+        for row_idx, tokenRow in enumerate(tokens):
             iob.append([])
             for idx, token in enumerate(tokenRow):
                 if token["annotation"] is None:
@@ -118,3 +122,70 @@ class TokenAnnotation(Annotation):
         chunk_score.score(self_nltk, ann2_nltk)
 
         return chunk_score
+
+    def group_and_process(self):
+        def merge_tokens(toks):
+            """
+            Merges a list of tokens into one token if the annotations agree
+            :param toks: a list of tokens
+            :return: a new merged token
+            """
+            new_tok = dict()
+            for key in toks[0].keys():
+                new_tok[key] = toks[0][key]
+            if type(new_tok["text"]) is not list:
+                new_tok["text"] = [new_tok["text"]]
+                new_tok["pos"] = [new_tok["pos"]]
+                new_tok["id"] = [new_tok["id"]]
+            for tok in toks[1:]:
+                if tok["annotation"] != toks[0]["annotation"]:
+                    raise ValueError('Tried to merge tokens with different annotations!')
+                new_tok["end"] = max(tok["end"], new_tok["end"])
+                new_tok["start"] = min(tok["start"], new_tok["start"])
+
+                new_tok["text"] += [tok["text"]]
+                new_tok["pos"] += [tok["pos"]]
+                new_tok["id"] += [tok["id"]]
+            return new_tok
+
+        new_toks = []
+        for row_idx, tokenRow in enumerate(self.tokens):
+            new_toks.append([])
+            for idx, token in enumerate(tokenRow):
+                if len(new_toks[row_idx]) == 0:
+                    new_toks[row_idx].append(token)
+                elif token["annotation"] == new_toks[row_idx][-1]["annotation"]:
+                    new_toks[row_idx][-1] = merge_tokens([new_toks[row_idx][-1], token])
+                else:
+                    new_toks[row_idx].append(token)
+        return new_toks
+
+    def phrase_tokens(self):
+        def ungroup_tokens(toks):
+            new_toks = []
+            for t_r in toks:
+                new_toks.append([])
+                for t in t_r:
+                    for ii, elem in enumerate(t["text"]):
+                        new_toks[-1].append({"text": elem,
+                                             "pos": t["pos"][ii],
+                                             "annotation": t["annotation"]})
+            return new_toks
+
+        grouped_toks = self.group_and_process()
+        ee = EmbeddingEngine()
+        for row_idx, tokenRow in enumerate(grouped_toks):
+            for idx, token in enumerate(tokenRow):
+                grouped_toks[row_idx][idx]["text"] = ee.phraser[ee.dp.process_sentence(
+                    token["text"] if type(token["text"]) is list else [token["text"]])]
+                new_pos_tags = []
+                for i, tok in enumerate(grouped_toks[row_idx][idx]["text"]):
+                    p_l = len(new_pos_tags)
+                    if "_" not in tok:
+                        new_pos_tags.append(grouped_toks[row_idx][idx]["pos"][p_l])
+                    else:
+                        new_pos_tags.append("_".join([
+                            grouped_toks[row_idx][idx]["pos"][k] for k in range(p_l, p_l+len(tok.split("_")))
+                        ]))
+                grouped_toks[row_idx][idx]["pos"] = new_pos_tags
+        return ungroup_tokens(grouped_toks)

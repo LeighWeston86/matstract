@@ -12,8 +12,8 @@ class EmbeddingEngine:
                  "CISe", "CISSe", "CsIPS", "CEsP", "BCsF", "CsFOS", "BCY10", "C12P", "EsHP", "CsHP",
                  "C2K8", "CsOP", "EsHS", "CsHS", "C3P", "C50I", "CEs", "CSm", "BF", "EsN", "BN50S", "AsCP",
                  "CPo", "LiPb17", "CsS", "EsIS", "AsCU", "CCsHS", "CsHPU", "AsOS", "AsCI", "EsF", "FV448",
-                 "CNS", "CP5", "AsFP", "EsOP", "NS", "NS2"]
-
+                 "CNS", "CP5", "AsFP", "EsOP", "NS", "NS2", "EsI", "BH", "PPmV", "PSe", "AsN", "OPV5",
+                 "NSiW"]
 
     def __init__(self):
         ds = np.DataSource()
@@ -22,8 +22,8 @@ class EmbeddingEngine:
         embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
         ds.open(embeddings_url)
         embeddings = np.load(ds.abspath(embeddings_url))
-        with ds.open(
-                "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.tsv") as f:
+        dict_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.tsv"
+        with ds.open(dict_url, encoding='utf-8') as f:
             self.reverse_dictionary = [x.strip('\n') for x in f.readlines()]
 
         self.word2index = dict()
@@ -45,11 +45,11 @@ class EmbeddingEngine:
         self.phraser = Phraser(phrases)
         del vocab, phrases
 
-        self._dp = DataPreparation()
+        self.dp = DataPreparation()
         # loading pre-trained embeddings and the dictionary
         formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_matnorm_lower_punct_units_valence_formula.pkl"
         ds.open(formulas_url)
-        self.formulas = self._dp.load_obj(ds.abspath(formulas_url[:-4]))
+        self.formulas = self.dp.load_obj(ds.abspath(formulas_url[:-4]))
         for abbr in self.ABBR_LIST:
             self.formulas.pop(abbr, None)
 
@@ -92,7 +92,7 @@ class EmbeddingEngine:
         """
         if word is not None and word != "":
             word = word.replace(" ", "_")
-            word = self._dp.process_sentence([word])[0]
+            word = self.dp.process_sentence([word])[0]
             # get all normalized word vectors
             try:
                 return self.normalized_embeddings[self.reverse_dictionary.index(word), :]
@@ -137,7 +137,7 @@ class EmbeddingEngine:
         """
         common_form_score_cout = []
         for formula in form_dict:
-            if formula[0] in self._dp.ELEMENTS:
+            if formula[0] in self.dp.ELEMENTS:
                 most_common_form = formula[0]
             else:
                 most_common_form = max(self.formulas[formula[0]].items(), key=operator.itemgetter(1))[0]
@@ -176,7 +176,7 @@ class EmbeddingEngine:
         matched = 0
         matched_formula = []
         for form in formula_list:
-            composition = self._dp.parser.parse_formula(form[0])
+            composition = self.dp.parser.parse_formula(form[0])
             if has_plus(composition, plus_elems) and not has_minus(composition, minus_elems):
                 matched_formula.append(form)
                 matched += 1
