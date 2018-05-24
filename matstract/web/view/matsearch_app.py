@@ -50,7 +50,7 @@ def matlist_figure(material_names, material_scores, material_counts):
         return {
             "data": [
                 go.Bar(
-                    x=list(reversed(material_scores)),
+                    x=list(reversed(material_counts)),  #material_scores
                     y=list(reversed(material_names)),
                     orientation='h',
                     marker=dict(color='rgb(158,202,225)'),
@@ -72,7 +72,7 @@ def matlist_figure(material_names, material_scores, material_counts):
                     hoverinfo='none',
                 ),
                 go.Bar(
-                    x=list(reversed(material_counts)),
+                    x=list(reversed(material_scores)),  #material_counts
                     y=list(reversed(material_names)),
                     orientation='h',
                     marker=dict(color='#1f77b4'),
@@ -87,12 +87,12 @@ def matlist_figure(material_names, material_scores, material_counts):
                 height=25 * len(material_scores),
                 xaxis=dict(
                     title="mentions",
-                    tickfont=dict(color='#1f77b4'),
-                    titlefont=dict(color='#1f77b4'),
-                ),
-                xaxis2=dict(
                     tickfont=dict(color='rgb(158,202,225)'),
                     titlefont=dict(color='rgb(158,202,225)'),
+                ),
+                xaxis2=dict(
+                    tickfont=dict(color='#1f77b4'),
+                    titlefont=dict(color='#1f77b4'),
                     title="score",
                     overlaying='x',
                     side='top'
