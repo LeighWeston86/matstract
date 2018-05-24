@@ -105,8 +105,8 @@ def get_entities(material):
             gen_output(cmt, num_entities, 'Characterization', material),
             gen_output(smt, num_entities, 'Synthesis', material),
             gen_output(spl, num_entities, 'Phase', material),
-            gen_output([], num_entities, 'Application (coming soon...)', material),
-            gen_output([], num_entities, 'Sample descriptor (coming soon...)', material),
+            gen_output(apl, num_entities, 'Application', material),
+            gen_output(dsc, num_entities, 'Sample descriptor', material),
         ])
     else:
         return "No entities for the specified material"
