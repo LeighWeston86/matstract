@@ -49,26 +49,29 @@ def generate_table(dataframe, max_rows=100):
     )
 
 
-def gen_output(most_common, size, entity_type):
+def gen_output(most_common, size, entity_type, material):
+    print([(prop, score) for prop, score in most_common])
     return html.Div(
-        [html.Div([html.Label(entity_type)] + [html.Div(prop) for prop, score in most_common],
-            style={'float': 'left'}),
-        html.Div([html.Label('Score')] + [html.Div('{:.2f}'.format(score/size)) for prop, score in most_common],
-            style={'float': 'right'})], className="summary-float-div")
+        [html.Div([html.Label(entity_type)] + [
+            html.Div(html.A(prop, href="/search/{}/{}".format(prop, material))) for prop, score in most_common],
+                  style={'float': 'left'}),
+         html.Div([html.Label('Score')] + [html.Div('{:.2f}'.format(score / size)) for prop, score in most_common],
+                  style={'float': 'right'})], className="summary-float-div")
+
 
 
 def get_entities(material):
-    #Normalize the material
+    # Normalize the material
     parser = SimpleParser()
     material = parser.matgen_parser(material)
 
-    #Open connection and get NEs associated with the material
+    # Open connection and get NEs associated with the material
     db = AtlasConnection(db="test").db
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
     entities = list(db.ne.find({'doi': {'$in': dois}}))
     num_entities = len(entities)
 
-    #Extract the entities
+    # Extract the entities
     if entities is not None:
         apl, pro, spl, smt, cmt, dsc = [], [], [], [], [], []
         for doc in entities:
@@ -76,11 +79,10 @@ def get_entities(material):
             pro.append(doc['PRO'])
             # Get the application
             apl.append(doc['APL'])
-            #Get the phase label
             spl.append(doc['SPL'])
-            #Get the synthesis method
+            # Get the synthesis method
             smt.append(doc['SMT'])
-            #Get the characterization method
+            # Get the characterization method
             cmt.append(doc['CMT'])
             # Get the characterization method
             dsc.append(doc['DSC'])
@@ -99,19 +101,15 @@ def get_entities(material):
         dsc = nltk.FreqDist(dsc).most_common(10)
 
         return html.Div([
-            gen_output(pro, num_entities, 'Property'),
-            gen_output(apl, num_entities, 'Application'),
-            gen_output(cmt, num_entities, 'Characterization'),
-            gen_output(smt, num_entities, 'Synthesis'),
-            gen_output(spl, num_entities, 'Phase'),
-            gen_output(dsc, num_entities, 'Sample descriptor'),
+            gen_output(pro, num_entities, 'Property', material),
+            gen_output(cmt, num_entities, 'Characterization', material),
+            gen_output(smt, num_entities, 'Synthesis', material),
+            gen_output(spl, num_entities, 'Phase', material),
+            gen_output([], num_entities, 'Application (coming soon...)', material),
+            gen_output([], num_entities, 'Sample descriptor (coming soon...)', material),
         ])
     else:
         return "No entities for the specified material"
-
-#def get_topics(material):
-#    docs = [doc['abstract'] for doc in get_search_results(material)]
-
 
 layout = html.Div([
     html.Label('Enter formula for material summary'),
