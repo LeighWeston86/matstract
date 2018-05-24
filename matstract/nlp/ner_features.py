@@ -376,6 +376,31 @@ class FeatureGenerator:
         scaled = scaler.transform(feature)
         return scaled
 
+    def chunker(self, my_list, n_chunks):
+        k, m = divmod(len(my_list), n_chunks)
+        return (my_list[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n_chunks))
+
+    @property
+    def cv_set(self):
+        features, outcomes = self._features_outcomes
+        cumulative_wordcount = list(np.cumsum(self.words_per_doc))
+        cv_list = []
+        for begin_point in np.linspace(0, 0.8, 5):
+            begin = int(begin_point*len(outcomes))
+            begin =  min(cumulative_wordcount, key=lambda x: abs(x - begin))
+            if begin_point == 0:
+                begin -= self.words_per_doc[cumulative_wordcount.index(begin)]
+            end = int((begin_point+0.2)*len(outcomes))
+            end = min(cumulative_wordcount, key=lambda x: abs(x - end))
+            train_range = list(range(begin)) + list(range(end, len(outcomes)))
+            #X_train = [features.tocsr()[i] for i in train_range]
+            X_train = features.tocsr()[train_range]
+            X_test = features.tocsr()[begin:end]
+            y_train = [outcomes[i] for i in train_range]
+            y_test = outcomes[begin:end]
+            cv_list.append(((X_train, y_train), (X_test, y_test)))
+        return cv_list
+
     @property
     def features_outcomes(self):
         return self._features_outcomes
