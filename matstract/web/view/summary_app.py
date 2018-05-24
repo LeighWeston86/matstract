@@ -2,10 +2,39 @@ import dash_html_components as html
 import dash_core_components as dcc
 from matstract.models.database import AtlasConnection
 from matstract.extract.parsing import SimpleParser
+import os
+import pickle, _pickle
 from matstract.nlp.theme_extractor import analyze_themes
 import pandas as pd
 from math import trunc
 import nltk
+
+# load in the entity dictionaries
+cmt_location = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '../../nlp/cmt_dict.p')
+with open(cmt_location, 'rb') as f:
+    cmt_dict = _pickle.load(f)
+
+smt_location = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '../../nlp/smt_dict.p')
+with open(smt_location, 'rb') as f:
+    smt_dict = _pickle.load(f)
+
+pro_location = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '../../nlp/pro_dict.p')
+with open(pro_location, 'rb') as f:
+    pro_dict = _pickle.load(f)
+
+apl_location = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '../../nlp/apl_dict.p')
+with open(apl_location, 'rb') as f:
+    apl_dict = _pickle.load(f)
+
+dsc_location = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '../../nlp/dsc_dict.p')
+with open(dsc_location, 'rb') as f:
+    dsc_dict = _pickle.load(f)
+
 
 
 def generate_table(dataframe, max_rows=100):
@@ -30,6 +59,7 @@ def gen_output(most_common, size, entity_type, material):
                   style={'float': 'right'})], className="summary-float-div")
 
 
+
 def get_entities(material):
     # Normalize the material
     parser = SimpleParser()
@@ -37,31 +67,38 @@ def get_entities(material):
 
     # Open connection and get NEs associated with the material
     db = AtlasConnection(db="test").db
-    test_ne = db.test_ne
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
-    entities = list(db.test_ne.find({'doi': {'$in': dois}}))
+    entities = list(db.ne.find({'doi': {'$in': dois}}))
     num_entities = len(entities)
 
     # Extract the entities
     if entities is not None:
-        pro, spl, smt, cmt = [], [], [], []
+        apl, pro, spl, smt, cmt, dsc = [], [], [], [], [], []
         for doc in entities:
             # Get the properties
             pro.append(doc['PRO'])
-            # Get the phase label
+            # Get the application
+            apl.append(doc['APL'])
             spl.append(doc['SPL'])
             # Get the synthesis method
             smt.append(doc['SMT'])
             # Get the characterization method
             cmt.append(doc['CMT'])
-        pro = [p for pp in pro for p in pp if len(p) > 2]
+            # Get the characterization method
+            dsc.append(doc['DSC'])
+
+        pro = [pro_dict[p] for pp in pro for p in pp if len(p) > 2 and p in pro_dict.keys()]
         pro = nltk.FreqDist(pro).most_common(20)
+        apl = [apl_dict[p] for pp in apl for p in pp if len(p) > 2 and p in apl_dict.keys()]
+        apl = nltk.FreqDist(apl).most_common(10)
         spl = [p for pp in spl for p in pp if len(p) > 2]
         spl = nltk.FreqDist(spl).most_common(3)
-        smt = [p for pp in smt for p in pp if len(p) > 2]
-        smt = nltk.FreqDist(smt).most_common(5)
-        cmt = [p for pp in cmt for p in pp if len(p) > 2]
+        smt = [smt_dict[p] for pp in smt for p in pp if len(p) > 2 and p in smt_dict.keys()]
+        smt = nltk.FreqDist(smt).most_common(10)
+        cmt = [cmt_dict[p] for pp in cmt for p in pp if len(p) > 2 and p in cmt_dict.keys()]
         cmt = nltk.FreqDist(cmt).most_common(10)
+        dsc = [dsc_dict[p] for pp in dsc for p in pp if len(p) > 2 and p in dsc_dict.keys()]
+        dsc = nltk.FreqDist(dsc).most_common(10)
 
         return html.Div([
             gen_output(pro, num_entities, 'Property', material),
@@ -74,10 +111,9 @@ def get_entities(material):
     else:
         return "No entities for the specified material"
 
-
 layout = html.Div([
     html.Label('Enter formula for material summary'),
-    html.Div("Work in progress... needs more data!!!"),
+    #html.Div("Work in progress... needs more data!!!"),
     html.Div([
         dcc.Input(id='summary-material',
                   placeholder='Material: e.g. "LiFePO4"',
