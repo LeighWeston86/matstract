@@ -32,7 +32,6 @@ class AtlasConnection():
             uri = "mongodb://%s:%s/%s" % (
                 env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
             user_creds = {'db': db}
-
         else:
             try:
                 db_creds = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/db_creds.json')
