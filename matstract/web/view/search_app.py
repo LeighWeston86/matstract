@@ -147,7 +147,7 @@ def serve_layout(path):
         html.Div([
             html.Label(id='number_results'),
             html.Table(id='table-element')
-        ], className='row', style={"overflow": "scroll"}, id="search_results"),
+        ], className='row', id="search_results"),
 
         html.Div([
             dcc.Textarea(id='linked_search_box',
