@@ -147,7 +147,7 @@ def serve_layout(path):
         html.Div([
             html.Label(id='number_results'),
             html.Table(id='table-element')
-        ], className='row', id="search_results"),
+        ], className='row', style={"width": "100%"}, id="search_results"),
 
         html.Div([
             dcc.Textarea(id='linked_search_box',
