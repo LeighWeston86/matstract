@@ -6,7 +6,6 @@ from matstract.web.view.summary_app import get_entities
 import dash_core_components as dcc
 import dash_html_components as html
 import regex
-import bs4 as bs
 
 
 def bind(app):
