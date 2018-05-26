@@ -26,20 +26,23 @@ def bind(app):
         [State('analogy_pos_1', 'value'),
          State('analogy_neg_1', 'value'),
          State('analogy_pos_2', 'value')])
-    def get_analogy(_, pos_1, neg_1, pos_2):
-        ee = EmbeddingEngine()
-        pos_1 = ee.phraser[ee.dp.process_sentence(pos_1.split())]
-        neg_1 = ee.phraser[ee.dp.process_sentence(neg_1.split())]
-        pos_2 = ee.phraser[ee.dp.process_sentence(pos_2.split())]
-        pos_1_vec = ee.get_word_vector(pos_1[0])
-        neg_1_vec = ee.get_word_vector(neg_1[0])
-        pos_2_vec = ee.get_word_vector(pos_2[0])
-        if pos_1_vec is not None and neg_1_vec is not None and pos_2_vec is not None:
-            diff_vec = pos_2_vec + pos_1_vec - neg_1_vec
-            norm_diff = diff_vec / np.linalg.norm(diff_vec, axis=0)  # unit length
-            close_words = ee.close_words(norm_diff, exclude_self=False)[0]
-            for close_word in close_words:
-                if close_word not in [pos_1[0], neg_1[0], pos_2[0]]:
-                    return close_word.replace("_", " ")
+    def get_analogy(n_clicks, pos_1, neg_1, pos_2):
+        if n_clicks is not None:
+            ee = EmbeddingEngine()
+            pos_1 = ee.phraser[ee.dp.process_sentence(pos_1.split())]
+            neg_1 = ee.phraser[ee.dp.process_sentence(neg_1.split())]
+            pos_2 = ee.phraser[ee.dp.process_sentence(pos_2.split())]
+            pos_1_vec = ee.get_word_vector(pos_1[0])
+            neg_1_vec = ee.get_word_vector(neg_1[0])
+            pos_2_vec = ee.get_word_vector(pos_2[0])
+            if pos_1_vec is not None and neg_1_vec is not None and pos_2_vec is not None:
+                diff_vec = pos_2_vec + pos_1_vec - neg_1_vec
+                norm_diff = diff_vec / np.linalg.norm(diff_vec, axis=0)  # unit length
+                close_words = ee.close_words(norm_diff, exclude_self=False)[0]
+                for close_word in close_words:
+                    if close_word not in [pos_1[0], neg_1[0], pos_2[0]]:
+                        return close_word.replace("_", " ")
+            else:
+                return ""
         else:
             return ""

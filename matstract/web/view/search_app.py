@@ -117,10 +117,6 @@ def serve_layout(path):
     # The Search app
     layout = html.Div([
         html.Div([
-            html.Div([
-                html.P('Welcome to the Matstract Database!')
-            ], style={'margin-left': '10px'}),
-
             html.Label('Search the database ({:,} abstracts!):'.format(db.abstracts.find({}).count())),
             dcc.Textarea(id='search-box',
                          autoFocus=True,
@@ -132,7 +128,8 @@ def serve_layout(path):
 
         html.Div([
             dcc.Input(id='material-box',
-                      placeholder='Material: e.g. "LiFePO4"',
+                      placeholder='Filter by material: e.g. "LiFePO4"',
+                      style={"width": "200px"},
                       type='text'),
             html.Button('Submit', id='search-button'),
         ]),

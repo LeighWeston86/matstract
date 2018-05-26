@@ -6,10 +6,8 @@ import dash_materialsintelligence as dmi
 from flask_caching import Cache
 
 from flask import send_from_directory
-from matstract.web.view import annotate_app, similar_app, \
-    search_app, keyword_app, trends_app, mat2vec_app, matsearch_app, extract_app, summary_app
-from matstract.web.callbacks import search_callbacks, annotate_callbacks, summary_callbacks, \
-    keyword_callbacks, trends_callbacks, similar_callbacks, mat2vec_callbacks, matsearch_callbacks, extract_callbacks
+from matstract.web.view import mat2vec_app, matsearch_app, summary_app, search_app
+from matstract.web.callbacks import search_callbacks,  summary_callbacks, mat2vec_callbacks, matsearch_callbacks
 from dash.dependencies import Input, Output, State
 from matstract.models.database import AtlasConnection
 
@@ -53,23 +51,11 @@ for css in css_files:
 header = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Div([
-        html.Div(
         html.Img(src="https://s3-us-west-1.amazonaws.com/webstract/matstract_with_text.png",
              style={
                  'width': '400px',
-                 'float': 'right',
-                 'max-width': "100%"
-             })),
-        html.H2(
-            'Matstract db',
-            style={
-                'padding-left': '27px',
-                'font-family': 'Dosis',
-                'font-size': '6.0rem',
-                'color': '#4D637F',
-                "float": "left",
-                "whiteSpace": "nowrap"
-            }),
+                 'marginLeft': "30px"
+             }),
     ]),
     dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
     html.Nav(
@@ -80,24 +66,11 @@ header = html.Div([
         children=[
             dcc.Link("Search", href="/search"),
             html.Span(u" \u2022 "),
-            dcc.Link("Trends", href="/trends"),
-            html.Span(u" \u2022 "),
-            dcc.Link("Extract", href="/extract"),
-            html.Span(u" \u2022 "),
-            dcc.Link("Similar Abstracts", href="/similar"),
-            html.Span(u" \u2022 "),
-            dcc.Link("Annotate", href="/annotate"),
-            html.Span(u" \u2022 "),
-            dcc.Link("Keyword Extraction", href="/keyword"),
-            html.Span(u" \u2022 "),
             dcc.Link("Mat2Vec", href="/mat2vec"),
             html.Span(u" \u2022 "),
             dcc.Link("MatSearch", href="/matsearch"),
             html.Span(u" \u2022 "),
             dcc.Link("Material Summary", href="/summary"),
-            html.Span(u" \u2022 "),
-            html.Span(html.A("Submit An Issue", href="https://github.com/materialsintelligence/matstract/issues/new",
-                             style={"color": "red"}, target="_blank"))
         ],
         id="nav_bar"),
 ], className='row', style={'position': 'relative', 'right': '15px'})
@@ -121,18 +94,8 @@ def display_page(path, user_key):
     path = str(path)
     if path.startswith("/search"):
         return search_app.serve_layout(path)
-    elif path == "/trends":
-        return trends_app.layout
-    elif path == "/extract":
-        return extract_app.layout
     elif path == "/summary":
          return summary_app.layout
-    elif path == "/similar":
-        return similar_app.layout
-    elif path.startswith("/annotate"):
-        return annotate_app.serve_layout(db, user_key, path)
-    elif path == "/keyword":
-        return keyword_app.layout
     elif path == "/mat2vec":
         return mat2vec_app.serve_layout(db)
     elif path == "/matsearch":
@@ -149,11 +112,6 @@ def get_stylesheet(path):
 
 # App Callbacks
 search_callbacks.bind(app, cache)
-trends_callbacks.bind(app, cache)
-extract_callbacks.bind(app)
 summary_callbacks.bind(app)
-keyword_callbacks.bind(app)
-annotate_callbacks.bind(app)
-similar_callbacks.bind(app, cache)
 mat2vec_callbacks.bind(app)
 matsearch_callbacks.bind(app)
