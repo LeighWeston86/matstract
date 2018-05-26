@@ -3,6 +3,7 @@ from matstract.nlp.data_preparation import DataPreparation
 from gensim.models.phrases import Phraser, Phrases
 from collections import defaultdict
 import operator
+import regex
 
 
 class EmbeddingEngine:
@@ -19,10 +20,14 @@ class EmbeddingEngine:
         ds = np.DataSource()
 
         # loading pre-trained embeddings and the dictionary
-        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
+        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
         ds.open(embeddings_url)
-        embeddings = np.load(ds.abspath(embeddings_url))
-        dict_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_valence_keepformula_sg_w8_n10_a001_pc20.tsv"
+        self.embeddings = np.load(ds.abspath(embeddings_url))
+
+        out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.trainables.syn1neg.npy"
+        ds.open(out_embeddings_url)
+        self.out_embeddings = np.load(ds.abspath(out_embeddings_url))
+        dict_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.tsv"
         with ds.open(dict_url, encoding='utf-8') as f:
             self.reverse_dictionary = [x.strip('\n') for x in f.readlines()]
 
@@ -30,9 +35,10 @@ class EmbeddingEngine:
         for i, word in enumerate(self.reverse_dictionary):
             self.word2index[word] = i
 
-        self.norm = np.sqrt(np.sum(np.square(embeddings), 1, keepdims=True))
-        self.normalized_embeddings = embeddings / self.norm
-        del embeddings  # to free up some memory
+        self.norm = np.sqrt(np.sum(np.square(self.embeddings), 1, keepdims=True))
+        self.out_norm = np.sqrt(np.sum(np.square(self.out_embeddings), 1, keepdims=True))
+        # self.normalized_embeddings = embeddings / self.norm
+        # del embeddings  # to free up some memory
 
         phrases = Phrases(threshold=0.0001, min_count=1)
         vocab = defaultdict(int)
@@ -47,7 +53,7 @@ class EmbeddingEngine:
 
         self.dp = DataPreparation()
         # loading pre-trained embeddings and the dictionary
-        formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_matnorm_lower_punct_units_valence_formula.pkl"
+        formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_matnorm_lower_punct_units_formula.pkl"
         ds.open(formulas_url)
         self.formulas = self.dp.load_obj(ds.abspath(formulas_url[:-4]))
         for abbr in self.ABBR_LIST:
@@ -69,13 +75,14 @@ class EmbeddingEngine:
         """
         close_words = []
         scores = []
+        normalized_embeddings = self.embeddings / self.norm
         if isinstance(word, str):
             word_embedding = self.get_word_vector(word)
         else:
             word_embedding = word
 
         if word_embedding is not None:
-            sim = np.dot([word_embedding], self.normalized_embeddings.T)
+            sim = np.dot([word_embedding], normalized_embeddings.T)
             nearest = (-sim[0, :]).argsort()[1:top_k + 1] if exclude_self else (-sim[0, :]).argsort()[:top_k]
             for k in range(top_k):
                 close_words.append(self.reverse_dictionary[nearest[k]])
@@ -95,14 +102,14 @@ class EmbeddingEngine:
             word = self.dp.process_sentence([word])[0]
             # get all normalized word vectors
             try:
-                return self.normalized_embeddings[self.reverse_dictionary.index(word), :]
+                return (self.embeddings / self.norm)[self.word2index[word], :]
             except Exception as ex:
                 print(ex)
                 return None
         else:
             return None
 
-    def find_similar_materials(self, sentence, n_sentence=None, min_count=10):
+    def find_similar_materials(self, sentence, n_sentence=None, min_count=10, use_output_emb=False):
         """
         Finds materials that match the best with the context of the sentence
         :param sentence: a list of words
@@ -112,21 +119,23 @@ class EmbeddingEngine:
         similarities = dict()
         avg_embedding = np.zeros(200)
         nr_words = 0
+        normalized_embeddings = self.embeddings / self.norm
+        embs = (self.out_embeddings / self.out_norm) if use_output_emb else normalized_embeddings  # the embeddings to use for similarity
         # positive contribution
         for word in sentence:
             if word in self.word2index:
-                avg_embedding += self.normalized_embeddings[self.word2index[word]]
+                avg_embedding += normalized_embeddings[self.word2index[word]]
                 nr_words += 1
         # negative contribution
         if n_sentence is not None:
             for n_word in n_sentence:
                 if n_word in self.word2index:
-                    avg_embedding -= self.normalized_embeddings[self.word2index[n_word]]
+                    avg_embedding -= normalized_embeddings[self.word2index[n_word]]
                     nr_words += 1
         avg_embedding = avg_embedding / nr_words
         for i, formla in enumerate(self.formulas):
             if self.formula_counts[i] > min_count:
-                similarities[formla] = np.dot(avg_embedding, self.normalized_embeddings[self.word2index[formla]])
+                similarities[formla] = np.dot(avg_embedding, embs[self.word2index[formla]])
         return sorted(similarities.items(), key=lambda x: x[1], reverse=True)
 
     def most_common_form(self, form_dict):
@@ -183,3 +192,7 @@ class EmbeddingEngine:
             if matched >= max:
                 return matched_formula
         return matched_formula
+
+
+def number_to_substring(text):
+    return regex.sub("(\d*\.?\d+)", r'<sub>\1</sub>', text)
