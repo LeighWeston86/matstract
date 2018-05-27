@@ -12,6 +12,7 @@ def serve_layout(db):
 
 def serve_searchbox():
     return html.Div([
+                html.Div(html.H6("Search for materials using keywords"), className="row"),
                 html.Div([
                     html.Span("is "),
                     dcc.Input(id='matsearch_input',
