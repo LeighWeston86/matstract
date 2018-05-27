@@ -1,7 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
 
-
 def serve_layout(db):
     """Generates the layout dynamically on every refresh"""
 
@@ -16,9 +15,9 @@ def serve_similarity():
                     dcc.Input(id='similar_words_input',
                               placeholder='e.g. LiMn2O4, anode, ...',
                               type='text'),
-                    html.Button("Is similar to", id="similar_words_button", className="butson-primary"),
+                    html.Button("Is similar to", id="similar_words_button"),
                     ]),
-                html.Div('', id='similar_words_container')])
+                html.Div('', id='similar_words_container', style={"padding": "0px 4px"})])
 
 
 def serve_analogy():
@@ -37,5 +36,6 @@ def serve_analogy():
                           placeholder='e.g. graphite, Al',
                           type='text'),
                 html.Span(" is to "),
-                html.Span("", id="analogy_container", style={"fontWeight": "bold"}),
-                html.Button("?", id="analogy_run", className="buton-primary")])
+                html.Button("?",
+                            id="analogy_run",
+                            style={"textTransform": "none"})])

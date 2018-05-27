@@ -31,7 +31,7 @@ def bind(app):
                 sentence=sentence,
                 n_sentence=n_sentence,
                 min_count=15,
-                use_output_emb=True)
+                use_output_emb=False if ee.dp.is_simple_formula(sentence[0]) else True)
 
             # filtering the results by elements and returning top 50
             elem_filtered = ee.filter_by_elements(most_similar, plus_elems, minus_elems, max=50)
@@ -75,7 +75,7 @@ def bind(app):
                         html.H6(material + " summary", style={
                             "fontWeight": "bold",
                             "marginTop": "20px"}),
-                        html.Div(get_entities(material))])]
+                        html.Div(get_entities(material, class_name=""))])]
         elif n_clicks is not None and input_text is not None and len(input_text) > 0:
             return "Click the graph to load material info."
         else:

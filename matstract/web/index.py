@@ -1,6 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table_experiments as dt
 import dash_materialsintelligence as dmi
 
 from flask_caching import Cache
@@ -56,12 +57,14 @@ header = html.Div([
                  'width': '400px',
                  'marginLeft': "30px"
              }),
-    ]),
-    dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
+    ], style={"float": "right"}),
+    html.Div([
+        dmi.Annotatable(value="", className="dummy_class", id="dummy_span"),
+        dt.DataTable(rows=[{}], id='dummy_datatable')], style={"display": "none"}),
     html.Nav(
         style={
             'margin': '10px 27px',
-            'clear': "both"
+            'float': 'left',
         },
         children=[
             dcc.Link("Search", href="/search"),

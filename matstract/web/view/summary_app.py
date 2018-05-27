@@ -36,7 +36,6 @@ with open(dsc_location, 'rb') as f:
     dsc_dict = _pickle.load(f)
 
 
-
 def generate_table(dataframe, max_rows=100):
     return html.Table(
         # Header
@@ -49,18 +48,18 @@ def generate_table(dataframe, max_rows=100):
     )
 
 
-def gen_output(most_common, size, entity_type, material):
-    print([(prop, score) for prop, score in most_common])
-    return html.Div(
-        [html.Div([html.Label(entity_type)] + [
-            html.Div(html.A(prop, href="/search/{}/{}".format(prop, material))) for prop, score in most_common],
-                  style={'float': 'left'}),
-         html.Div([html.Label('Score')] + [html.Div('{:.2f}'.format(score / size)) for prop, score in most_common],
-                  style={'float': 'right'})], className="summary-float-div")
+def gen_output(most_common, size, entity_type, material, class_name="four columns"):
+    # print([(prop, score) for prop, score in most_common])
+    table = html.Table(
+        [html.Tr([html.Th(entity_type), html.Th("score", style={"textAlign": "right"})])] +
+        [html.Tr([
+            html.Td(html.A(prop, href="/search/{}/{}".format(prop, material))),
+            html.Td('{:.2f}'.format(score / size), style={"textAlign": "right"})]) for prop, score in most_common]
+    )
+    return html.Div(table, className="summary-div " + class_name)
 
 
-
-def get_entities(material):
+def get_entities(material, class_name="four columns"):
     # Normalize the material
     parser = SimpleParser()
     material = parser.matgen_parser(material)
@@ -101,12 +100,14 @@ def get_entities(material):
         dsc = nltk.FreqDist(dsc).most_common(10)
 
         return html.Div([
-            gen_output(pro, num_entities, 'Property', material),
-            gen_output(cmt, num_entities, 'Characterization', material),
-            gen_output(smt, num_entities, 'Synthesis', material),
-            gen_output(spl, num_entities, 'Phase', material),
-            gen_output(apl, num_entities, 'Application', material),
-            gen_output(dsc, num_entities, 'Sample descriptor', material),
+            html.Div([
+                gen_output(pro, num_entities, 'Property', material, class_name),
+                gen_output(cmt, num_entities, 'Characterization', material, class_name),
+                gen_output(smt, num_entities, 'Synthesis', material, class_name)], className="row"),
+            html.Div([
+                gen_output(spl, num_entities, 'Phase', material, class_name),
+                gen_output(apl, num_entities, 'Application', material, class_name),
+                gen_output(dsc, num_entities, 'Sample descriptor', material, class_name)], className="row"),
         ])
     else:
         return "No entities for the specified material"

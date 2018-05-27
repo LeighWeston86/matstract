@@ -108,6 +108,7 @@ def generate_table(search=None, materials=None,
     return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"),
             html.Table(id="table-element")]
 
+
 def serve_layout(path):
     if len(path) > len("/search"):
         path = path[len("/search")+1::]
@@ -123,7 +124,7 @@ def serve_layout(path):
                          spellCheck=True,
                          wrap=True,
                          style={"width": "100%"},
-                         placeholder='Search: e.g. "Li-ion battery"'),
+                         placeholder='Search text: e.g. "Li-ion battery"'),
         ]),
 
         html.Div([
