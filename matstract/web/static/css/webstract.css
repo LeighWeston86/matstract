@@ -29,23 +29,24 @@ a {
     cursor: pointer;
 }
 
-.summary-float-div {
-    float: left;
+.summary-div {
     margin: 10px;
     border: 1px solid #aaa;
     border-radius: 3px;
     padding: 10px;
+    max-height: 300px;
+    overflow: scroll;
 }
 
-.summary-float-div div {
-    padding: 2px 5px;
+.summary-div td {
+    padding: 5px;
 }
 
-.summary-float-div label {
-    border-bottom: 1px solid #aaa;
+.summary-div table {
+    margin-bottom: 15px;
 }
 
-#material_summary_div .summary-float-div {
+#material_summary_div .summary-div {
     max-height: 200px;
     overflow: scroll;
 }
@@ -60,6 +61,10 @@ a {
 
 #has_elements, #n_has_elements {
     display: inline-grid;
-    width: 200px;
+    width: 170px;
     margin: 0px 3px;
+}
+
+#matsearch_input, #matsearch_negative_input {
+    width: 170px;
 }

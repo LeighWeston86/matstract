@@ -2,6 +2,7 @@ dash
 dash-auth
 dash-core-components
 dash-html-components
+dash-table-experiments
 dash-renderer
 elasticsearch
 elasticsearch-dsl

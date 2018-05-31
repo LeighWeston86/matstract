@@ -12,28 +12,30 @@ def serve_layout(db):
 
 def serve_searchbox():
     return html.Div([
+                html.Div(html.H6("Search for materials using keywords"), className="row"),
                 html.Div([
-                    html.Span("+"),
+                    html.Span("is "),
                     dcc.Input(id='matsearch_input',
                               placeholder='e.g. ferroelectric',
                               type='text'),
-                    html.Span("-"),
+                    html.Span(" but not "),
                     dcc.Input(id='matsearch_negative_input',
                               placeholder='e.g. perovskite',
                               type='text'),
-                    html.Span("+"),
                     dcc.Dropdown(id='has_elements',
                                  options=[{'label': el, "value": el} for el in DataPreparation.ELEMENTS],
-                                 className="element_select",
+                                 className="element-select",
+                                 placeholder="must include...",
                                  value=None,
                                  multi=True),
-                    html.Span("-"),
                     dcc.Dropdown(id='n_has_elements',
                                  options=[{'label': el, "value": el} for el in DataPreparation.ELEMENTS],
-                                 className="element_select",
+                                 className="element-select",
+                                 placeholder="but exclude...",
                                  value=None,
                                  multi=True),
-                    html.Button("Search", id="matsearch_button"),
+                    html.Button("Search", id="matsearch_button", style={"textTransform": "none"}, className="button-primary"),
+                    html.Button("Load example", id="matsearch_example", style={"textTransform": "none"}),
                     ], className="row matsearch-div"),
                 html.Div([html.Div(
                     serve_matlist([]),
@@ -50,13 +52,12 @@ def matlist_figure(material_names, material_scores, material_counts):
         return {
             "data": [
                 go.Bar(
-                    x=list(reversed(material_scores)),
+                    x=list(reversed(material_counts)),  #material_scores
                     y=list(reversed(material_names)),
                     orientation='h',
-                    marker=dict(color='rgb(158,202,225)'),
+                    marker=dict(color='rgb(154,154,154)'),
                     opacity=0.6,
-                    name="score",
-                    xaxis="x2"),
+                    name="popularity"),
                 go.Bar(
                     x=[0] * len(material_names),
                     y=list(reversed(material_names)),
@@ -72,12 +73,13 @@ def matlist_figure(material_names, material_scores, material_counts):
                     hoverinfo='none',
                 ),
                 go.Bar(
-                    x=list(reversed(material_counts)),
+                    x=list(reversed(material_scores)),  #material_counts
                     y=list(reversed(material_names)),
                     orientation='h',
                     marker=dict(color='#1f77b4'),
-                    name="mentions",
-                    opacity=0.8),
+                    name="relevance",
+                    opacity=0.8,
+                    xaxis="x2"),
             ],
             "layout": go.Layout(
                 # title="Relevant materials",
@@ -86,14 +88,14 @@ def matlist_figure(material_names, material_scores, material_counts):
                 margin=go.Margin(l=150, pad=4, t=40),
                 height=25 * len(material_scores),
                 xaxis=dict(
-                    title="mentions",
-                    tickfont=dict(color='#1f77b4'),
-                    titlefont=dict(color='#1f77b4'),
+                    title="number of mentions",
+                    tickfont=dict(color='rgb(154,154,154)'),
+                    titlefont=dict(color='rgb(154,154,154)'),
                 ),
                 xaxis2=dict(
-                    tickfont=dict(color='rgb(158,202,225)'),
-                    titlefont=dict(color='rgb(158,202,225)'),
-                    title="score",
+                    tickfont=dict(color='#1f77b4'),
+                    titlefont=dict(color='#1f77b4'),
+                    title="relevance",
                     overlaying='x',
                     side='top'
                 ),
