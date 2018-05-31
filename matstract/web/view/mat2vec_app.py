@@ -4,7 +4,9 @@ import dash_core_components as dcc
 def serve_layout(db):
     """Generates the layout dynamically on every refresh"""
 
-    return html.Div([serve_analogy(), serve_similarity()])
+    return html.Div([
+        serve_analogy(),
+        serve_similarity()])
 
 
 def serve_similarity():
@@ -38,4 +40,22 @@ def serve_analogy():
                 html.Span(" is to "),
                 html.Button("?",
                             id="analogy_run",
-                            style={"textTransform": "none"})])
+                            className="button-primary",
+                            style={"textTransform": "none"}),
+                html.Button("Load example",
+                            id="mat2vec_surprise",
+                            style={"textTransform": "none"}),
+    ])
+
+
+# def generate_analogy_str(l):
+#     return html.Div([
+#         html.Span(l[0]),
+#         html.Span(" is to "),
+#         html.Span(l[1]),
+#         html.Span(" as "),
+#         html.Span(l[2]),
+#         html.Span(" is to "),
+#         html.Span("?")])
+
+# analogy_examples = html.Div([generate_analogy_str(analogy) for analogy in analogies], style={"paddingBottom": "10px"})

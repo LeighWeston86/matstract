@@ -74,6 +74,11 @@ header = html.Div([
             dcc.Link("MatSearch", href="/matsearch"),
             html.Span(u" \u2022 "),
             dcc.Link("Material Summary", href="/summary"),
+            html.Span(u" \u2022 "),
+            html.A("Sign up for updates",
+                   href="http://materialsintelligence.com",
+                   target="_blank",
+                   style={"color": "#F012BE"}),
         ],
         id="nav_bar"),
 ], className='row', style={'position': 'relative', 'right': '15px'})

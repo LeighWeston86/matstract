@@ -86,3 +86,45 @@ def bind(app):
         [Input('matsearch_button', 'n_clicks')])
     def clear_clicks(_):
         return None
+
+    # updates analogies
+    @app.callback(
+        Output('matsearch_input', 'value'),
+        [Input('matsearch_example', 'n_clicks')])
+    def example_pos_input(n_clicks):
+        if n_clicks is not None:
+            return search_examples[n_clicks % len(search_examples)][0]
+
+    # updates analogies
+    @app.callback(
+        Output('matsearch_negative_input', 'value'),
+        [Input('matsearch_example', 'n_clicks')])
+    def example_neg_input(n_clicks):
+        if n_clicks is not None:
+            return search_examples[n_clicks % len(search_examples)][1]
+
+    # updates analogies
+    @app.callback(
+        Output('has_elements', 'value'),
+        [Input('matsearch_example', 'n_clicks')])
+    def example_has_elements(n_clicks):
+        if n_clicks is not None:
+            return search_examples[n_clicks % len(search_examples)][2]
+
+    # updates analogies
+    @app.callback(
+        Output('n_has_elements', 'value'),
+        [Input('matsearch_example', 'n_clicks')])
+    def example_n_has_elements(n_clicks):
+        if n_clicks is not None:
+            return search_examples[n_clicks % len(search_examples)][3]
+
+
+search_examples = [
+    ["ferroelectric", "perovskite", None, None],
+    ["solar cells", "", None, None],
+    ["LiCoO2", "", ["Na"], None],
+    ["thermoelectric", "", None, ["Bi"]],
+    ["ferromagnetic", "", None, None],
+    ["amorphous", "", None, None],
+]
