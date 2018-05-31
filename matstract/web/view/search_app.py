@@ -85,8 +85,9 @@ def generate_table(search=None, materials=None,
         print("{} search results".format(len(results)))
     if materials:
         df = pd.DataFrame(results[:max_rows])
-        if not df.empty:
-            df = sort_df(df, materials)
+        # NOT Sorting by material mention count
+        # if not df.empty:
+        #     df = sort_df(df, materials)
     else:
         df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
     if not df.empty:
@@ -98,10 +99,10 @@ def generate_table(search=None, materials=None,
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
             [html.Tr([
-                html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
+                html.Td(html.A(str(df.iloc[i][col]),
                                href=df.iloc[i]["link"], target="_blank")) if col == "title"
-                else html.Td(
-                    hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
+                # else html.Td(
+                #     hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))],
             id="table-element")]

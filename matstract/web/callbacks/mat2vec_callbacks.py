@@ -74,3 +74,37 @@ def bind(app):
          Input('analogy_pos_2', 'value')])
     def get_analogy(_, __, ___):
         return None
+
+    # updates analogies
+    @app.callback(
+        Output('analogy_neg_1', 'value'),
+        [Input('mat2vec_surprise', 'n_clicks')])
+    def surprise_neg1(n_clicks):
+        if n_clicks is not None:
+            return analogies[n_clicks % len(analogies)][0]
+
+    # updates analogies
+    @app.callback(
+        Output('analogy_pos_1', 'value'),
+        [Input('mat2vec_surprise', 'n_clicks')])
+    def surprise_pos1(n_clicks):
+        if n_clicks is not None:
+            return analogies[n_clicks % len(analogies)][1]
+
+    # updates analogies
+    @app.callback(
+        Output('analogy_pos_2', 'value'),
+        [Input('mat2vec_surprise', 'n_clicks')])
+    def surprise_pos2(n_clicks):
+        if n_clicks is not None:
+            return analogies[n_clicks % len(analogies)][2]
+
+
+analogies = [
+    ["CoFe", "ferromagnetic", "CoO", "antiferromagnetic"],
+    ["K", "temperature", "V", "voltage"],
+    ["CdS", "wurtzite", "CdTe", "zincblende"],
+    ["Co", "hcp", "Fe", "bcc"],
+    ["Fe", "Fe2O3", "Ni", "NiO"],
+    ["LiCoO2", "graphite", "cathode", "anode"]
+]
