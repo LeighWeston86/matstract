@@ -22,7 +22,8 @@ namespaces = {'dtd': 'http://www.elsevier.com/xml/svapi/abstract/dtd',
               'dc': 'http://purl.org/dc/elements/1.1/',
               'dcterms': 'http://purl.org/dc/terms/',
               'atom': 'http://www.w3.org/2005/Atom',
-              'opensearch': 'http://a9.com/-/spec/opensearch/1.1/'}
+              'opensearch': 'http://a9.com/-/spec/opensearch/1.1/',
+              'ani': 'http://www.elsevier.com/xml/ani/common'}
 
 config = json.load(open('matstract/collect/scopus_config.json', 'r'))
 APIKEY = config["apikey"]
@@ -175,12 +176,14 @@ def get_encoded_text(container, xpath):
     """
 
     try:
+
         items = [i.text if i.text else i for i in container.findall(xpath, namespaces)]
         if len(items) == 1:
             return items[0]
         elif len(items) == 0:
             return None
         else:
+
             return items
     except AttributeError:
         return None
@@ -304,6 +307,115 @@ class ScopusArticle(object):
 
         # Subjects of article
         self.subjects = get_encoded_text(coredata, 'dcterms:subject')
+
+        # Copywrite info
+        self.copyright = get_encoded_text(coredata, 'prism:copyright')
+
+        # Name of publisher
+        self.publisher = get_encoded_text(coredata, 'prism:publisher')
+
+        # Name of issue
+        self.issue_name = get_encoded_text(coredata, 'prism:IssueName')
+
+        # Raw copy of abstract as returned by scopus
+        self.raw_abstract = get_encoded_text(coredata, 'dc:description')
+
+        # Cleaned abstract text
+        self.abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
+
+class ScopusAbstract(object):
+
+    def __init__(self, input_doi='', refresh=True):
+        """
+        A class that represents a Scopus article.
+
+        Args:
+
+            input_doi: (str) DOI of article
+
+            refresh: (bool) Whether the article should be pulled from scopus or whether it should be
+                    pulled from the mongodb.
+        """
+
+        url = "https://api.elsevier.com/content/abstract/doi/{}".format(input_doi)
+        self.retrieval_url = url
+
+        params = {'view': "FULL"}
+        xml = ET.fromstring(get_content(input_doi, url=url, refresh=refresh, params=params))
+
+
+        # Remove default namespace if present
+        remove = u'{http://www.elsevier.com/xml/svapi/abstract/dtd}'
+        namespace_length = len(remove)
+        for elem in xml.getiterator():
+            if elem.tag.startswith(remove):
+                elem.tag = elem.tag[namespace_length:]
+
+        self.xml = xml
+        if xml.tag == 'service-error':
+            raise Exception('\n{0}\n{1}'.format(input_doi, self.xml))
+
+        # Parse coredata
+        coredata = xml.find('coredata', namespaces)
+
+        # Scopus URL of article
+        self.scopus_url = get_encoded_text(coredata, 'prism:url')
+
+        # Scopus source_id of the article
+        self.scopus_id = get_encoded_text(coredata, 'dc:identifier')
+
+        # URL of article
+        url = "https://doi.org/"
+        self.url = url + input_doi
+
+        # EID of article
+        self.eid = get_encoded_text(coredata, 'eid')
+
+        # DOI of article
+        self.doi = get_encoded_text(coredata, 'prism:doi')
+
+        # Title of article
+        self.title = get_encoded_text(coredata, 'dc:title')
+
+        # Authors of Article
+        authors = xml.find("authors", namespaces)
+        self.authors = get_encoded_text(authors, 'authors')
+
+        # Journal Name
+        self.journal = get_encoded_text(coredata, 'prism:publicationName')
+
+        # Date of publication
+        self.cover_date = get_encoded_text(coredata, 'prism:coverDate')
+
+        # Date of publication (cover)
+        self.cover_display_date = get_encoded_text(coredata, 'prism:coverDisplayDate')
+
+        # Journal ISSN (or EISSN, or both)
+        self.issn = get_encoded_text(coredata, 'prism:issn')
+
+        # Volume that article appears in
+        self.volume = get_encoded_text(coredata, 'prism:volume')
+
+        # Issue that article appears in.
+        self.issue = get_encoded_text(coredata, 'prism:issueIdentifier')
+
+        # Article number
+        self.article_number = get_encoded_text(coredata, 'prism:number')
+
+        # Page number of first page
+        self.first_page = get_encoded_text(coredata, 'prism:startingPage')
+
+        # Page number of last page
+        self.last_page = get_encoded_text(coredata, 'prism:endingPage')
+
+        # Page range of article
+        self.page_range = get_encoded_text(coredata, 'prism:pageRange')
+
+        # Format of Article
+        self.format = get_encoded_text(coredata, 'dc:format')
+
+        # Subjects of article
+        self.subjects = get_encoded_text(coredata, 'subject-areas')
 
         # Copywrite info
         self.copyright = get_encoded_text(coredata, 'prism:copyright')
