@@ -6,6 +6,7 @@ from tqdm import tqdm
 import zipfile
 import os
 import regex
+import string
 import pickle
 from pymatgen.core.composition import Composition
 from monty.fractions import gcd_float
@@ -18,7 +19,7 @@ class DataPreparation:
     ABS_FIELD = "abstract"
     DOI_FIELD = "doi"
 
-    UNITS = ['K', 'h', 'V', 'wt', 'wt.', 'MHz', 'kHz', 'GHz', 'days', 'weeks',
+    UNITS = ['K', 'h', 'V', 'wt', 'wt.', 'MHz', 'kHz', 'GHz', 'Hz', 'days', 'weeks',
              'hours', 'minutes', 'seconds', 'T', 'MPa', 'GPa', 'at.', 'mol.',
              'at', 'm', 'N', 's-1', 'vol.', 'vol', 'eV', 'A', 'atm', 'bar',
              'kOe', 'Oe', 'h.', 'mWcm−2', 'keV', 'MeV', 'meV', 'day', 'week', 'hour',
@@ -39,7 +40,8 @@ class DataPreparation:
              'cd', 'mcd', 'mHz', 'm−3', 'ppm', 'phr', 'mL', 'ML', 'mlmin−1', 'MWm−2',
              'Wm−1K−1', 'Wm−1K−1', 'kWh', 'Wkg−1', 'Jm−3', 'm-3', 'gl−1', 'A−1',
              'Ks−1', 'mgdm−3', 'mms−1', 'ks', 'appm', 'ºC', 'HV', 'kDa', 'Da', 'kG',
-             'kGy', 'MGy', 'Gy', 'mGy', 'Gbps']
+             'kGy', 'MGy', 'Gy', 'mGy', 'Gbps', 'μB', 'μL', 'μF', 'nF', 'pF', 'mF',
+             'A', 'Å', 'A˚']
 
     ELEMENTS = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K',
                 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
@@ -65,14 +67,18 @@ class DataPreparation:
                      'moscovium', 'livermorium', 'tennessine', 'oganesson', 'ununennium']
     ELEMENTS_AND_NAMES = ELEMENTS + ELEMENT_NAMES + [en.capitalize() for en in ELEMENT_NAMES]
 
-    NR_UNIT = regex.compile(r'^([\d.?]+)([\p{script=Latin}]+.*)', regex.DOTALL)
+    NR_BASIC = regex.compile(r'^[+-]?\d*\.?\d+\(?\d*\)?+$', regex.DOTALL)
+    NR_AND_UNIT = regex.compile(r'^([+-]?\d*\.?\d+\(?\d*\)?+)([\p{script=Latin}|Ω|μ]+.*)', regex.DOTALL)
 
     # elemement with the valence state in parenthesis
     ELEMENT_VALENCE_IN_PAR = regex.compile(r'^('+'|'.join(ELEMENTS_AND_NAMES) +
                                            ')(\(([IV|iv]|[Vv]?[Ii]{0,3})\))$')
+    ELEMENT_DIRECTION_IN_PAR = regex.compile(r'^('+'|'.join(ELEMENTS_AND_NAMES) + ')(\(\d\d\d\d?\))')
 
     # exactly IV, VI or has 2 consecutive II, or roman in parenthesis: is not a simple formula
     VALENCE_INFO = regex.compile(r'(II+|^IV$|^VI$|\(IV\)|\(V?I{0,3}\))')
+
+    PUNCT = list(string.punctuation) + ['"', '“', '”', '≥', '≤', '×']
 
     # ROMAN_NR_PR = regex.compile(r'\((IV|V?I{0,3})\)')
 
@@ -101,7 +107,7 @@ class DataPreparation:
     format for machine learning tasks
     """
     def to_word2vec_zip(self, filepath=None, limit=None, newlines=False, line_per_abstract=False, doi=None,
-                        only_relevant=False):
+                        only_relevant=False, exclude_punct=False):
         """
         Coverts the tokenized abstracts in the database to a zip file with a single vocabulary line.
         :param limit: number of abstracts to use. If not specified, all data will be considered
@@ -116,16 +122,20 @@ class DataPreparation:
         else:
             nl_tok = ""
 
-        for abstract in tqdm(abstracts, total=abstracts.count()):
+        try:
+            total = abstracts.count()
+        except:
+            total = None
+        for abstract in tqdm(abstracts, total=total):
             # print("processing abstract {}".format(i), end="\r")
             ttl = abstract[self.TTL_FILED]
             abs = abstract[self.ABS_FIELD]
             if ttl is not None and abs is not None:
                 if not only_relevant or self.is_relevant(abs):
                     for sentence in ttl:
-                        txt += " ".join(self.process_sentence(sentence) + [nl_tok])
+                        txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
                     for sentence in abs:
-                        txt += " ".join(self.process_sentence(sentence) + [nl_tok])
+                        txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
                     if line_per_abstract:
                         txt += "\n"
         text = txt
@@ -218,20 +228,24 @@ class DataPreparation:
             abstracts = getattr(self._db, col).find(conditions)
         return abstracts
 
-    @staticmethod
-    def is_number(t):
-        try:
-            float(t.replace(',', ''))  # also considering digits separated with commas
-            return True
-        except ValueError:
-            return False
+    def is_number(self, t):
+        return self.NR_BASIC.match(t.replace(',', '')) is not None
 
     # @staticmethod
-    def process_sentence(self, s):
+    def process_sentence(self, s, exclude_punct=False):
         st = []
-        for tok in s:
-            if DataPreparation.is_number(tok):
-                tok = "<nUm>"  # replace all numbers with a string <nUm>
+        split_indices = []
+        for i, tok in enumerate(s):
+            if exclude_punct and tok in self.PUNCT:
+                continue
+            elif self.is_number(tok):
+                try:
+                    if s[i-1] == "(" and s[i+1] == ")" or s[i-1] == "〈" and s[i+1] == "〉":
+                        pass
+                    else:
+                        tok = "<nUm>"
+                except:
+                    tok = "<nUm>"  # replace all numbers with a string <nUm>
             else:
                 elem_with_valence = self.ELEMENT_VALENCE_IN_PAR.match(tok)
                 if elem_with_valence is not None:
@@ -246,6 +260,7 @@ class DataPreparation:
                     self.mat_list.append((matmention, formula))  # exclude the valence state from name
                     # split this for word2vec
                     st.append(matmention)
+                    split_indices.append(i)
                     tok = elem_with_valence.group(2)
                 elif tok in self.ELEMENTS_AND_NAMES:  # add element names to formulae
                     try:
@@ -261,20 +276,22 @@ class DataPreparation:
                     self.mat_list.append((tok, formula))
                     tok = formula
                 elif (len(tok) == 1 or (len(tok) > 1 and tok[0].isupper() and tok[1:].islower())) \
-                        and tok not in self.ELEMENTS and tok not in self.UNITS:
+                        and tok not in self.ELEMENTS and tok not in self.UNITS \
+                        and self.ELEMENT_DIRECTION_IN_PAR.match(tok) is None:
                     # to lowercase if only first letter is uppercase (chemical elements already covered above)
                     tok = deaccent(tok.lower())
                 else:
                     # splitting units from numbers (e.g. you can get 2mol., 3V, etc..)
-                    nr_unit = self.NR_UNIT.match(tok)
+                    nr_unit = self.NR_AND_UNIT.match(tok)
                     if nr_unit is None or nr_unit.group(2) not in self.UNITS:
                         tok = deaccent(tok)  # matches the pattern but not in the list of units
                     else:
                         # splitting the unit from number
                         st.append("<nUm>")
-                        tok = deaccent(nr_unit.group(2))  # the unit
+                        split_indices.append(i)
+                        tok = nr_unit.group(2)  # the unit
             st.append(tok)
-        return st
+        return st, split_indices
 
     def material_counts(self):
         counts = dict()

@@ -6,8 +6,8 @@ from collections import Iterable
 class MatstractSearch:
     """The class running all search queries"""
 
-    def __init__(self):
-        self._ac = AtlasConnection(db="production")
+    def __init__(self, local=False):
+        self._ac = AtlasConnection(db="production", local=local)
         self._ec = ElasticConnection()
         self.filters = []
 

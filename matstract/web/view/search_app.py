@@ -85,8 +85,9 @@ def generate_table(search=None, materials=None,
         print("{} search results".format(len(results)))
     if materials:
         df = pd.DataFrame(results[:max_rows])
-        if not df.empty:
-            df = sort_df(df, materials)
+        # NOT Sorting by material mention count
+        # if not df.empty:
+        #     df = sort_df(df, materials)
     else:
         df = pd.DataFrame(results[0:100]) if results else pd.DataFrame()
     if not df.empty:
@@ -98,15 +99,16 @@ def generate_table(search=None, materials=None,
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
             [html.Tr([
-                html.Td(html.A(hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search),
+                html.Td(html.A(str(df.iloc[i][col]),
                                href=df.iloc[i]["link"], target="_blank")) if col == "title"
-                else html.Td(
-                    hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
+                # else html.Td(
+                #     hm(str(df.iloc[i][col]), df.iloc[i]['to_highlight'] if materials else search)) if col == "abstract"
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))],
             id="table-element")]
     return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"),
             html.Table(id="table-element")]
+
 
 def serve_layout(path):
     if len(path) > len("/search"):
@@ -117,22 +119,19 @@ def serve_layout(path):
     # The Search app
     layout = html.Div([
         html.Div([
-            html.Div([
-                html.P('Welcome to the Matstract Database!')
-            ], style={'margin-left': '10px'}),
-
             html.Label('Search the database ({:,} abstracts!):'.format(db.abstracts.find({}).count())),
             dcc.Textarea(id='search-box',
                          autoFocus=True,
                          spellCheck=True,
                          wrap=True,
                          style={"width": "100%"},
-                         placeholder='Search: e.g. "Li-ion battery"'),
+                         placeholder='Search text: e.g. "Li-ion battery"'),
         ]),
 
         html.Div([
             dcc.Input(id='material-box',
-                      placeholder='Material: e.g. "LiFePO4"',
+                      placeholder='Filter by material: e.g. "LiFePO4"',
+                      style={"width": "200px"},
                       type='text'),
             html.Button('Submit', id='search-button'),
         ]),

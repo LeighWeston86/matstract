@@ -1,11 +1,12 @@
 import dash_html_components as html
 import dash_core_components as dcc
 
-
 def serve_layout(db):
     """Generates the layout dynamically on every refresh"""
 
-    return html.Div([serve_analogy(), serve_similarity()])
+    return html.Div([
+        serve_analogy(),
+        serve_similarity()])
 
 
 def serve_similarity():
@@ -16,9 +17,9 @@ def serve_similarity():
                     dcc.Input(id='similar_words_input',
                               placeholder='e.g. LiMn2O4, anode, ...',
                               type='text'),
-                    html.Button("Is similar to", id="similar_words_button", className="butson-primary"),
+                    html.Button("Is similar to", id="similar_words_button"),
                     ]),
-                html.Div('', id='similar_words_container')])
+                html.Div('', id='similar_words_container', style={"padding": "0px 4px"})])
 
 
 def serve_analogy():
@@ -37,5 +38,24 @@ def serve_analogy():
                           placeholder='e.g. graphite, Al',
                           type='text'),
                 html.Span(" is to "),
-                html.Span("", id="analogy_container", style={"fontWeight": "bold"}),
-                html.Button("?", id="analogy_run", className="buton-primary")])
+                html.Button("?",
+                            id="analogy_run",
+                            className="button-primary",
+                            style={"textTransform": "none"}),
+                html.Button("Load example",
+                            id="mat2vec_surprise",
+                            style={"textTransform": "none"}),
+    ])
+
+
+# def generate_analogy_str(l):
+#     return html.Div([
+#         html.Span(l[0]),
+#         html.Span(" is to "),
+#         html.Span(l[1]),
+#         html.Span(" as "),
+#         html.Span(l[2]),
+#         html.Span(" is to "),
+#         html.Span("?")])
+
+# analogy_examples = html.Div([generate_analogy_str(analogy) for analogy in analogies], style={"paddingBottom": "10px"})
