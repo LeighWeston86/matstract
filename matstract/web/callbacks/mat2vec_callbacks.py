@@ -15,6 +15,7 @@ def bind(app):
         if word is not None and word != "":
             ee = EmbeddingEngine()
             close_words, scores = ee.close_words(word, top_k=8)
+            print(close_words)
             return dt.DataTable(
                 rows=[{"#": i+1,
                        'Words and phrases similar to "{}"'.format(word): w.replace("_", " "),
