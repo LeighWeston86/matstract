@@ -99,7 +99,7 @@ class EmbeddingEngine:
         """
         if word is not None and word != "":
             word = word.replace(" ", "_")
-            word = self.dp.process_sentence([word])[0]
+            word = self.dp.process_sentence([word])[0][0]
             # get all normalized word vectors
             try:
                 return (self.embeddings / self.norm)[self.word2index[word], :]

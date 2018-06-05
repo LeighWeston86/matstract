@@ -29,6 +29,7 @@ class AtlasConnection():
 
         """
         if 'MATSTRACT_HOST' in env and local:
+            db = "matstract_db" if db == "production" else "tri_abstracts"
             uri = "mongodb://%s:%s/%s" % (
                 env['MATSTRACT_HOST'], env['MATSTRACT_PORT'], db)
             user_creds = {'db': db}

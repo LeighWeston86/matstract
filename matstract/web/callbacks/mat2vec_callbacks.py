@@ -48,9 +48,9 @@ def bind(app):
                 pos_2 is not None and \
                 pos_2 != "":
             ee = EmbeddingEngine()
-            pos_1 = ee.phraser[ee.dp.process_sentence(pos_1.split())]
-            neg_1 = ee.phraser[ee.dp.process_sentence(neg_1.split())]
-            pos_2 = ee.phraser[ee.dp.process_sentence(pos_2.split())]
+            pos_1 = ee.phraser[ee.dp.process_sentence(pos_1.split())[0]]
+            neg_1 = ee.phraser[ee.dp.process_sentence(neg_1.split())[0]]
+            pos_2 = ee.phraser[ee.dp.process_sentence(pos_2.split())[0]]
             pos_1_vec = ee.get_word_vector(pos_1[0])
             neg_1_vec = ee.get_word_vector(neg_1[0])
             pos_2_vec = ee.get_word_vector(pos_2[0])

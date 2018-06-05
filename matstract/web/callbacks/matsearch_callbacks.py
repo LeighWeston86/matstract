@@ -20,10 +20,10 @@ def bind(app):
             ee = EmbeddingEngine()
 
             # the positive word vectors
-            sentence = ee.phraser[ee.dp.process_sentence(search_text.split())]
+            sentence = ee.phraser[ee.dp.process_sentence(search_text.split())[0]]
 
             # the negative word vectors
-            n_sentence = ee.phraser[ee.dp.process_sentence(n_search_text.split())] \
+            n_sentence = ee.phraser[ee.dp.process_sentence(n_search_text.split())[0]] \
                 if n_search_text is not None and len(n_search_text) > 0 else None
 
             # finding materials sorted by similarity

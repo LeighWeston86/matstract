@@ -152,12 +152,15 @@ class TokenAnnotation(Annotation):
         for row_idx, tokenRow in enumerate(self.tokens):
             new_toks.append([])
             for idx, token in enumerate(tokenRow):
+                token_copy = dict()
+                for key in token:
+                    token_copy[key] = token[key]
                 if len(new_toks[row_idx]) == 0:
-                    new_toks[row_idx].append(token)
+                    new_toks[row_idx].append(token_copy)
                 elif token["annotation"] == new_toks[row_idx][-1]["annotation"]:
-                    new_toks[row_idx][-1] = merge_tokens([new_toks[row_idx][-1], token])
+                    new_toks[row_idx][-1] = merge_tokens([new_toks[row_idx][-1], token_copy])
                 else:
-                    new_toks[row_idx].append(token)
+                    new_toks[row_idx].append(token_copy)
         return new_toks
 
     def phrase_tokens(self):
@@ -176,8 +179,18 @@ class TokenAnnotation(Annotation):
         ee = EmbeddingEngine()
         for row_idx, tokenRow in enumerate(grouped_toks):
             for idx, token in enumerate(tokenRow):
-                grouped_toks[row_idx][idx]["text"] = ee.phraser[ee.dp.process_sentence(
-                    token["text"] if type(token["text"]) is list else [token["text"]])]
+                # processing the sentence
+                processesed_sentence, split_indices = ee.dp.process_sentence(
+                    token["text"] if type(token["text"]) is list else [token["text"]])
+                grouped_toks[row_idx][idx]["text"] = ee.phraser[processesed_sentence]
+
+                # some tokens are split during processing so need to update pos tags
+                processed_pos = []
+                for ii, pos in enumerate(grouped_toks[row_idx][idx]["pos"]):
+                    processed_pos += [pos] if ii not in split_indices else [pos, pos]
+                grouped_toks[row_idx][idx]["pos"] = processed_pos
+
+                # grouping words together
                 new_pos_tags = []
                 for i, tok in enumerate(grouped_toks[row_idx][idx]["text"]):
                     p_l = len(new_pos_tags)
