@@ -39,7 +39,7 @@ def serve_abstract(db,
         tokens = []
         existing_labels = []
     else:
-        builder = AnnotationBuilder(local=True)
+        builder = AnnotationBuilder(local=False)
         # get a random paragraph
         random_abstract = builder.get_abstract(good_ones=False, doi=doi, user_key=user_key, only_relevant=True)
         doi = random_abstract['doi']

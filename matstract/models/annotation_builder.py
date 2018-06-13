@@ -154,15 +154,20 @@ class AnnotationBuilder:
             else:
                 return list(mg)
 
-        paragraph = self.get_abstract(doi=annotations[0].doi)
-        combined_toks, _ = self.get_tokens(paragraph, None, cems=False)
+        # paragraph = self.get_abstract(doi=annotations[0].doi)
+        # combined_toks, _ = self.get_tokens(paragraph, None, cems=False)
         if len(annotations) > 0:
+            combined_toks = annotations[0].processed_tokens(not_annotated=True)
             for pair in itertools.combinations(annotations, r=2):
+                toks0 = pair[0].processed_tokens()
+                toks1 = pair[1].processed_tokens()
                 common_labels = set(pair[0].labels).intersection(pair[1].labels).union({None})
-                for rowIdx, tokenRow in enumerate(pair[1].tokens):
+                for rowIdx, tokenRow in enumerate(toks1):
                     for idx, token in enumerate(tokenRow):
-                        token_ann = pair[0].tokens[rowIdx][idx]["annotation"]
-                        merged = merge_anns([token_ann, token["annotation"]], common_labels)
+                        # token_ann = toks0[rowIdx][idx]["annotation"]
+                        merged = merge_anns(
+                            [toks1[rowIdx][idx]["annotation"], toks0[rowIdx][idx]["annotation"]],
+                            common_labels)
                         combined_toks[rowIdx][idx]["annotation"] = merge_anns([
                             merged,
                             combined_toks[rowIdx][idx]["annotation"]])

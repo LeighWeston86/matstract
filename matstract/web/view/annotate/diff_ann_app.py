@@ -19,7 +19,7 @@ def serve_layout(_, user_key, attrs):
 def serve_abstract(user_key,
                    doi=None):
     """Returns a random abstract and refreshes annotation options"""
-    builder = AnnotationBuilder(local=True)
+    builder = AnnotationBuilder(local=False)
     diff_tokens, message = builder.get_diff_tokens(doi=doi, user=user_key)
     if diff_tokens is not None:
         return [
