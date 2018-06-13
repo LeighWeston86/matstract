@@ -2,7 +2,7 @@ import datetime
 import nltk
 from nltk.chunk.util import ChunkScore
 from matstract.models.word_embeddings import EmbeddingEngine
-
+from matstract.nlp.data_preparation import DataPreparation
 
 class Annotation:
     def __init__(self, doi, user=None):
@@ -241,12 +241,12 @@ class TokenAnnotation(Annotation):
 
     def processed_tokens(self, not_annotated=False):
         processed_toks = []
-        ee = EmbeddingEngine()
+        dp = DataPreparation()
         for row_idx, tokenRow in enumerate(self.tokens):
             processed_toks.append([])
             for idx, token in enumerate(tokenRow):
                 # processing the sentence
-                processesed_token_text = ee.dp.process_sentence([token["text"]])[0]
+                processesed_token_text = dp.process_sentence([token["text"]])[0]
                 for text in processesed_token_text:
                     new_tok = dict()
                     for key in token:
