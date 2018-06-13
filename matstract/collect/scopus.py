@@ -81,7 +81,7 @@ def build_scopus_query(year=None, issn=None):
     return base + y + i
 
 
-def find_articles(year=None, issn=None, get_all=True):
+def find_articles(year=None, issn=None, get_all=True, id_type="doi"):
     """
     Returns a list of the DOI's for all articles published in the specified year and journal.
 
@@ -89,22 +89,27 @@ def find_articles(year=None, issn=None, get_all=True):
         year (str): year of publication
         issn (str): ISSN (or EISSN) of journal
         get_all (bool): Whether all results should be returned or just the 1st result. Default is True.
+        id_type: (str) Return document eids or dois. Default is doi.
 
     Returns:
-        dois (str): The dois for all articles published in corresponding journal in the specified year
+        ids (str): The eids/dois for all articles published in corresponding journal in the specified year
 
     """
 
     query = build_scopus_query(year=year, issn=issn)
     search = ElsSearch(query, index='scopus', )
     search.execute(els_client=CLIENT, get_all=get_all)
-    dois = []
+    if id_type == "doi":
+        key = 'prism:doi'
+    else:
+        key = id_type
+    ids = []
     for r in search.results:
         try:
-            dois.append(r['prism:doi'])
+            ids.append(r[key])
         except:
             continue
-    return dois
+    return ids
 
 
 def download(url, format='xml', params=None):
@@ -133,7 +138,7 @@ def download(url, format='xml', params=None):
     return resp
 
 
-def get_content(DOI, refresh=True, *args, **kwds):
+def get_content(DOI, format="json", refresh=True, *args, **kwds):
     """ Helper function to read file content as xml.
 
     Args:
@@ -147,7 +152,7 @@ def get_content(DOI, refresh=True, *args, **kwds):
     """
 
     if not refresh:
-        db = open_db_connection()
+        db = AtlasConnection().db
         elsevier = db.elsevier
         entries = elsevier.find({"doi": DOI})
         if len(entries):
@@ -157,8 +162,13 @@ def get_content(DOI, refresh=True, *args, **kwds):
             if entry["collected"]:
                 content = entry["xml"]
                 return content
-    content = download(*args, **kwds).text
-    return content
+    else:
+        if format == "xml":
+            content = download(*args, **kwds).text
+            return content
+        elif format == "json":
+            content = download(*args, **kwds)
+            return content
 
 
 def get_encoded_text(container, xpath):
@@ -203,9 +213,8 @@ def clean_text(text):
 
     """
     try:
-        if not isinstance(text, str):
-            text = text.text
-        cleaned_text = re.sub("\n                        ", "", text)
+        cleaned_text = re.sub("© ([0-9])\w* The Author\(s\)\. ", "", text)
+        cleaned_text = re.sub("\n                        ", "", cleaned_text)
         cleaned_text = re.sub("\n                     ", "", cleaned_text)
         cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
         cleaned_text = cleaned_text.replace("Abstract ", '', 1)
@@ -213,6 +222,22 @@ def clean_text(text):
     except:
         return None
 
+
+def format_authors(author_dict):
+    authors = []
+    for entry in author_dict:
+        if not "ce:given-name" in entry:
+            entry["ce:given-name"] = entry['preferred-name']["ce:given-name"]
+        authors.append(entry["ce:surname"] + ", " + entry["ce:given-name"])
+    return authors
+
+
+def format_terms(term_dict):
+    if term_dict:
+        terms = []
+        for entry in term_dict["mainterm"]:
+            terms.append(entry["$"])
+        return terms
 
 class ScopusArticle(object):
 
@@ -232,7 +257,7 @@ class ScopusArticle(object):
         self.retrieval_url = url
 
         params = {'view': "FULL"}
-        xml = ET.fromstring(get_content(input_doi, url=url, refresh=refresh, params=params))
+        xml = ET.fromstring(get_content(input_doi, url=url, format="xml", refresh=refresh, params=params))
 
         # Remove default namespace if present
         remove = u'{http://www.elsevier.com/xml/svapi/article/dtd}'
@@ -323,6 +348,7 @@ class ScopusArticle(object):
         # Cleaned abstract text
         self.abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
 
+
 class ScopusAbstract(object):
 
     def __init__(self, input_doi='', refresh=True):
@@ -341,96 +367,80 @@ class ScopusAbstract(object):
         self.retrieval_url = url
 
         params = {'view': "FULL"}
-        xml = ET.fromstring(get_content(input_doi, url=url, refresh=refresh, params=params))
+        response = json.loads(download(url=url, format="json", params=params).text)
+        response = response["abstracts-retrieval-response"]
 
-
-        # Remove default namespace if present
-        remove = u'{http://www.elsevier.com/xml/svapi/abstract/dtd}'
-        namespace_length = len(remove)
-        for elem in xml.getiterator():
-            if elem.tag.startswith(remove):
-                elem.tag = elem.tag[namespace_length:]
-
-        self.xml = xml
-        if xml.tag == 'service-error':
-            raise Exception('\n{0}\n{1}'.format(input_doi, self.xml))
+        self.json = response
 
         # Parse coredata
-        coredata = xml.find('coredata', namespaces)
+        coredata = self.json["coredata"]
 
         # Scopus URL of article
-        self.scopus_url = get_encoded_text(coredata, 'prism:url')
+        self.scopus_url = coredata["prism:url"]
 
         # Scopus source_id of the article
-        self.scopus_id = get_encoded_text(coredata, 'dc:identifier')
+        self.scopus_id = coredata['dc:identifier']
+
+        # DOI of article
+        self.doi = coredata['prism:doi']
 
         # URL of article
         url = "https://doi.org/"
-        self.url = url + input_doi
+        self.url = url + self.doi
 
         # EID of article
-        self.eid = get_encoded_text(coredata, 'eid')
-
-        # DOI of article
-        self.doi = get_encoded_text(coredata, 'prism:doi')
+        self.eid = coredata['eid']
 
         # Title of article
-        self.title = get_encoded_text(coredata, 'dc:title')
+        self.title = coredata['dc:title']
 
         # Authors of Article
-        authors = xml.find("authors", namespaces)
-        self.authors = get_encoded_text(authors, 'authors')
+        self.authors = format_authors(response["authors"]["author"])
 
         # Journal Name
-        self.journal = get_encoded_text(coredata, 'prism:publicationName')
+        self.journal = coredata['prism:publicationName']
 
         # Date of publication
-        self.cover_date = get_encoded_text(coredata, 'prism:coverDate')
-
-        # Date of publication (cover)
-        self.cover_display_date = get_encoded_text(coredata, 'prism:coverDisplayDate')
+        self.cover_date = coredata['prism:coverDate']
 
         # Journal ISSN (or EISSN, or both)
-        self.issn = get_encoded_text(coredata, 'prism:issn')
+        self.issn = coredata['prism:issn']
 
         # Volume that article appears in
-        self.volume = get_encoded_text(coredata, 'prism:volume')
+        self.volume = coredata['prism:volume'] if "prism:volume" in coredata else None
 
         # Issue that article appears in.
-        self.issue = get_encoded_text(coredata, 'prism:issueIdentifier')
+        self.issue = coredata['prism:issueIdentifier'] if "prism:issueIdentifier" in coredata else None
 
         # Article number
-        self.article_number = get_encoded_text(coredata, 'prism:number')
+        self.article_number = coredata['prism:number'] if "prism:number" in coredata else None
 
         # Page number of first page
-        self.first_page = get_encoded_text(coredata, 'prism:startingPage')
+        self.first_page = coredata['prism:startingPage'] if 'prism:startingPage' in coredata else None
 
         # Page number of last page
-        self.last_page = get_encoded_text(coredata, 'prism:endingPage')
+        self.last_page = coredata['prism:endingPage'] if 'prism:endingPage' in coredata else None
 
         # Page range of article
-        self.page_range = get_encoded_text(coredata, 'prism:pageRange')
+        self.page_range = coredata['prism:pageRange'] if 'prism:pageRange' in coredata else None
 
         # Format of Article
-        self.format = get_encoded_text(coredata, 'dc:format')
+        self.format = coredata['subtypeDescription']
 
         # Subjects of article
-        self.subjects = get_encoded_text(coredata, 'subject-areas')
-
-        # Copywrite info
-        self.copyright = get_encoded_text(coredata, 'prism:copyright')
+        self.subjects = format_terms(response['idxterms'])
 
         # Name of publisher
-        self.publisher = get_encoded_text(coredata, 'prism:publisher')
+        self.publisher = coredata['dc:publisher']
 
         # Name of issue
-        self.issue_name = get_encoded_text(coredata, 'prism:IssueName')
+        self.issue_name = coredata['prism:issueIdentifier']
 
         # Raw copy of abstract as returned by scopus
-        self.raw_abstract = get_encoded_text(coredata, 'dc:description')
+        self.raw_abstract = coredata['dc:description'] if 'dc:description' in coredata else ""
 
         # Cleaned abstract text
-        self.abstract = clean_text(get_encoded_text(coredata, 'dc:description'))
+        self.abstract = clean_text(coredata['dc:description']) if 'dc:description' in coredata else ""
 
 
 def verify_access():
@@ -498,7 +508,7 @@ def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_
 
     """
     user = json.load(open(user_creds, 'r'))["name"]
-    db = open_db_connection(user_creds=user_creds)
+    db = AtlasConnection().db
     log = db.elsevier_log
     elsevier = db.elsevier
 
