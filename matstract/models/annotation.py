@@ -41,9 +41,13 @@ class TokenAnnotation(Annotation):
     labels: a list of token labels that was used for that annotation
     tags:   a list of tags for the whole abstract, if one wants to add any extra info
     """
-    def __init__(self, doi=None, tokens=None, labels=None, tags=None, user=None, annotation=None):
+    BOT_USERNAME = "NER-bot"
+
+    def __init__(self, doi=None, tokens=None, labels=None, tags=None, user=None, annotation=None, iob=None):
         if annotation is not None:
             self.from_dict(annotation)
+        elif iob is not None:
+            self.from_iob(iob, doi)
         else:
             Annotation.__init__(self, doi, user)
             self.tokens = tokens
@@ -81,6 +85,38 @@ class TokenAnnotation(Annotation):
                 iob_str.append(token["text"] + " " + token["pos"] + " " + label + "\n")
             iob_str.append("\n")
         return iob, "".join(iob_str)
+
+    def from_iob(self, iob_list, doi):
+        """
+        Converts iob list of tuples to TokenAnnotation class
+        :param phrases:
+        :return:
+        """
+        Annotation.__init__(self, doi, self.BOT_USERNAME)
+        self.tags = None
+        self.tokens = []
+        self.labels = set()
+        start = 0
+        for iob_sentence in iob_list:
+            self.tokens.append([])
+            for iob in iob_sentence:
+                sub_tokens = iob[0].split("_")
+                pos_tags = iob[1].split("_")
+                if len(pos_tags) < len(sub_tokens):
+                    pos_tags = [pos_tags] * len(sub_tokens)
+                label = iob[2]
+                for i, tk in enumerate(sub_tokens):
+                    token = dict()
+                    token["text"] = sub_tokens[i]
+                    token["pos"] = pos_tags[i]
+                    token["annotation"] = None if (label[:2] != "I-" and label[:2] != "B-") else label[2:]
+                    self.labels.add(token["annotation"])
+                    token["start"] = start
+                    token["end"] = token["start"] + len(token["text"])
+                    token["id"] = "token-{}-{}".format(token["start"], token["end"])
+                    start = token["end"]
+                    self.tokens[-1].append(token)
+        self.labels = list(self.labels)
 
     def to_agr_list(self):
         """
@@ -202,3 +238,21 @@ class TokenAnnotation(Annotation):
                         ]))
                 grouped_toks[row_idx][idx]["pos"] = new_pos_tags
         return ungroup_tokens(grouped_toks)
+
+    def processed_tokens(self, not_annotated=False):
+        processed_toks = []
+        ee = EmbeddingEngine()
+        for row_idx, tokenRow in enumerate(self.tokens):
+            processed_toks.append([])
+            for idx, token in enumerate(tokenRow):
+                # processing the sentence
+                processesed_token_text = ee.dp.process_sentence([token["text"]])[0]
+                for text in processesed_token_text:
+                    new_tok = dict()
+                    for key in token:
+                        new_tok[key] = token[key]
+                    if not_annotated:
+                        new_tok["annotation"] = None
+                    new_tok["text"] = text
+                    processed_toks[-1].append(new_tok)
+        return processed_toks

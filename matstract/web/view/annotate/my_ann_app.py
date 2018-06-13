@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 
 def serve_layout(_, user_key, __):
-    builder = AnnotationBuilder(local=True)
+    builder = AnnotationBuilder(local=False)
     my_annotations = builder.get_annotations(user=user_key)
     children = []
     for annotation in my_annotations:
