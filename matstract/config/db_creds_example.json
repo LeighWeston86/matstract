@@ -1,15 +1,19 @@
 {
+  "scopus": {
+    "name": "First Last",
+    "apikey": "<<TEXT MINING API KEY>>"
+  },
   "mongo": {
     "admin": {
       "production": {
-        "name": "John Dagdelen",
+        "name": "First Last",
         "db": "matstract_db",
         "user": "<<USER>>",
         "pass": "<<PASSWORD>>",
         "rest": "matstract-shard-00-00-kve41.mongodb.net:27017,matstract-shard-00-01-kve41.mongodb.net:27017,matstract-shard-00-02-kve41.mongodb.net:27017/test?ssl=true&replicaSet=matstract-shard-0&authSource=admin"
       },
       "test": {
-        "name": "John Dagdelen",
+        "name": "First Last",
         "db": "tri_abstracts",
         "user": "<<USER>>",
         "pass": "<<PASSWORD>>",
