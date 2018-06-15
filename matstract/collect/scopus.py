@@ -47,7 +47,7 @@ def check_scopus_collection(year, issn):
 
     """
     db = AtlasConnection(access='admin', db="test").db
-    log = db.elsevier_log
+    log = db.build_log
     entry = log.find({"year": year, "issn": issn})[0]
     if entry["status"] == "complete":
         return True
@@ -134,7 +134,6 @@ def download(url, format='xml', params=None):
     header = {'Accept': 'application/{}'.format(format), 'X-ELS-APIKey': APIKEY}
     resp = requests.get(url, headers=header, params=params)
     resp.raise_for_status()
-
     return resp
 
 
@@ -437,10 +436,10 @@ class ScopusAbstract(object):
         self.issue_name = coredata['prism:issueIdentifier']
 
         # Raw copy of abstract as returned by scopus
-        self.raw_abstract = coredata['dc:description'] if 'dc:description' in coredata else ""
+        self.raw_abstract = coredata['dc:description'] if 'dc:description' in coredata else None
 
         # Cleaned abstract text
-        self.abstract = clean_text(coredata['dc:description']) if 'dc:description' in coredata else ""
+        self.abstract = clean_text(coredata['dc:description']) if 'dc:description' in coredata else None
 
 
 def verify_access():
@@ -459,12 +458,13 @@ def verify_access():
                         "the LBNL VPN.")
 
 
-def collect_entries(dois, user):
+def collect_entries(dois, user, entry_type="abstract"):
     """ Collects the scopus entry for each DOI in dois and processes them for insertion into the Matstract database.
 
     Args:
         dois (list(str)): List of DOIs
         user: (dict): Credentials of user
+        entry_type (str): "full_article" or "abstract". Default is "abstract"
 
     Returns:
         entries (list(dict)): List of entries to be inserted into database
@@ -475,28 +475,44 @@ def collect_entries(dois, user):
     for doi in tqdm(dois):
         date = datetime.datetime.now().isoformat()
         try:
-            article = ScopusArticle(input_doi=doi)
-            abstract = article.abstract
-            raw_abstract = article.raw_abstract
+            if entry_type == "full_article":
+                article = ScopusArticle(input_doi=doi)
+                abstract = article.abstract
+                raw_abstract = article.raw_abstract
 
-            if abstract is None or raw_abstract is None:
-                entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
-                                "pulled_on": date, "pulled_by": user})
-            else:
-                if not isinstance(raw_abstract, str):
-                    raw_abstract = raw_abstract.text
-                entries.append({"doi": doi, "title": article.title, "abstract": abstract,
-                                "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
-                                "subjects": article.subjects, "journal": article.journal,
-                                "date": article.cover_date,
-                                "completed": True, "pulled_on": date, "pulled_by": user})
+                if abstract is None or raw_abstract is None:
+                    entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
+                                    "pulled_on": date, "pulled_by": user})
+                else:
+                    if not isinstance(raw_abstract, str):
+                        raw_abstract = raw_abstract.text
+                    entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                    "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                    "subjects": article.subjects, "journal": article.journal,
+                                    "date": article.cover_date, "full_xml": article.xml,
+                                    "completed": True, "pulled_on": date, "pulled_by": user})
+
+            elif entry_type == "abstract":
+                article = ScopusAbstract(input_doi=doi)
+                abstract = article.abstract
+                raw_abstract = article.raw_abstract
+                if abstract is None or raw_abstract is None:
+                    entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
+                                    "pulled_on": date, "pulled_by": user})
+                else:
+                    entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                    "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                    "subjects": article.subjects, "journal": article.journal,
+                                    "date": article.cover_date,
+                                    "completed": True, "pulled_on": date, "pulled_by": user})
+
         except HTTPError as e:
             entries.append({"doi": doi, "completed": False, "error": str(e),
                             "pulled_on": date, "pulled_by": user})
     return entries
 
 
-def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_blocks=1):
+def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, num_blocks=1):
     """
     Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
     dois, and downloads the corresponding xmls for each to the elsevier collection.
@@ -507,10 +523,13 @@ def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_
         num_blocks ((:obj:`int`, optional)): maximum number of blocks to run in session. Defaults to 1.
 
     """
-    user = json.load(open(user_creds, 'r'))["name"]
-    db = AtlasConnection().db
-    log = db.elsevier_log
-    elsevier = db.elsevier
+    user = json.load(open(config, "r"))["name"]
+
+        # json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
+
+    db = AtlasConnection(access="admin", db="test").db
+    log = db.build_log
+    build = db.build
 
     for i in range(num_blocks):
         # Verify access at start of each block to detect dropped VPN sessions.
@@ -536,15 +555,15 @@ def contribute(user_creds="matstract/atlas_creds.json", max_block_size=100, num_
         # Collect scopus for block
         print("Collecting entries for Block {}...".format(target["_id"]))
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
-        new_entries = collect_entries(dois, user)
+        new_entries = collect_entries(dois, user, entry_type="abstract")
 
         # Insert entries into Matstract database
         print("Inserting entries into Matstract database...")
         for entry in tqdm(new_entries):
-            if elsevier.find({"doi": entry["doi"]}).count():
-                elsevier.update_one({"doi": entry["doi"]}, {"$set": entry})
+            if build.find({"doi": entry["doi"]}).count():
+                build.update_one({"doi": entry["doi"]}, {"$set": entry})
             else:
-                elsevier.insert_one(entry)
+                build.insert_one(entry)
 
         # Mark block as completed in log
         date = datetime.datetime.now().isoformat()
