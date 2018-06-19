@@ -494,7 +494,7 @@ class MiniAbstract(object):
         self.title = entry.get('dc:title')
 
         # Authors of Article
-        authlist = entry["author"]
+        authlist = entry.get("author", [])
         authors = []
         for author in authlist:
             if author["surname"] is not None and author["given-name"] is not None:
