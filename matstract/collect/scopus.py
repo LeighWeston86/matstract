@@ -626,10 +626,9 @@ def collect_entries_by_doi_search(dois, user):
     entries = []
     miniblocks = [dois[x:x + 25] for x in range(0, len(dois), 25)]
 
-    for miniblock in miniblocks:
+    for miniblock in tqdm(miniblocks):
 
         query = " OR ".join(["DOI({})".format(doi) for doi in miniblock])
-        print(query)
         search = ElsSearch(query=query, index="scopus")
         search._uri = search.uri + "&view=COMPLETE"
         search.execute(els_client=CLIENT, get_all=True)
