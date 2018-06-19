@@ -58,13 +58,13 @@ def check_scopus_collection(year, issn):
 
 
 def build_scopus_query(year=None, issn=None):
-    """ Builds a query from a given year, volume, and letter (for author's 1st initial)
+    """ Builds a query from a given year and journal
 
     e.g.
 
-    build_query(1994) would return:
+    build_query(year=1994, issn="1234-5678") would return:
 
-    "SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR = 1994"
+    "SUBJAREA(MATE) AND DOCTYPE(ar) AND LANGUAGE(english) AND PUBYEAR =1994 AND ISSN(1234-5678) OR EISSN(1234-5678)"
 
     Args:
         year (str): year of publication
@@ -211,8 +211,11 @@ def clean_text(text):
         (str) Abstract text with formatting issues removed.
 
     """
+    if text is None:
+        return None
     try:
-        cleaned_text = re.sub("© ([0-9])\w* The Author\(s\)\. ", "", text)
+        cleaned_text = re.sub("© ([0-9])\w* The Author(s)*\.( )*", "", text)
+        cleaned_text = re.sub("Published by Elsevier Ltd\.", "", cleaned_text)
         cleaned_text = re.sub("\n                        ", "", cleaned_text)
         cleaned_text = re.sub("\n                     ", "", cleaned_text)
         cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
@@ -223,20 +226,37 @@ def clean_text(text):
 
 
 def format_authors(author_dict):
+    """ Reformats a dict of authors to a list"""
     authors = []
     for entry in author_dict:
         if not "ce:given-name" in entry:
-            entry["ce:given-name"] = entry['preferred-name']["ce:given-name"]
+            if entry['preferred-name']["ce:given-name"] is not None:
+                entry["ce:given-name"] = entry['preferred-name']["ce:given-name"]
+            else:
+                continue
+        if not "ce:surname" in entry:
+            if entry['preferred-name']["ce:surname"] is not None:
+                entry["ce:surname"] = entry['preferred-name']["ce:surname"]
+            else:
+                continue
         authors.append(entry["ce:surname"] + ", " + entry["ce:given-name"])
     return authors
 
 
 def format_terms(term_dict):
+    """ Extracts the keywords from term_dict to a list."""
+    if term_dict is None:
+        return None
+
     if term_dict:
         terms = []
         for entry in term_dict["mainterm"]:
-            terms.append(entry["$"])
+            if isinstance(entry, dict):
+                terms.append(entry["$"])
+            elif isinstance(entry, str):
+                terms.append(entry)
         return terms
+
 
 class ScopusArticle(object):
 
@@ -375,71 +395,149 @@ class ScopusAbstract(object):
         coredata = self.json["coredata"]
 
         # Scopus URL of article
-        self.scopus_url = coredata["prism:url"]
+        self.scopus_url = coredata.get("prism:url")
 
         # Scopus source_id of the article
-        self.scopus_id = coredata['dc:identifier']
+        self.scopus_id = coredata.get('dc:identifier')
 
         # DOI of article
-        self.doi = coredata['prism:doi']
+        self.doi = coredata.get('prism:doi')
 
         # URL of article
         url = "https://doi.org/"
         self.url = url + self.doi
 
         # EID of article
-        self.eid = coredata['eid']
+        self.eid = coredata.get('eid')
 
         # Title of article
-        self.title = coredata['dc:title']
+        self.title = coredata.get('dc:title')
 
         # Authors of Article
         self.authors = format_authors(response["authors"]["author"])
 
         # Journal Name
-        self.journal = coredata['prism:publicationName']
+        self.journal = coredata.get('prism:publicationName')
 
         # Date of publication
-        self.cover_date = coredata['prism:coverDate']
+        self.cover_date = coredata.get('prism:coverDate')
 
         # Journal ISSN (or EISSN, or both)
-        self.issn = coredata['prism:issn']
+        self.issn = coredata.get('prism:issn')
 
         # Volume that article appears in
-        self.volume = coredata['prism:volume'] if "prism:volume" in coredata else None
+        self.volume = coredata.get('prism:volume')
 
         # Issue that article appears in.
-        self.issue = coredata['prism:issueIdentifier'] if "prism:issueIdentifier" in coredata else None
+        self.issue = coredata.get('prism:issueIdentifier')
 
         # Article number
-        self.article_number = coredata['prism:number'] if "prism:number" in coredata else None
+        self.article_number = coredata.get('prism:number')
 
         # Page number of first page
-        self.first_page = coredata['prism:startingPage'] if 'prism:startingPage' in coredata else None
+        self.first_page = coredata.get('prism:startingPage')
 
         # Page number of last page
-        self.last_page = coredata['prism:endingPage'] if 'prism:endingPage' in coredata else None
+        self.last_page = coredata.get('prism:endingPage')
 
         # Page range of article
-        self.page_range = coredata['prism:pageRange'] if 'prism:pageRange' in coredata else None
+        self.page_range = coredata.get('prism:pageRange')
 
         # Format of Article
-        self.format = coredata['subtypeDescription']
+        self.format = coredata.get('subtypeDescription')
 
         # Subjects of article
-        self.subjects = format_terms(response['idxterms'])
+        self.subjects = format_terms(response.get('idxterms'))
 
         # Name of publisher
-        self.publisher = coredata['dc:publisher']
+        # Not Avaliable in Abstract Retrieval view
 
         # Name of issue
-        self.issue_name = coredata['prism:issueIdentifier']
+        self.issue_name = coredata.get('prism:issueIdentifier')
 
-        # Raw copy of abstract as returned by scopus
-        self.raw_abstract = coredata['dc:description'] if 'dc:description' in coredata else None
+        # Abstract
+        self.raw_abstract = coredata.get('dc:description')
+        self.abstract = clean_text(coredata.get('dc:description'))
 
-        # Cleaned abstract text
-        self.abstract = clean_text(coredata['dc:description']) if 'dc:description' in coredata else None
+
+class MiniAbstract(object):
+
+    def __init__(self, entry):
+        """
+        A class that represents a Scopus article.
+
+        Args:
+
+            input_doi: (str) DOI of article
+
+            refresh: (bool) Whether the article should be pulled from scopus or whether it should be
+                    pulled from the mongodb.
+        """
+
+        # Scopus URL of article
+        self.scopus_url = entry.get("prism:url")
+
+        # Scopus source_id of the article
+        self.scopus_id = entry.get('dc:identifier')
+
+        # DOI of article
+        self.doi = entry.get('prism:doi')
+
+        # URL of article
+        url = "https://doi.org/"
+        self.url = url + self.doi
+
+        # EID of article
+        self.eid = entry.get('eid')
+
+        # Title of article
+        self.title = entry.get('dc:title')
+
+        # Authors of Article
+        authlist = entry["author"]
+        authors = []
+        for author in authlist:
+            if author["surname"] is not None and author["given-name"] is not None:
+                authors.append(author["surname"] + ", " + author["given-name"])
+            elif author["authname"] is not None:
+                authors.append(author["authname"])
+            else:
+                continue
+        self.authors = authors
+
+        # Journal Name
+        self.journal = entry.get('prism:publicationName')
+
+        # Date of publication
+        self.cover_date = entry.get('prism:coverDate')
+
+        # Journal ISSN (or EISSN, or both)
+        self.issn = entry.get('prism:issn')
+
+        # Volume that article appears in
+        self.volume = entry.get('prism:volume')
+
+        # Issue that article appears in.
+        self.issue = entry.get('prism:issueIdentifier')
+
+        # Article number
+        self.article_number = entry.get('article-number')
+
+        # Number of Citations
+        self.citations = entry.get('citedby-count')
+
+        # Page range of article
+        self.page_range = entry.get('prism:pageRange')
+
+        # Format of Article
+        self.format = entry.get('subtypeDescription')
+
+        # Name of publisher
+        # Not Avaliable in Search Complete view
+
+        # Abstract
+        self.raw_abstract = entry.get('dc:description')
+        self.abstract = clean_text(entry.get('dc:description'))
 
 
 def verify_access():
@@ -512,6 +610,54 @@ def collect_entries(dois, user, entry_type="abstract"):
     return entries
 
 
+def collect_entries_by_doi_search(dois, user):
+    """ Collects the scopus entry for each DOI in dois and processes them for insertion into the Matstract database.
+
+    Args:
+        dois (list(str)): List of DOIs
+        user: (dict): Credentials of user
+        entry_type (str): "full_article" or "abstract". Default is "abstract"
+
+    Returns:
+        entries (list(dict)): List of entries to be inserted into database
+
+    """
+
+    entries = []
+    miniblocks = [dois[x:x + 25] for x in range(0, len(dois), 25)]
+
+    for miniblock in miniblocks:
+
+        query = " OR ".join(["DOI({})".format(doi) for doi in miniblock])
+        print(query)
+        search = ElsSearch(query=query, index="scopus")
+        search._uri = search.uri + "&view=COMPLETE"
+        search.execute(els_client=CLIENT, get_all=True)
+        results = search.results
+
+        for result in results:
+            date = datetime.datetime.now().isoformat()
+            doi = result['prism:doi']
+            try:
+                article = MiniAbstract(result)
+                abstract = article.abstract
+                raw_abstract = article.raw_abstract
+                if abstract is None or raw_abstract is None:
+                    entries.append({"doi": doi, "completed": False, "error": "No Abstract!",
+                                    "pulled_on": date, "pulled_by": user})
+                else:
+                    entries.append({"doi": doi, "title": article.title, "abstract": abstract,
+                                    "raw_abstract": raw_abstract, "authors": article.authors, "url": article.url,
+                                    "subjects": [], "journal": article.journal,
+                                    "date": article.cover_date, "citations": article.citations,
+                                    "completed": True, "pulled_on": date, "pulled_by": user})
+
+            except HTTPError as e:
+                entries.append({"doi": doi, "completed": False, "error": str(e),
+                                "pulled_on": date, "pulled_by": user})
+    return entries
+
+
 def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, num_blocks=1):
     """
     Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
@@ -523,9 +669,9 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         num_blocks ((:obj:`int`, optional)): maximum number of blocks to run in session. Defaults to 1.
 
     """
-    user = json.load(open(config, "r"))["name"]
+    # user = json.load(open(user_creds, "r"))["name"]
 
-        # json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
+    user = json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
 
     db = AtlasConnection(access="admin", db="test").db
     log = db.build_log
@@ -538,7 +684,7 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         # Get list of all available blocks sorted from largest to smallest.
         available_blocks = log.find({"status": "incomplete",
                                      "num_articles": {"$lt": max_block_size}},
-                                    ["year", "issn"]).limit(1).sort("num_articles", -1)
+                                    ["year", "issn", "journal"]).limit(1).sort("num_articles", -1)
 
         # Break if no remaining blocks smaller than max_block_size
         if available_blocks.count() == 0:
@@ -553,9 +699,16 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
         # Collect scopus for block
-        print("Collecting entries for Block {}...".format(target["_id"]))
+        if "journal" in target:
+            print("Collecting entries for {}, {} (Block ID {})...".format(target.get("journal"),
+                                                                          target.get("year"),
+                                                                          target.get("_id")))
+        else:
+            print("Collecting entries for {}, {} (Block ID {})...".format(target.get("issn"),
+                                                                          target.get("year"),
+                                                                          target.get("_id")))
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
-        new_entries = collect_entries(dois, user, entry_type="abstract")
+        new_entries = collect_entries_by_doi_search(dois, user)
 
         # Insert entries into Matstract database
         print("Inserting entries into Matstract database...")
