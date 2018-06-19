@@ -211,8 +211,11 @@ def clean_text(text):
         (str) Abstract text with formatting issues removed.
 
     """
+    if text is None:
+        return None
     try:
-        cleaned_text = re.sub("© ([0-9])\w* The Author\(s\)\. ", "", text)
+        cleaned_text = re.sub("© ([0-9])\w* The Author(s)*\.( )*", "", text)
+        cleaned_text = re.sub("Published by Elsevier Ltd\.",  "", cleaned_text)
         cleaned_text = re.sub("\n                        ", "", cleaned_text)
         cleaned_text = re.sub("\n                     ", "", cleaned_text)
         cleaned_text = " ".join("".join(cleaned_text.split("\n               ")).split())
@@ -223,20 +226,37 @@ def clean_text(text):
 
 
 def format_authors(author_dict):
+    """ Reformats a dict of authors to a list"""
     authors = []
     for entry in author_dict:
         if not "ce:given-name" in entry:
-            entry["ce:given-name"] = entry['preferred-name']["ce:given-name"]
+            if entry['preferred-name']["ce:given-name"] is not None:
+                entry["ce:given-name"] = entry['preferred-name']["ce:given-name"]
+            else:
+                continue
+        if not "ce:surname" in entry:
+            if entry['preferred-name']["ce:surname"] is not None:
+                entry["ce:surname"] = entry['preferred-name']["ce:surname"]
+            else:
+                continue
         authors.append(entry["ce:surname"] + ", " + entry["ce:given-name"])
     return authors
 
 
 def format_terms(term_dict):
+    """ Extracts the keywords from term_dict to a list."""
+    if term_dict is None:
+        return None
+
     if term_dict:
         terms = []
         for entry in term_dict["mainterm"]:
-            terms.append(entry["$"])
+            if isinstance(entry, dict):
+                terms.append(entry["$"])
+            elif isinstance(entry, str):
+                terms.append(entry)
         return terms
+
 
 class ScopusArticle(object):
 
@@ -375,71 +395,70 @@ class ScopusAbstract(object):
         coredata = self.json["coredata"]
 
         # Scopus URL of article
-        self.scopus_url = coredata["prism:url"]
+        self.scopus_url = coredata.get("prism:url")
 
         # Scopus source_id of the article
-        self.scopus_id = coredata['dc:identifier']
+        self.scopus_id = coredata.get('dc:identifier')
 
         # DOI of article
-        self.doi = coredata['prism:doi']
+        self.doi = coredata.get('prism:doi')
 
         # URL of article
         url = "https://doi.org/"
         self.url = url + self.doi
 
         # EID of article
-        self.eid = coredata['eid']
+        self.eid = coredata.get('eid')
 
         # Title of article
-        self.title = coredata['dc:title']
+        self.title = coredata.get('dc:title')
 
         # Authors of Article
         self.authors = format_authors(response["authors"]["author"])
 
         # Journal Name
-        self.journal = coredata['prism:publicationName']
+        self.journal = coredata.get('prism:publicationName')
 
         # Date of publication
-        self.cover_date = coredata['prism:coverDate']
+        self.cover_date = coredata.get('prism:coverDate')
 
         # Journal ISSN (or EISSN, or both)
-        self.issn = coredata['prism:issn']
+        self.issn = coredata.get('prism:issn')
 
         # Volume that article appears in
-        self.volume = coredata['prism:volume'] if "prism:volume" in coredata else None
+        self.volume = coredata.get('prism:volume')
 
         # Issue that article appears in.
-        self.issue = coredata['prism:issueIdentifier'] if "prism:issueIdentifier" in coredata else None
+        self.issue = coredata.get('prism:issueIdentifier')
 
         # Article number
-        self.article_number = coredata['prism:number'] if "prism:number" in coredata else None
+        self.article_number = coredata.get('prism:number')
+
 
         # Page number of first page
-        self.first_page = coredata['prism:startingPage'] if 'prism:startingPage' in coredata else None
+        self.first_page = coredata.get('prism:startingPage')
 
         # Page number of last page
-        self.last_page = coredata['prism:endingPage'] if 'prism:endingPage' in coredata else None
+        self.last_page = coredata.get('prism:endingPage')
 
         # Page range of article
-        self.page_range = coredata['prism:pageRange'] if 'prism:pageRange' in coredata else None
+        self.page_range = coredata.get('prism:pageRange')
 
         # Format of Article
-        self.format = coredata['subtypeDescription']
+        self.format = coredata.get('subtypeDescription')
 
         # Subjects of article
-        self.subjects = format_terms(response['idxterms'])
+        self.subjects = format_terms(response.get('idxterms'))
 
         # Name of publisher
-        self.publisher = coredata['dc:publisher']
+        # Not Avaliable in Abstract Retrieval view
 
         # Name of issue
-        self.issue_name = coredata['prism:issueIdentifier']
+        self.issue_name = coredata.get('prism:issueIdentifier')
 
-        # Raw copy of abstract as returned by scopus
-        self.raw_abstract = coredata['dc:description'] if 'dc:description' in coredata else None
-
-        # Cleaned abstract text
-        self.abstract = clean_text(coredata['dc:description']) if 'dc:description' in coredata else None
+        # Abstract
+        self.raw_abstract = coredata.get('dc:description')
+        self.abstract = clean_text(coredata.get('dc:description'))
 
 
 def verify_access():
@@ -523,9 +542,9 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         num_blocks ((:obj:`int`, optional)): maximum number of blocks to run in session. Defaults to 1.
 
     """
-    user = json.load(open(config, "r"))["name"]
+    # user = json.load(open(user_creds, "r"))["name"]
 
-        # json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
+    user = json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
 
     db = AtlasConnection(access="admin", db="test").db
     log = db.build_log
@@ -553,7 +572,9 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
         # Collect scopus for block
-        print("Collecting entries for Block {}...".format(target["_id"]))
+        print("Collecting entries for {}, {} (Block ID {})...".format(target.get("journal"),
+                                                                     target.get("year"),
+                                                                     target.get("_id")))
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
         new_entries = collect_entries(dois, user, entry_type="abstract")
 
