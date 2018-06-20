@@ -714,6 +714,11 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         dois = find_articles(year=target["year"], issn=target["issn"], get_all=True, apikey=apikey)
         new_entries = collect_entries_by_doi_search(dois, user, apikey=apikey)
 
+        # Update log with number of articles for block
+        num_articles = len(new_entries)
+        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
+                       {"$set": {"num_articles": num_articles}})
+
         # Insert entries into Matstract database
         print("Inserting entries into Matstract database...")
         for entry in tqdm(new_entries):
@@ -726,4 +731,4 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         date = datetime.datetime.now().isoformat()
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
                        {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
-                                 "updated_by": user, "updated_on": date}})
+                                 "updated_by": user, "updated_on": date, }})
