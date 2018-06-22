@@ -81,7 +81,7 @@ def build_scopus_query(year=None, issn=None):
     return base + y + i
 
 
-def find_articles(year=None, issn=None, get_all=True, id_type="doi"):
+def find_articles(year=None, issn=None, get_all=True, id_type="doi", apikey=None):
     """
     Returns a list of the DOI's for all articles published in the specified year and journal.
 
@@ -97,6 +97,8 @@ def find_articles(year=None, issn=None, get_all=True, id_type="doi"):
     """
 
     query = build_scopus_query(year=year, issn=issn)
+    if apikey:
+        CLIENT = ElsClient(apikey, num_res=10000)
     search = ElsSearch(query, index='scopus', )
     search.execute(els_client=CLIENT, get_all=get_all)
     if id_type == "doi":
@@ -610,7 +612,7 @@ def collect_entries(dois, user, entry_type="abstract"):
     return entries
 
 
-def collect_entries_by_doi_search(dois, user):
+def collect_entries_by_doi_search(dois, user, apikey=None):
     """ Collects the scopus entry for each DOI in dois and processes them for insertion into the Matstract database.
 
     Args:
@@ -631,6 +633,9 @@ def collect_entries_by_doi_search(dois, user):
         query = " OR ".join(["DOI({})".format(doi) for doi in miniblock])
         search = ElsSearch(query=query, index="scopus")
         search._uri = search.uri + "&view=COMPLETE"
+        if apikey:
+            CLIENT = ElsClient(apikey, num_res=10000)
+
         search.execute(els_client=CLIENT, get_all=True)
         results = search.results
 
@@ -657,7 +662,7 @@ def collect_entries_by_doi_search(dois, user):
     return entries
 
 
-def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, num_blocks=1):
+def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, num_blocks=1, apikey=None):
     """
     Gets a incomplete year/journal combination from elsevier_log, queries for the corresponding
     dois, and downloads the corresponding xmls for each to the elsevier collection.
@@ -706,8 +711,13 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
             print("Collecting entries for {}, {} (Block ID {})...".format(target.get("issn"),
                                                                           target.get("year"),
                                                                           target.get("_id")))
-        dois = find_articles(year=target["year"], issn=target["issn"], get_all=True)
-        new_entries = collect_entries_by_doi_search(dois, user)
+        dois = find_articles(year=target["year"], issn=target["issn"], get_all=True, apikey=apikey)
+        new_entries = collect_entries_by_doi_search(dois, user, apikey=apikey)
+
+        # Update log with number of articles for block
+        num_articles = len(new_entries)
+        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
+                       {"$set": {"num_articles": num_articles}})
 
         # Insert entries into Matstract database
         print("Inserting entries into Matstract database...")
@@ -721,4 +731,4 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         date = datetime.datetime.now().isoformat()
         log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
                        {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
-                                 "updated_by": user, "updated_on": date}})
+                                 "updated_by": user, "updated_on": date, }})
