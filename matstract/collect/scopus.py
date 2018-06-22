@@ -676,7 +676,7 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
 
     user = json.load(open(user_creds, 'r'))["scopus"]["name"]
 
-    db = AtlasConnection(access="read_only", db="test").db
+    db = AtlasConnection(access="admin", db="test").db
     log = db.build_log
     build = db.build
 
