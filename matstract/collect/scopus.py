@@ -624,12 +624,13 @@ def collect_entries_by_doi_search(dois, user, apikey=None):
         entries (list(dict)): List of entries to be inserted into database
 
     """
-
+    db = AtlasConnection.db
     entries = []
     miniblocks = [dois[x:x + 25] for x in range(0, len(dois), 25)]
 
     for miniblock in tqdm(miniblocks):
-
+        if db.build.find({"doi":{"$in":miniblock}}).count() == len(miniblock):
+            pass
         query = " OR ".join(["DOI({})".format(doi) for doi in miniblock])
         search = ElsSearch(query=query, index="scopus")
         search._uri = search.uri + "&view=COMPLETE"
