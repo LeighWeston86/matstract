@@ -20,11 +20,11 @@ class EmbeddingEngine:
         ds = np.DataSource()
 
         # loading pre-trained embeddings and the dictionary
-        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.wv.vectors.npy"
+        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.wv.vectors_float16.npy"
         ds.open(embeddings_url)
         self.embeddings = np.load(ds.abspath(embeddings_url))
 
-        out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.trainables.syn1neg.npy"
+        out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.trainables.syn1neg_float16.npy"
         ds.open(out_embeddings_url)
         self.out_embeddings = np.load(ds.abspath(out_embeddings_url))
         dict_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_phrases_matnorm_keepformula_sg_w8_n10_a001_pc20.tsv"

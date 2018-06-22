@@ -313,9 +313,16 @@ class DataPreparation:
         elif any(char.isdigit() or char.islower() for char in text):
             # has to contain at least one lowercase letter or at least one number (to ignore abbreviations)
             try:
+                if text in ["O2", "N2", "Cl2", "F2", "H2"]:
+                    # including chemical elements that are diatomic at room temperature and atm pressure,
+                    # despite them having only a single element
+                    return True
                 composition = Composition(text)
                 # has to contain more than one element
                 if len(composition.keys()) < 2 or any([not self.simple_parser.is_element(key) for key in composition.keys()]):
+                    return False
+                # if the simple parser passes, try the more advanced one to catch more mistakes
+                if any([not self.simple_parser.is_element(key) for key in self.parser.parse_formula(text).keys()]):
                     return False
                 return True
             except Exception:

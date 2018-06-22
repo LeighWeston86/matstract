@@ -25,7 +25,7 @@ namespaces = {'dtd': 'http://www.elsevier.com/xml/svapi/abstract/dtd',
               'opensearch': 'http://a9.com/-/spec/opensearch/1.1/',
               'ani': 'http://www.elsevier.com/xml/ani/common'}
 
-config = json.load(open('matstract/collect/scopus_config.json', 'r'))
+config = json.load(open('matstract/config/db_creds.json', 'r'))["scopus"]
 APIKEY = config["apikey"]
 
 ## Initialize client
@@ -673,9 +673,8 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
         num_blocks ((:obj:`int`, optional)): maximum number of blocks to run in session. Defaults to 1.
 
     """
-    # user = json.load(open(user_creds, "r"))["name"]
 
-    user = json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
+    user = json.load(open(user_creds, 'r'))["scopus"]["name"]
 
     db = AtlasConnection(access="admin", db="test").db
     log = db.build_log
@@ -699,7 +698,7 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
 
         target = available_blocks[0]
         date = datetime.datetime.now().isoformat()
-        log.update_one({"year": target["year"], "issn": target["issn"], "status": "incomplete"},
+        log.update_one({"_id": target["_id"]},
                        {"$set": {"status": "in progress", "updated_by": user, "updated_on": date}})
 
         # Collect scopus for block
@@ -716,19 +715,16 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
 
         # Update log with number of articles for block
         num_articles = len(new_entries)
-        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
+        log.update_one({"_id": target["_id"]},
                        {"$set": {"num_articles": num_articles}})
 
         # Insert entries into Matstract database
         print("Inserting entries into Matstract database...")
         for entry in tqdm(new_entries):
-            if build.find({"doi": entry["doi"]}).count():
-                build.update_one({"doi": entry["doi"]}, {"$set": entry})
-            else:
-                build.insert_one(entry)
+            build.replace_one({"doi": entry["doi"]}, entry, upsert=True)
 
         # Mark block as completed in log
         date = datetime.datetime.now().isoformat()
-        log.update_one({"year": target["year"], "issn": target["issn"], "status": "in progress"},
+        log.update_one({"_id": target["_id"]},
                        {"$set": {"status": "complete", "completed_by": user, "completed_on": date,
-                                 "updated_by": user, "updated_on": date, }})
+                                 "updated_by": user, "updated_on": date}})
