@@ -25,7 +25,7 @@ namespaces = {'dtd': 'http://www.elsevier.com/xml/svapi/abstract/dtd',
               'opensearch': 'http://a9.com/-/spec/opensearch/1.1/',
               'ani': 'http://www.elsevier.com/xml/ani/common'}
 
-config = json.load(open('matstract/collect/scopus_config.json', 'r'))
+config = json.load(open('matstract/config/db_creds.json', 'r'))["scopus"]
 APIKEY = config["apikey"]
 
 ## Initialize client
@@ -672,7 +672,7 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
 
     user = json.load(open(user_creds, 'r'))["mongo"]["admin"]["test"]["name"]
 
-    db = AtlasConnection(access="admin", db="test").db
+    db = AtlasConnection(access="admin", db="production").db
     log = db.build_log
     build = db.build
 

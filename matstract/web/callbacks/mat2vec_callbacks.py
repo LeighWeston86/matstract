@@ -59,6 +59,7 @@ def bind(app):
                 diff_vec = pos_2_vec + pos_1_vec - neg_1_vec
                 norm_diff = diff_vec / np.linalg.norm(diff_vec, axis=0)  # unit length
                 close_words = ee.close_words(norm_diff, exclude_self=False)[0]
+                print(close_words)
                 for close_word in close_words:
                     if close_word not in [pos_1[0], neg_1[0], pos_2[0]]:
                         return close_word.replace("_", " ")
