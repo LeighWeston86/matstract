@@ -630,7 +630,7 @@ def collect_entries_by_doi_search(dois, user, apikey=None):
 
     for miniblock in tqdm(miniblocks):
         if db.build.find({"doi":{"$in":miniblock}}).count() == len(miniblock):
-            pass
+            continue
         query = " OR ".join(["DOI({})".format(doi) for doi in miniblock])
         search = ElsSearch(query=query, index="scopus")
         search._uri = search.uri + "&view=COMPLETE"
