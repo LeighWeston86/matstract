@@ -147,7 +147,9 @@ def serve_layout(path):
             html.Label(id='number_results'),
             html.Table(id='table-element')
         ], className='row', style={"overflow": "ellipsis"}, id="search_results"),
-
+        html.Div([html.Footer("Attribution Notice: This data was downloaded from the Scopus API between January-July\
+         2018 via https://api.elsevier.com and https://www.scopus.com.",
+                              style={"color":"grey", "text-align":"center", "font-size":"10pt"})]),
         html.Div([
             dcc.Textarea(id='linked_search_box',
                          value=path),
