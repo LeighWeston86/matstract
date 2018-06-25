@@ -1,7 +1,8 @@
 {
   "scopus": {
     "name": "First Last",
-    "apikey": "<<TEXT MINING API KEY>>"
+    "apikey": "<<TEXT MINING API KEY>>",
+    "insttoken": null
   },
   "mongo": {
     "admin": {
