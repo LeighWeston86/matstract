@@ -8,6 +8,7 @@ from elsapy.elssearch import ElsSearch
 import datetime
 from tqdm import tqdm
 import re
+import time
 
 # Namespaces for Scopus XML
 namespaces = {'dtd': 'http://www.elsevier.com/xml/svapi/abstract/dtd',
@@ -624,7 +625,7 @@ def collect_entries_by_doi_search(dois, user, apikey=None):
         entries (list(dict)): List of entries to be inserted into database
 
     """
-    db = AtlasConnection().db
+    db = AtlasConnection(db="test").db
     entries = []
     miniblocks = [dois[x:x + 25] for x in range(0, len(dois), 25)]
 
@@ -682,6 +683,7 @@ def contribute(user_creds="matstract/config/db_creds.json", max_block_size=100, 
     build = db.build
 
     for i in range(num_blocks):
+        time.sleep(3)  # to make sure we don't send more than 6 request / second on 16 cores (3 > 16/6)
         # Verify access at start of each block to detect dropped VPN sessions.
         verify_access()
 
