@@ -68,3 +68,88 @@ a {
 #matsearch_input, #matsearch_negative_input {
     width: 170px;
 }
+
+
+/* For the new front page */
+
+h4.headline {
+    color: #128E91;
+    font-size: 21pt;
+}
+
+.button-search {
+    background-color: #16ADAF;
+    border-color: #16ADAF;
+    color: white;
+}
+
+.button-search:hover {
+    background-color: #128E91;
+    border-color: #128E91;
+    color: white;
+}
+
+input.filter-value {
+    width: 200px;
+    height: 36px;
+}
+
+
+.remove-filter {
+    line-height: 34px;
+    height: 36px;
+    padding: 0px 15px;
+    text-transform: none;
+}
+
+/* maximum 6 filters */
+#filter_type_0 {
+    display: inline-grid;
+    width: 200px;
+    margin: 0px 10px;
+}
+
+#filter_type_1 {
+    display: inline-grid;
+    width: 160px;
+    margin: 0px 10px;
+}
+
+#filter_type_2 {
+    display: inline-grid;
+    width: 160px;
+    margin: 0px 10px;
+}
+
+#filter_type_3 {
+    display: inline-grid;
+    width: 160px;
+    margin: 0px 10px;
+}
+
+#filter_type_4 {
+    display: inline-grid;
+    width: 160px;
+    margin: 0px 10px;
+}
+
+#filter_type_5 {
+    display: inline-grid;
+    width: 160px;
+    margin: 0px 10px;
+}
+
+.search-filters .Select-value {
+    background-color: #ceeaea;
+    color: black;
+}
+
+#nav_bar a {
+    color: #16ADAF;
+}
+
+#nav_bar a:hover {
+    color: #128E91;
+}
+
+
