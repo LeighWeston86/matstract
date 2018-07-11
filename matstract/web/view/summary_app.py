@@ -98,7 +98,10 @@ def get_entities(mat, class_name="three columns"):
         pro = [pro_dict[p] for pp in pro for p in pp if len(p) > 2 and p in pro_dict.keys()]
         pro = nltk.FreqDist(pro).most_common(20)
         apl = [apl_dict[p] for pp in apl for p in pp if len(p) > 2 and p in apl_dict.keys()]
-        apl = nltk.FreqDist(apl).most_common(10)
+        apl = nltk.FreqDist(apl).most_common(12)
+        print(apl)
+        apl = [(a, score) for a, score in apl if a not in ['coating', 'electrode']]
+        print(apl)
         spl = [p for pp in spl for p in pp if len(p) > 2]
         spl = nltk.FreqDist(spl).most_common(3)
         smt = [smt_dict[p] for pp in smt for p in pp if len(p) > 2 and p in smt_dict.keys()]
