@@ -6,20 +6,24 @@ from collections import Iterable
 class MatstractSearch:
     """The class running all search queries"""
 
+    VALID_FILTERS = ["material", "property", "application", "descriptor", "characterization", "synthesis", "phase"]
+
     def __init__(self, local=False):
         self._ac = AtlasConnection(db="production", local=local)
         self._ec = ElasticConnection()
         self.filters = []
 
-    def search(self, text='', materials=(), max_results=1000):
+    def search(self, text=None, materials=None, max_results=1000):
         if materials is not None:
             max_results = 10000
         print("searching for {} and {}".format(text, materials))
         pipeline = list()
         if materials:
-            self.material_filter = MaterialFilter(materials)
-            for cond in self.material_filter.conditions:
-                pipeline.append(cond)
+            for material in materials:
+                if material is not None:
+                    material_filter = MaterialFilter(material.split(","))
+                    for cond in material_filter.conditions:
+                        pipeline.append(cond)
             pipeline.append({"$lookup": {
                 "from": "abstracts",
                 "localField": "doi",
@@ -38,15 +42,18 @@ class MatstractSearch:
                 "link": "$abstracts.link",
                 "chem_mentions": "$unique_mats"}})
             pipeline.append({"$project": {"abstracts": 0}})
-            pipeline.append({ "$limit": max_results})
+            pipeline.append({"$limit": max_results})
         if text:
             ids = self._ec.query(text, max_results=max_results)
-            self.document_filter = DocumentFilter(ids)
+            document_filter = DocumentFilter(ids)
             if not materials or not len(materials):
                 return self._ac.get_documents_by_id(ids)
-            for cond in self.document_filter.conditions:
+            for cond in document_filter.conditions:
                 pipeline.append(cond)
-        return self._ac.db.mats_.aggregate(pipeline)
+        if len(pipeline) > 0:
+            return self._ac.db.mats_.aggregate(pipeline)
+        else:
+            return []
 
     def more_like_this(self, text='', materials=(), max_results=100):
         if text is None or text == '':
@@ -80,23 +87,31 @@ class MaterialFilter(Filter):
         parser = parsing.SimpleParser()
         conditions = []
         if materials is not None:
-            materials = materials.split()
-            include = list()
-            exclude = list()
+            include = set()
+            exclude = set()
             for material in materials:
                 if material[-1] == ",":
                     material = material[0:-1]
                 if material[0] == "-":
                     material = material[1::]
                     parsed = parser.parse(material)
-                    exclude.append(parsed if parsed else material)
+                    exclude.add(parsed if parsed else material)
                 else:
                     parsed = parser.parse(material)
-                    include.append(parsed if parsed else material)
-            if len(include):
-                conditions.append({"$match": {"unique_mats": {"$in": include}}})
-            if len(exclude):
-                conditions.append({"$match": {"unique_mats": {"$nin": exclude}}})
+                    include.add(parsed if parsed else material)
+            if len(include) and len(exclude):
+                conditions.append({
+                    "$match": {
+                        "unique_mats": {
+                            "$or": {
+                                {"$in": list(include)}, {"$nin": list(exclude)}
+                            }
+                        }
+                    }})
+            elif len(include):
+                conditions.append({"$match": {"unique_mats": {"$in": list(include)}}})
+            elif len(exclude):
+                conditions.append({"$match": {"unique_mats": {"$nin": list(exclude)}}})
         super().__init__(conditions)
 
 

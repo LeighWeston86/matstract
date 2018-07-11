@@ -4,7 +4,6 @@ from matstract.models.database import AtlasConnection
 
 db = AtlasConnection().db
 
-
 def bind(app, cache):
     @cache.memoize(timeout=600)
     @app.callback(

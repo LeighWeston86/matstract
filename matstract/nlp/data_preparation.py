@@ -10,6 +10,7 @@ import string
 import pickle
 from pymatgen.core.composition import Composition
 from monty.fractions import gcd_float
+from multiprocessing import Pool
 
 
 class DataPreparation:
@@ -41,7 +42,7 @@ class DataPreparation:
              'Wm−1K−1', 'Wm−1K−1', 'kWh', 'Wkg−1', 'Jm−3', 'm-3', 'gl−1', 'A−1',
              'Ks−1', 'mgdm−3', 'mms−1', 'ks', 'appm', 'ºC', 'HV', 'kDa', 'Da', 'kG',
              'kGy', 'MGy', 'Gy', 'mGy', 'Gbps', 'μB', 'μL', 'μF', 'nF', 'pF', 'mF',
-             'A', 'Å', 'A˚']
+             'A', 'Å', 'A˚', "μgL−1"]
 
     ELEMENTS = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K',
                 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
@@ -114,7 +115,7 @@ class DataPreparation:
         :return: a 2d list of words from the abstract / titles, with each abstract on a separate line
         """
         abstracts = self._get_abstracts(limit=limit, col=self.TOK_ABSTRACT_COL, doi=doi)
-        txt = ""
+        # txt = ""
         if line_per_abstract:
             nl_tok = ""
         elif newlines:
@@ -126,32 +127,44 @@ class DataPreparation:
             total = abstracts.count()
         except:
             total = None
-        for abstract in tqdm(abstracts, total=total):
-            # print("processing abstract {}".format(i), end="\r")
-            ttl = abstract[self.TTL_FILED]
-            abs = abstract[self.ABS_FIELD]
-            if ttl is not None and abs is not None:
-                if not only_relevant or self.is_relevant(abs):
-                    for sentence in ttl:
-                        txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
-                    for sentence in abs:
-                        txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
-                    if line_per_abstract:
-                        txt += "\n"
-        text = txt
+        with open("abstracts.txt", "w+") as abstract_file:
+            for abstract in tqdm(abstracts, total=total):
+                abs_txt = ""
+                # print("processing abstract {}".format(i), end="\r")
+                ttl = abstract[self.TTL_FILED]
+                abs = abstract[self.ABS_FIELD]
+                if ttl is not None and abs is not None:
+                    if not only_relevant or self.is_relevant(abs):
+                        processed_ttl = []
+                        for sentence in ttl:
+                            processed_sentence = self.process_sentence(sentence, exclude_punct)[0]
+                            processed_ttl.append(processed_sentence)
+                            abs_txt += " ".join(processed_sentence + [nl_tok])
+                        processed_abs = []
+                        for sentence in abs:
+                            processed_sentence = self.process_sentence(sentence, exclude_punct)[0]
+                            processed_abs.append(processed_sentence)
+                            abs_txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
+                        if line_per_abstract:
+                            abs_txt += "\n"
+                # abstract_file.write(abs_txt)
+                        self._db.abstract_tokens_processed.insert_one(
+                            {"doi": abstract["doi"], "title": processed_ttl, "abstract": processed_abs})
 
-        if filepath is None:
-            zip_path = os.getcwd()
-        else:
-            zip_path = filepath
-        filename = "abstracts.zip"
+        # text = txt
 
-        print("%s created at %s" % (filename, zip_path))
-        zf = zipfile.ZipFile(os.path.join(zip_path, "abstracts.zip"), "w")
-        zf.writestr("/abstracts", text)
+        # if filepath is None:
+        #     zip_path = os.getcwd()
+        # else:
+        #     zip_path = filepath
+        # filename = "abstracts.zip"
+
+        # print("%s created at %s" % (filename, zip_path))
+        # zf = zipfile.ZipFile(os.path.join(zip_path, "abstracts.zip"), "w")
+        # zf.writestr("/abstracts", text)
         DataPreparation.save_obj(self.material_counts(), "formula")
-        zf.write("formula.pkl")
-        os.remove("formula.pkl")
+        # zf.write("formula.pkl")
+        # os.remove("formula.pkl")
 
     def tokenize_abstracts(self, limit=None, override=False):
         def tokenize(text):
@@ -182,6 +195,7 @@ class DataPreparation:
                         self.DOI_FIELD: a[self.DOI_FIELD],
                         self.TTL_FILED: tokenize(a[self.TTL_FILED]),
                         self.ABS_FIELD: tokenize(a[self.ABS_FIELD]),
+                        "abstract_id": a["_id"],
                     }
                 except Exception as e:
                     print("Exception type: %s, doi: %s" % (type(e).__name__, a[self.DOI_FIELD]))
@@ -189,6 +203,7 @@ class DataPreparation:
                         self.DOI_FIELD: a[self.DOI_FIELD],
                         self.TTL_FILED: None,
                         self.ABS_FIELD: None,
+                        "abstract_id": a["_id"],
                         "error": "%s: %s " % (type(e).__name__, str(e))
                     }
                 if override:
@@ -207,9 +222,9 @@ class DataPreparation:
         # tokenize and insert into the new collection (doi as unique key)
         for abstract in tqdm(abstracts, total=count):
             insert_abstract(abstract)
-
-        # # with Pool() as p:
-        # list(tqdm(parmap(insert_abstract, abstracts), total=count))
+        #
+        # with Pool() as p:
+        #     list(tqdm(p.imap(insert_abstract, abstracts), total=count))
 
     def _get_abstracts(self, limit=None, col=None, doi=None):
         """

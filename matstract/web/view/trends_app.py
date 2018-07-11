@@ -3,10 +3,15 @@ import dash_core_components as dcc
 import operator
 from matstract.models.search import MatstractSearch
 import plotly.graph_objs as go
+import regex
+from matstract.models.word_embeddings import number_to_substring
+from matstract.web.view import trends_app
 
 
 def generate_trends_graph(search=None, material=None, layout=None):
     MS = MatstractSearch()
+    if material is not None:
+        material = [material]
     results = list(MS.search(search, material, max_results=10000))
     hist = dict()
     if len(results) > 0:
@@ -25,12 +30,35 @@ def generate_trends_graph(search=None, material=None, layout=None):
         histdata = sorted(histdata.items(), key=operator.itemgetter(0))
         hist["data"] = [{
             'x': [x[0] for x in histdata],
-            'y': [x[1] for x in histdata]}]
+            'y': [x[1] for x in histdata],
+            'line': {"width": 2, "color": 'rgb(0, 0, 0)'}
+        }]
     else:
-        hist["data"] = [{'x': [], 'y': []}]
+        hist["data"] = [{'x': [], 'y': [], 'line' : {"width": 2, "color": 'rgb(0, 0, 0)'}}]
     if layout is not None:
         hist["layout"] = layout
     return hist
+
+
+def display_trends_graph(material):
+    layout = {"height": 300,
+              "showlegend": False,
+              "margin": dict(l=60, r=40, t=10, b=40),
+              "xaxis": dict(
+                  title="Year",
+              ),
+              "yaxis": dict(
+                  title="Number of Publications"
+              )}
+    fig = trends_app.generate_trends_graph(
+        material=material,
+        layout=layout)
+    fig["mode"] = "histogram"
+    graph = dcc.Graph(
+        id='material_trend',
+        figure=fig,
+    )
+    return graph
 
 
 figure = {"data": [{
