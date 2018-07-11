@@ -5,6 +5,7 @@ from matstract.models.search import MatstractSearch
 import plotly.graph_objs as go
 import regex
 from matstract.models.word_embeddings import number_to_substring
+from matstract.models.database import AtlasConnection
 from matstract.web.view import trends_app
 
 
