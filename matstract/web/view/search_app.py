@@ -64,8 +64,8 @@ def sort_df(test_df, materials):
     return test_df
 
 
-def generate_nr_results(n, search=None, material=None):
-    if material or search:
+def generate_nr_results(n, search=None, material=None, filters=None):
+    if material or search or filters:
         if n == 0:
             return "No Results"
         elif n == 1000:
@@ -94,7 +94,7 @@ def generate_table(search=None, materials=None, filters=None,
         format_authors = lambda author_list: ", ".join(author_list)
         df['authors'] = df['authors'].apply(format_authors)
         hm = highlight_material
-        return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"), html.Table(
+        return [html.Label(generate_nr_results(len(results), search, materials, filters), id="number_results"), html.Table(
             # Header
             [html.Tr([html.Th(col) for col in columns])] +
             # Body
@@ -106,7 +106,7 @@ def generate_table(search=None, materials=None, filters=None,
                 else html.Td(df.iloc[i][col]) for col in columns])
                 for i in range(min(len(df), max_rows))],
             id="table-element")]
-    return [html.Label(generate_nr_results(len(results), search, materials), id="number_results"),
+    return [html.Label(generate_nr_results(len(results), search, materials, filters), id="number_results"),
             html.Table(id="table-element")]
 
 
