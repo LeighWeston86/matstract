@@ -76,11 +76,11 @@ def generate_nr_results(n, search=None, material=None):
         return ''
 
 
-def generate_table(search=None, materials=None,
+def generate_table(search=None, materials=None, filters=None,
                    columns=('title', 'authors', 'year', 'journal', 'abstract'),
                    max_rows=100):
     MS = MatstractSearch()
-    results = list(MS.search(search, materials))
+    results = list(MS.search(search, materials=materials, filters=filters))
     if results is not None:
         print("{} search results".format(len(results)))
     if materials:

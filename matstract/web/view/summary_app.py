@@ -74,8 +74,8 @@ def get_entities(mat, class_name="three columns"):
     material = parser.matgen_parser(mat)
 
     # Open connection and get NEs associated with the material
-    db = AtlasConnection(db="test").db
-    dois = db.mats_.find({'unique_mats': material}).distinct('doi')
+    db = AtlasConnection(db="production").db
+    dois = db.ne_071018.find({'MAT': material}).distinct('doi')
     entities = list(db.ne_071018.find({'doi': {'$in': dois}}))
     num_entities = len(entities)
 
@@ -99,9 +99,7 @@ def get_entities(mat, class_name="three columns"):
         pro = nltk.FreqDist(pro).most_common(20)
         apl = [apl_dict[p] for pp in apl for p in pp if len(p) > 2 and p in apl_dict.keys()]
         apl = nltk.FreqDist(apl).most_common(12)
-        print(apl)
         apl = [(a, score) for a, score in apl if a not in ['coating', 'electrode']]
-        print(apl)
         spl = [p for pp in spl for p in pp if len(p) > 2]
         spl = nltk.FreqDist(spl).most_common(3)
         smt = [smt_dict[p] for pp in smt for p in pp if len(p) > 2 and p in smt_dict.keys()]

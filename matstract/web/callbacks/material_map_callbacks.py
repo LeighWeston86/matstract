@@ -1,6 +1,6 @@
 from dash.dependencies import Input, Output, State
 import numpy as np
-from matstract.web.view.material_map_app import ee, embs, fig, x, y, most_common_forms, formula_emb_indices
+from matstract.web.view.material_map_app import ee, embs, fig, x, y, formulas, formula_emb_indices
 import plotly.graph_objs as go
 
 
@@ -29,7 +29,7 @@ def bind(app):
                 y=y,
                 x=x,
                 mode='markers',
-                text=most_common_forms,
+                text=formulas,
                 marker=dict(
                     size=5,
                     color=similarities.ravel(),
