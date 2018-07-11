@@ -50,7 +50,7 @@ class MatstractSearch:
                 "link": "$abstracts.link",
                 "chem_mentions": "$unique_mats"}})
             pipeline.append({"$project": {"abstracts": 0}})
-        elif materials:
+        elif materials:  # if filters are supplied don't look at materials
             for material in materials:
                 if material is not None:
                     material_filter = MaterialFilter(material.split(","))
@@ -78,8 +78,8 @@ class MatstractSearch:
             results = self._ac.db.ne_071018.aggregate(pipeline)
             ids = [str(entry["_id"]) for entry in results]
         else:
-            ids = []
-        if text:
+            ids = None
+        if text and (ids is None or len(ids) > 0):
             ids = self._ec.query(text, ids=ids, max_results=max_results)
         return self._ac.get_documents_by_id(ids)
 

@@ -129,7 +129,7 @@ class ElasticConnection(Elasticsearch):
         if text is None:
             return None
         else:
-            if isinstance(ids, CommandCursor):
+            if ids is not None and isinstance(ids, CommandCursor):
                 ids = list(ids)
             if len(ids):
                 query = {
