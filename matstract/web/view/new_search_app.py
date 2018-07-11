@@ -26,6 +26,8 @@ def serve_layout(path=None):
     if path is not None and len(path) > len("/search"):
         path = path[len("/search")+1::]
         path = path.replace("%20", " ")
+    options = []
+    value = options
     if path is not None:
         filter_value_material = path.split("/")
         if len(filter_value_material) == 3:
