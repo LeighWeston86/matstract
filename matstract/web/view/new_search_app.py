@@ -1,6 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_materialsintelligence as dmi
+from matstract.models.search import MatstractSearch
 
 
 def search_html():
@@ -36,11 +37,13 @@ def serve_layout():
         promptText="Add filter ",
         className="search-filters",
         placeholder="filter:value1,value2",
+        value=[],
         id='search_filters'),
     html.Div(
-        'Valid filters: material, property, application, synthesis, characterization, descriptor',
+        'Valid filters: ' + ', '.join(MatstractSearch.VALID_FILTERS),
         style={"color": "grey", "padding": "10px 1px", "fontSize": "10pt"},
         className="row"),
+    html.Div("", id="search_results", className="row"),
     html.Div([
         html.Span("Attribution Notice: This data was downloaded from the Scopus API between January - July 2018"),
         html.Br(),

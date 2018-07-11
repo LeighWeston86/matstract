@@ -30,16 +30,34 @@ a {
 }
 
 .summary-div {
-    margin: 10px;
+    margin-bottom: 10px;
+    margin-top: 10px;
     border: 1px solid #aaa;
     border-radius: 3px;
-    padding: 10px;
     max-height: 300px;
     overflow: scroll;
 }
 
 .summary-div td {
-    padding: 5px;
+    padding: 4px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-div .summary-header {
+    background-color: #ceeaea;
+}
+
+.summary-div .summary-header th {
+    padding: 10px;
+    border-bottom: 1px solid #aaa;
+}
+
+.summary-div a {
+    color: black;
+}
+
+.summary-table {
+    border-collapse: collapse;
 }
 
 .summary-div table {
@@ -94,49 +112,11 @@ input.filter-value {
     height: 36px;
 }
 
-
 .remove-filter {
     line-height: 34px;
     height: 36px;
     padding: 0px 15px;
     text-transform: none;
-}
-
-/* maximum 6 filters */
-#filter_type_0 {
-    display: inline-grid;
-    width: 200px;
-    margin: 0px 10px;
-}
-
-#filter_type_1 {
-    display: inline-grid;
-    width: 160px;
-    margin: 0px 10px;
-}
-
-#filter_type_2 {
-    display: inline-grid;
-    width: 160px;
-    margin: 0px 10px;
-}
-
-#filter_type_3 {
-    display: inline-grid;
-    width: 160px;
-    margin: 0px 10px;
-}
-
-#filter_type_4 {
-    display: inline-grid;
-    width: 160px;
-    margin: 0px 10px;
-}
-
-#filter_type_5 {
-    display: inline-grid;
-    width: 160px;
-    margin: 0px 10px;
 }
 
 .search-filters .Select-value {

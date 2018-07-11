@@ -7,7 +7,8 @@ import dash_materialsintelligence as dmi
 from flask import send_from_directory
 
 from dash.dependencies import Input, Output
-from matstract.web.view import new_search_app, trends_app, summary_app
+from matstract.web.view import new_search_app, summary_app
+from matstract.web.callbacks import new_search_callbacks, summary_callbacks
 
 # app config
 app = dash.Dash()
@@ -45,8 +46,6 @@ nav = html.Nav(
         children=[
             dcc.Link("Search", href="/search"),
             html.Span(u" \u2022 "),
-            dcc.Link("Trends", href="/trends"),
-            html.Span(u" \u2022 "),
             dcc.Link("Material Summary", href="/summary"),
         ],
         id="nav_bar")
@@ -56,18 +55,16 @@ app.layout = html.Div([
     html.Div(stylesheets_links, style={"display": "none"}),
     header,
     nav,
-    html.Div("", id="app-container")], className='container main-container')
+    html.Div("", id="app_container")], className='container main-container')
 
 
 @app.callback(
-    Output('app-container', 'children'),
+    Output('app_container', 'children'),
     [Input('url', 'pathname')])
 def display_page(path):
     path = str(path)
     if path.startswith("/search"):
         return new_search_app.serve_layout()
-    elif path == "/trends":
-        return trends_app.layout
     elif path == "/summary":
          return summary_app.layout
     else:
@@ -81,3 +78,5 @@ def get_stylesheet(path):
     return send_from_directory(static_folder, path)
 
 
+new_search_callbacks.bind(app)
+summary_callbacks.bind(app)

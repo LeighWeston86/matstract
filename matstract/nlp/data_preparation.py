@@ -14,8 +14,8 @@ from multiprocessing import Pool
 
 
 class DataPreparation:
-    RAW_ABSTRACT_COL = "abstracts_synthesis"
-    TOK_ABSTRACT_COL = "abstracts_synthesis_tokens"
+    RAW_ABSTRACT_COL = "abstracts"
+    TOK_ABSTRACT_COL = "abstract_tokens"
     TTL_FILED = "title"
     ABS_FIELD = "abstract"
     DOI_FIELD = "doi"
@@ -135,13 +135,21 @@ class DataPreparation:
                 abs = abstract[self.ABS_FIELD]
                 if ttl is not None and abs is not None:
                     if not only_relevant or self.is_relevant(abs):
+                        processed_ttl = []
                         for sentence in ttl:
-                            abs_txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
+                            processed_sentence = self.process_sentence(sentence, exclude_punct)[0]
+                            processed_ttl.append(processed_sentence)
+                            abs_txt += " ".join(processed_sentence + [nl_tok])
+                        processed_abs = []
                         for sentence in abs:
+                            processed_sentence = self.process_sentence(sentence, exclude_punct)[0]
+                            processed_abs.append(processed_sentence)
                             abs_txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
                         if line_per_abstract:
                             abs_txt += "\n"
-                abstract_file.write(abs_txt)
+                # abstract_file.write(abs_txt)
+                        self._db.abstract_tokens_processed.insert_one(
+                            {"doi": abstract["doi"], "title": processed_ttl, "abstract": processed_abs})
 
         # text = txt
 

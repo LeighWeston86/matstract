@@ -5,6 +5,7 @@ from matstract.extract.parsing import SimpleParser
 import os
 import pickle, _pickle
 from matstract.nlp.theme_extractor import analyze_themes
+from matstract.web.view import trends_app
 import pandas as pd
 from math import trunc
 import nltk
@@ -51,23 +52,25 @@ def generate_table(dataframe, max_rows=100):
 def gen_output(most_common, size, entity_type, material, class_name="four columns"):
     # print([(prop, score) for prop, score in most_common])
     table = html.Table(
-        [html.Tr([html.Th(entity_type), html.Th("score", style={"textAlign": "right"})])] +
+        [html.Tr([html.Th(entity_type), html.Th("score", style={"textAlign": "right", "fontWeight": "normal"})], className="summary-header")] +
         [html.Tr([
             html.Td(html.A(prop, href="/search/{}/{}".format(prop, material))),
-            html.Td('{:.2f}'.format(score / size), style={"textAlign": "right"})]) for prop, score in most_common]
-    )
+            html.Td('{:.2f}'.format(score / size), style={"textAlign": "right"})]) for prop, score in most_common],
+        className="summary-table")
     return html.Div(table, className="summary-div " + class_name)
 
 
-def get_entities(material, class_name="four columns"):
+def get_entities(mat, class_name="three columns"):
     # Normalize the material
     parser = SimpleParser()
-    material = parser.matgen_parser(material)
+    material = parser.matgen_parser(mat)
 
     # Open connection and get NEs associated with the material
     db = AtlasConnection(db="test").db
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
+    print(dois)
     entities = list(db.ne.find({'doi': {'$in': dois}}))
+    print(entities)
     num_entities = len(entities)
 
     # Extract the entities
@@ -101,25 +104,29 @@ def get_entities(material, class_name="four columns"):
 
         return html.Div([
             html.Div([
+                html.Div(trends_app.display_trends_graph(material), className="six columns"),
                 gen_output(pro, num_entities, 'Property', material, class_name),
-                gen_output(cmt, num_entities, 'Characterization', material, class_name),
-                gen_output(smt, num_entities, 'Synthesis', material, class_name)], className="row"),
+                gen_output(apl, num_entities, 'Application', material, class_name)], className="row"),
             html.Div([
-                gen_output(spl, num_entities, 'Phase', material, class_name),
-                gen_output(apl, num_entities, 'Application', material, class_name),
-                gen_output(dsc, num_entities, 'Sample descriptor', material, class_name)], className="row"),
+                gen_output(cmt, num_entities, 'Characterization', material, class_name),
+                gen_output(smt, num_entities, 'Synthesis', material, class_name),
+                gen_output(dsc, num_entities, 'Sample descriptor', material, class_name),
+                gen_output(spl, num_entities, 'Phase', material, class_name)], className="row"),
         ])
     else:
         return "No entities for the specified material"
 
+
 layout = html.Div([
-    html.Label('Enter formula for material summary'),
-    #html.Div("Work in progress... needs more data!!!"),
     html.Div([
         dcc.Input(id='summary-material',
                   placeholder='Material: e.g. "LiFePO4"',
                   type='text'),
-        html.Button('Search summary', id='summary-button'),
+        html.Button(
+            'Get Summary',
+            id='summary-button',
+            className="button-search",
+            style={"display": "table-cell", "verticalAlign": "top"}),
     ]),
     html.Div(style={"padding": "10px"}),
     html.Div("", id='summary-extrated'),
