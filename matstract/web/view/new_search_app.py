@@ -36,7 +36,7 @@ def serve_layout():
         multi=True,
         promptText="Add filter ",
         className="search-filters",
-        placeholder="filter:value1,value2",
+        placeholder="filter:value_1,value_2",
         value=[],
         id='search_filters'),
     html.Div(

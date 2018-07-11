@@ -64,13 +64,13 @@ def get_entities(mat, class_name="three columns"):
     # Normalize the material
     parser = SimpleParser()
     material = parser.matgen_parser(mat)
+    if not material:
+        return html.Div(html.P("Material \"{}\" is not a valid material formula. Please try again.".format(mat)))
 
     # Open connection and get NEs associated with the material
     db = AtlasConnection(db="test").db
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
-    print(dois)
     entities = list(db.ne.find({'doi': {'$in': dois}}))
-    print(entities)
     num_entities = len(entities)
 
     # Extract the entities
