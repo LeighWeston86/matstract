@@ -119,7 +119,7 @@ input.filter-value {
     text-transform: none;
 }
 
-.search-filters .Select-value {
+.Select--multi .Select-value {
     background-color: #ceeaea;
     color: black;
 }

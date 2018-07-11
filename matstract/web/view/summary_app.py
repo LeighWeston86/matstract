@@ -49,12 +49,20 @@ def generate_table(dataframe, max_rows=100):
     )
 
 
+FILTER_DICT = {'Material': 'material',
+               'Property': 'property',
+               'Application': 'application',
+               'Phase': 'phase',
+               'Characterization': 'characterization',
+               'Synthesis': 'synthesis',
+               'Sample descriptor': 'descriptor'}
+
 def gen_output(most_common, size, entity_type, material, class_name="four columns"):
     # print([(prop, score) for prop, score in most_common])
     table = html.Table(
         [html.Tr([html.Th(entity_type), html.Th("score", style={"textAlign": "right", "fontWeight": "normal"})], className="summary-header")] +
         [html.Tr([
-            html.Td(html.A(prop, href="/search/{}/{}".format(prop, material))),
+            html.Td(html.A(prop, href="/search/{}/{}/{}".format(FILTER_DICT[entity_type], prop, material))),
             html.Td('{:.2f}'.format(score / size), style={"textAlign": "right"})]) for prop, score in most_common],
         className="summary-table")
     return html.Div(table, className="summary-div " + class_name)
@@ -64,13 +72,11 @@ def get_entities(mat, class_name="three columns"):
     # Normalize the material
     parser = SimpleParser()
     material = parser.matgen_parser(mat)
-    if not material:
-        return html.Div(html.P("Material \"{}\" is not a valid material formula. Please try again.".format(mat)))
 
     # Open connection and get NEs associated with the material
     db = AtlasConnection(db="test").db
     dois = db.mats_.find({'unique_mats': material}).distinct('doi')
-    entities = list(db.ne.find({'doi': {'$in': dois}}))
+    entities = list(db.ne_071018.find({'doi': {'$in': dois}}))
     num_entities = len(entities)
 
     # Extract the entities
@@ -102,17 +108,29 @@ def get_entities(mat, class_name="three columns"):
         dsc = [dsc_dict[p] for pp in dsc for p in pp if len(p) > 2 and p in dsc_dict.keys()]
         dsc = nltk.FreqDist(dsc).most_common(10)
 
-        return html.Div([
-            html.Div([
-                html.Div(trends_app.display_trends_graph(material), className="six columns"),
-                gen_output(pro, num_entities, 'Property', material, class_name),
-                gen_output(apl, num_entities, 'Application', material, class_name)], className="row"),
-            html.Div([
-                gen_output(cmt, num_entities, 'Characterization', material, class_name),
-                gen_output(smt, num_entities, 'Synthesis', material, class_name),
-                gen_output(dsc, num_entities, 'Sample descriptor', material, class_name),
-                gen_output(spl, num_entities, 'Phase', material, class_name)], className="row"),
-        ])
+        if class_name == "three columns":
+            return html.Div([
+                html.Div([
+                    html.Div(trends_app.display_trends_graph(material), className="six columns"),
+                    gen_output(pro, num_entities, 'Property', material, class_name),
+                    gen_output(apl, num_entities, 'Application', material, class_name)], className="row"),
+                html.Div([
+                    gen_output(cmt, num_entities, 'Characterization', material, class_name),
+                    gen_output(smt, num_entities, 'Synthesis', material, class_name),
+                    gen_output(dsc, num_entities, 'Sample descriptor', material, class_name),
+                    gen_output(spl, num_entities, 'Phase', material, class_name)], className="row"),
+            ])
+        else:
+            return html.Div([
+                html.Div([
+                    gen_output(pro, num_entities, 'Property', material, class_name),
+                    gen_output(apl, num_entities, 'Application', material, class_name),
+                    gen_output(cmt, num_entities, 'Characterization', material, class_name)], className="row"),
+                html.Div([
+                    gen_output(smt, num_entities, 'Synthesis', material, class_name),
+                    gen_output(dsc, num_entities, 'Sample descriptor', material, class_name),
+                    gen_output(spl, num_entities, 'Phase', material, class_name)], className="row"),
+            ])
     else:
         return "No entities for the specified material"
 
