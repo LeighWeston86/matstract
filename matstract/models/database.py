@@ -137,7 +137,7 @@ class ElasticConnection(Elasticsearch):
                         "bool": {
                             "filter": {
                                 "ids": {"values": ids}},
-                            "should": {
+                            "d": {
                                 "simple_query_string": {
                                     "query": text}
                             }

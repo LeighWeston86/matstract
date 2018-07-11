@@ -49,9 +49,11 @@ nav = html.Nav(
         children=[
             dcc.Link("Search", href="/search"),
             html.Span(u" \u2022 "),
+            dcc.Link("Material Summary", href="/summary"),
+            html.Span(u" \u2022 "),
             dcc.Link("Material Search", href="/matsearch"),
             html.Span(u" \u2022 "),
-            dcc.Link("Material Summary", href="/summary"),
+            html.A("Materials Map", href="https://plot.ly/~vtshitoyan/6/markers-and-text/#/"),
         ],
         id="nav_bar")
 
