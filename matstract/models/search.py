@@ -7,6 +7,15 @@ class MatstractSearch:
     """The class running all search queries"""
 
     VALID_FILTERS = ["material", "property", "application", "descriptor", "characterization", "synthesis", "phase"]
+    FILTER_DICT = {
+        "material": "MAT",
+        "property": "PRO",
+        "application": "APL",
+        "descriptor": "DSC",
+        "characterization": "CMT",
+        "synthesis": "SMT",
+        "phase": "SPL"
+    }
 
     def __init__(self, local=False):
         self._ac = AtlasConnection(db="production", local=local)

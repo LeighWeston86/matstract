@@ -26,6 +26,8 @@ def serve_layout(path=None):
     if path is not None and len(path) > len("/search"):
         path = path[len("/search")+1::]
         path = path.replace("%20", " ")
+    options = []
+    value = options
     if path is not None:
         filter_value_material = path.split("/")
         if len(filter_value_material) == 3:
@@ -33,9 +35,6 @@ def serve_layout(path=None):
                         'value': 'material:' + filter_value_material[2]},
                        {'label': filter_value_material[0] + ':' + filter_value_material[1],
                         'value': filter_value_material[0] + ':' + filter_value_material[1]}]
-            value = options
-        else:
-            options = []
             value = options
     return [search_html(),
     dmi.DropdownCreatable(
