@@ -5,8 +5,9 @@ from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 import certifi
 from bson import ObjectId
+from pymongo.command_cursor import CommandCursor
 
-#Change this variable to True for easy offline testing.
+# Change this variable to True for easy offline testing.
 local = False
 
 
@@ -39,7 +40,7 @@ class AtlasConnection():
                 user_creds = json.load(open(db_creds, "r"))["mongo"][access][db]
                 uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
             except:
-                if db=="production":
+                if db == "production":
                     db = "matstract_db"
                 elif db == "test":
                     db = "tri_abstracts"
@@ -48,19 +49,18 @@ class AtlasConnection():
                     raise ConnectionError("Required environment variables not found.")
                 if access == "read_only":
                     user_creds = {"user": os.environ["ATLAS_USER"],
-                                "pass": os.environ["ATLAS_USER_PASSWORD"],
-                                "rest": os.environ["ATLAS_REST"],
-                                "db": db}
+                                  "pass": os.environ["ATLAS_USER_PASSWORD"],
+                                  "rest": os.environ["ATLAS_REST"],
+                                  "db": db}
                 elif access == "annotator":
                     user_creds = {"user": os.environ["ANNOTATOR_USER"],
-                                "pass": os.environ["ANNOTATOR_PASSWORD"],
-                                "rest": os.environ["ATLAS_REST"],
-                                "db": db}
+                                  "pass": os.environ["ANNOTATOR_PASSWORD"],
+                                  "rest": os.environ["ATLAS_REST"],
+                                  "db": db}
                 uri = "mongodb://{user}:{pass}@{rest}".format(**user_creds)
 
         client = MongoClient(uri, connect=False)
         self.db = client[user_creds["db"]]
-
 
     def query(self, mongo_query):
         """
@@ -75,10 +75,11 @@ class AtlasConnection():
         return self.db.abstracts.query(mongo_query)
 
     def get_documents_by_id(self, ids):
-        return sort_results(self.db.abstracts.find({"_id": {"$in":ids}}), ids)
+        ids = [ObjectId(id) for id in ids]
+        return sort_results(self.db.abstracts.find({"_id": {"$in": ids}}), ids)
 
     def get_documents_by_doi(self, dois):
-        return sort_results(self.db.abstracts.find({"doi": {"$in":dois}}), dois)
+        return sort_results(self.db.abstracts.find({"doi": {"$in": dois}}), dois)
 
 
 class ElasticConnection(Elasticsearch):
@@ -114,7 +115,7 @@ class ElasticConnection(Elasticsearch):
         super(ElasticConnection, self).__init__(hosts=hosts, http_auth=http_auth,
                                                 use_ssl=True, ca_certs=certifi.where())
 
-    def query(self, text=None, max_results=10000):
+    def query(self, text=None, ids=(), max_results=10000):
         """
         Wrapper for ElasticSearch search that enforces correct db.
 
@@ -127,7 +128,28 @@ class ElasticConnection(Elasticsearch):
         """
         if text is None:
             return None
-        query = {"query": {"simple_query_string": {"query": text}}}
-        hits = self.search(index="tri_abstracts", body=query, size=max_results, request_timeout=30)["hits"]["hits"]
-        ids = [ObjectId(h["_id"]) for h in hits]
-        return ids
+        else:
+            if isinstance(ids, CommandCursor):
+                ids = list(ids)
+            if len(ids):
+                query = {
+                    "query": {
+                        "bool": {
+                            "filter": {
+                                "ids": {"values": ids}},
+                            "should": {
+                                "simple_query_string": {
+                                    "query": text}
+                            }
+                        }
+                    }
+                }
+                hits = self.search(index="tri_abstracts", body=query, size=max_results, request_timeout=30)["hits"][
+                    "hits"]
+                ids = [ObjectId(h["_id"]) for h in hits]
+            else:
+                query = {"query": {"simple_query_string": {"query": text}}}
+                hits = self.search(index="tri_abstracts", body=query, size=max_results, request_timeout=30)["hits"][
+                    "hits"]
+                ids = [ObjectId(h["_id"]) for h in hits]
+            return ids

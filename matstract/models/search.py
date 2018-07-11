@@ -2,6 +2,7 @@ from matstract.models.database import AtlasConnection, ElasticConnection
 from matstract.extract import parsing
 from bson import ObjectId
 from collections import Iterable
+from pymongo.command_cursor import CommandCursor
 
 class MatstractSearch:
     """The class running all search queries"""
@@ -14,9 +15,7 @@ class MatstractSearch:
         self.filters = []
 
     def search(self, text=None, materials=None, max_results=1000):
-        if materials is not None:
-            max_results = 10000
-        print("searching for {} and {}".format(text, materials))
+        print("searching for '{}' and {}".format(text, materials))
         pipeline = list()
         if materials:
             for material in materials:
@@ -42,18 +41,16 @@ class MatstractSearch:
                 "link": "$abstracts.link",
                 "chem_mentions": "$unique_mats"}})
             pipeline.append({"$project": {"abstracts": 0}})
-            pipeline.append({"$limit": max_results})
-        if text:
-            ids = self._ec.query(text, max_results=max_results)
-            document_filter = DocumentFilter(ids)
-            if not materials or not len(materials):
-                return self._ac.get_documents_by_id(ids)
-            for cond in document_filter.conditions:
-                pipeline.append(cond)
+            # pipeline.append({"$limit": max_results})
         if len(pipeline) > 0:
-            return self._ac.db.mats_.aggregate(pipeline)
+            results = self._ac.db.mats_.aggregate(pipeline)
+            ids = [str(entry["_id"]) for entry in results]
         else:
-            return []
+            ids = []
+        if text:
+            ids = self._ec.query(text, ids=ids, max_results=max_results)
+        return self._ac.get_documents_by_id(ids)
+
 
     def more_like_this(self, text='', materials=(), max_results=100):
         if text is None or text == '':

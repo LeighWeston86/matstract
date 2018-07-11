@@ -111,7 +111,7 @@ def clean_up(list_to_clean):
 
 def clean_to_dict(list_to_clean):
     fd = nltk.FreqDist(list_to_clean)
-    _set = [word for word, count in fd.most_common(300)]
+    _set = [word for word, count in fd.most_common(5000)]
     #_set = list(set(list_to_clean))
     entity_dict = {}
     for entity_1 in _set:
@@ -219,9 +219,9 @@ if __name__ == '__main__':
     #entities['SMT'] = clean_up(entities['SMT'])
     #print(nltk.FreqDist(entities['SMT']2).most_common(20))
     db = open_db()
-    ne = db.ne
+    ne = db.ne_071018
     docs = list(ne.find(projection =  {'doi': 1, 'PRO' : 1, 'SMT': 1, 'CMT': 1, 'SPL': 1, 'APL': 1, 'DSC': 1} ))
-    smt = [smt for doc in docs for smt in doc['SMT']]
+    smt = [smt for doc in docs for smt in doc['APL']]
     smt_dict = clean_to_dict(smt)
     print(smt_dict)
-    pickle.dump(smt_dict, open('smt_dict.p', 'wb'))
+    pickle.dump(smt_dict, open('apl_dict.p', 'wb'))
