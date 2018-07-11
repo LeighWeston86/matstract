@@ -7,8 +7,8 @@ import dash_materialsintelligence as dmi
 from flask import send_from_directory
 
 from dash.dependencies import Input, Output
-from matstract.web.view import new_search_app, summary_app, matsearch_app
-from matstract.web.callbacks import new_search_callbacks, summary_callbacks, matsearch_callbacks
+from matstract.web.view import new_search_app, summary_app, matsearch_app, material_map_app
+from matstract.web.callbacks import new_search_callbacks, summary_callbacks, matsearch_callbacks, material_map_callbacks
 from matstract.models.database import AtlasConnection
 
 # app config
@@ -52,6 +52,8 @@ nav = html.Nav(
             dcc.Link("Material Search", href="/matsearch"),
             html.Span(u" \u2022 "),
             dcc.Link("Material Summary", href="/summary"),
+            html.Span(u" \u2022 "),
+            dcc.Link("Material Map", href="/matmap"),
         ],
         id="nav_bar")
 
@@ -74,6 +76,8 @@ def display_page(path):
          return summary_app.layout
     elif path == "/matsearch":
          return matsearch_app.serve_layout(db)
+    elif path == "/matmap":
+         return material_map_app.layout
     else:
         return new_search_app.serve_layout()
 
@@ -88,3 +92,4 @@ def get_stylesheet(path):
 new_search_callbacks.bind(app)
 summary_callbacks.bind(app)
 matsearch_callbacks.bind(app)
+material_map_callbacks.bind(app)
