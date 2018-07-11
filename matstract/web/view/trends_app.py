@@ -11,8 +11,10 @@ from matstract.web.view import trends_app
 def generate_trends_graph(search=None, material=None, layout=None):
     MS = MatstractSearch()
     if material is not None:
-        material = [material]
-    results = list(MS.search(search, material, max_results=10000))
+        filters = [("material", material)]
+    else:
+        filters = None
+    results = list(MS.search(text=search, filters=filters, max_results=10000))
     hist = dict()
     if len(results) > 0:
         histdata = {}

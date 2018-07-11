@@ -11,7 +11,7 @@ def bind(app):
          State('search_input', 'value')])
     def show_filters(n_clicks, filter_val, text_val):
         if n_clicks is not None:
-            text = text_val if text_val else None
+            text = text_val if text_val is not None else None
             filter_vals = [val["value"] for val in filter_val] if filter_val else None
             valid_filters = []
             if filter_vals:
@@ -20,7 +20,7 @@ def bind(app):
                     if len(split_filter) != 2:
                         pass  # invalid filter
                     else:
-                        if split_filter[0].strip().lower() in MatstractSearch.VALID_FILTERS:
+                        if split_filter[0].strip().lower() in MatstractSearch.FILTER_DICT:
                             valid_filters.append(
                                 (split_filter[0].strip().lower(),
                                  split_filter[1].strip())
@@ -32,5 +32,5 @@ def bind(app):
             materials = materials if materials else None
             print("Search Text: {}".format(text))
             print("Valid filters: ", valid_filters)
-            return generate_table(search=text_val, materials=materials)
+            return generate_table(search=text, filters=valid_filters)
         return ""

@@ -51,7 +51,6 @@ def bind(app):
     def display_trends(click_data, n_clicks, input_text):
         if click_data is not None:
             material = regex.sub(r"<sub>|</sub>", r"", click_data["points"][0]["y"])  # name of the material
-            print(material)
             layout = {"height": 300,
                       "title": number_to_substring(material) + " trends",
                       "showlegend": False,

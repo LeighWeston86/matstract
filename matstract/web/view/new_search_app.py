@@ -36,9 +36,6 @@ def serve_layout(path=None):
                        {'label': filter_value_material[0] + ':' + filter_value_material[1],
                         'value': filter_value_material[0] + ':' + filter_value_material[1]}]
             value = options
-        else:
-            options = []
-            value = options
     return [search_html(),
     dmi.DropdownCreatable(
         options=options,
