@@ -34,10 +34,10 @@ def bind(app):
                 use_output_emb=False if ee.dp.is_simple_formula(sentence[0]) else True)
 
             # filtering the results by elements and returning top 50
-            elem_filtered = ee.filter_by_elements(most_similar, plus_elems, minus_elems, max=50)
+            elem_filtered = ee.filter_by_elements(most_similar, plus_elems, minus_elems, max=65)
 
             # display top 50 results
-            matlist = ee.most_common_form(elem_filtered[:50])
+            matlist = ee.most_common_form(elem_filtered)
             material_names, material_scores, material_counts, _ = zip(*matlist)
             return matlist_figure([number_to_substring(name) for name in material_names], material_scores, material_counts)
         else:

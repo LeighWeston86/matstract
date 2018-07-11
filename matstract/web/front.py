@@ -7,8 +7,9 @@ import dash_materialsintelligence as dmi
 from flask import send_from_directory
 
 from dash.dependencies import Input, Output
-from matstract.web.view import new_search_app, summary_app
-from matstract.web.callbacks import new_search_callbacks, summary_callbacks
+from matstract.web.view import new_search_app, summary_app, matsearch_app
+from matstract.web.callbacks import new_search_callbacks, summary_callbacks, matsearch_callbacks
+from matstract.models.database import AtlasConnection
 
 # app config
 app = dash.Dash()
@@ -16,6 +17,8 @@ app.css.config.serve_locally = True
 app.scripts.config.serve_locally = True
 app.config.suppress_callback_exceptions = True
 app.title = "Matstract - Rediscovering Materials"
+
+db = AtlasConnection().db
 
 # loading css files
 css_files = ["dash_extra.css", "skeleton.min.css", "webstract.css",
@@ -46,6 +49,8 @@ nav = html.Nav(
         children=[
             dcc.Link("Search", href="/search"),
             html.Span(u" \u2022 "),
+            dcc.Link("Material Search", href="/matsearch"),
+            html.Span(u" \u2022 "),
             dcc.Link("Material Summary", href="/summary"),
         ],
         id="nav_bar")
@@ -64,9 +69,11 @@ app.layout = html.Div([
 def display_page(path):
     path = str(path)
     if path.startswith("/search"):
-        return new_search_app.serve_layout()
+        return new_search_app.serve_layout(path)
     elif path == "/summary":
          return summary_app.layout
+    elif path == "/matsearch":
+         return matsearch_app.serve_layout(db)
     else:
         return new_search_app.serve_layout()
 
@@ -80,3 +87,4 @@ def get_stylesheet(path):
 
 new_search_callbacks.bind(app)
 summary_callbacks.bind(app)
+matsearch_callbacks.bind(app)
