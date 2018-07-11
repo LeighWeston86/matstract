@@ -20,7 +20,7 @@ def serve_searchbox():
                               type='text'),
                     html.Span(" but not "),
                     dcc.Input(id='matsearch_negative_input',
-                              placeholder='e.g. perovskite',
+                              placeholder='e.g. perovskite (optional)',
                               type='text'),
                     dcc.Dropdown(id='has_elements',
                                  options=[{'label': el, "value": el} for el in DataPreparation.ELEMENTS],
@@ -34,9 +34,9 @@ def serve_searchbox():
                                  placeholder="but exclude...",
                                  value=None,
                                  multi=True),
-                    html.Button("Search", id="matsearch_button", style={"textTransform": "none"}, className="button-primary"),
+                    html.Button("Search", id="matsearch_button", style={"textTransform": "none"}, className="button-search"),
                     html.Button("Load example", id="matsearch_example", style={"textTransform": "none"}),
-                    ], className="row matsearch-div"),
+                    ], className="row matsearch-div", style={"marginBottom": "25px"}),
                 html.Div([html.Div(
                     serve_matlist([]),
                     id='relevant_materials_container',
@@ -76,7 +76,7 @@ def matlist_figure(material_names, material_scores, material_counts):
                     x=list(reversed(material_scores)),  #material_counts
                     y=list(reversed(material_names)),
                     orientation='h',
-                    marker=dict(color='#1f77b4'),
+                    marker=dict(color='#128E91'),
                     name="relevance",
                     opacity=0.8,
                     xaxis="x2"),
@@ -93,8 +93,8 @@ def matlist_figure(material_names, material_scores, material_counts):
                     titlefont=dict(color='rgb(154,154,154)'),
                 ),
                 xaxis2=dict(
-                    tickfont=dict(color='#1f77b4'),
-                    titlefont=dict(color='#1f77b4'),
+                    tickfont=dict(color='#128E91'),
+                    titlefont=dict(color='#128E91'),
                     title="relevance",
                     overlaying='x',
                     side='top'

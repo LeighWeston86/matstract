@@ -22,22 +22,29 @@ def search_html():
         )
 
 
-def serve_layout():
+def serve_layout(path=None):
+    if path is not None and len(path) > len("/search"):
+        path = path[len("/search")+1::]
+        path = path.replace("%20", " ")
+    if path is not None:
+        filter_value_material = path.split("/")
+        if len(filter_value_material) == 3:
+            options = [{'label': 'material:' + filter_value_material[2],
+                        'value': 'material:' + filter_value_material[2]},
+                       {'label': filter_value_material[0] + ':' + filter_value_material[1],
+                        'value': filter_value_material[0] + ':' + filter_value_material[1]}]
+            value = options
+        else:
+            options = []
+            value = options
     return [search_html(),
     dmi.DropdownCreatable(
-        options=[
-            # {'label': 'material:LiCoO2', 'value': 'material:LiCoO2'},
-            # {'label': 'property:ionic conductivity', 'value': 'property:ionic conductivity'},
-            # {'label': 'application:cathode', 'value': 'application:cathode'},
-            # {'label': 'characterization:XRD', 'value': 'characterization:XRD'},
-            # {'label': 'synthesis:solid-state reaction', 'value': 'synthesis:solid-state reaction'},
-            # {'label': 'descriptor:thin film', 'value': 'descriptor:thin film'},
-        ],
+        options=options,
         multi=True,
         promptText="Add filter ",
         className="search-filters",
         placeholder="filter:value1,value2",
-        value=[],
+        value=value,
         id='search_filters'),
     html.Div(
         'Valid filters: ' + ', '.join(MatstractSearch.VALID_FILTERS),
