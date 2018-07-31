@@ -131,13 +131,13 @@ class ElasticConnection(Elasticsearch):
         else:
             if ids is not None and isinstance(ids, CommandCursor):
                 ids = list(ids)
-            if len(ids):
+            if ids is not None and len(ids):
                 query = {
                     "query": {
                         "bool": {
                             "filter": {
                                 "ids": {"values": ids}},
-                            "should": {
+                            "must": {
                                 "simple_query_string": {
                                     "query": text}
                             }
