@@ -14,8 +14,8 @@ from multiprocessing import Pool
 
 
 class DataPreparation:
-    RAW_ABSTRACT_COL = "abstracts"
-    TOK_ABSTRACT_COL = "abstract_tokens"
+    RAW_ABSTRACT_COL = "abstracts_w2v"
+    TOK_ABSTRACT_COL = "abstracts_w2v_tokens"
     TTL_FILED = "title"
     ABS_FIELD = "abstract"
     DOI_FIELD = "doi"
@@ -369,6 +369,8 @@ class DataPreparation:
             return text
 
     def is_relevant(self, abstract):
+        if abstract is None:
+            return False
         txt = ""
         for sentence in abstract:
             txt += " ".join(sentence)

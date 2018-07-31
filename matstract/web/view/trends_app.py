@@ -1,20 +1,13 @@
 import dash_html_components as html
 import dash_core_components as dcc
-import operator
-from matstract.models.search import MatstractSearch
-import plotly.graph_objs as go
-import regex
-from matstract.models.word_embeddings import number_to_substring
 from matstract.models.database import AtlasConnection
-from matstract.web.view import trends_app
+from matstract.extract.parsing import SimpleParser
 
 
 def generate_trends_graph(search=None, material=None, layout=None):
-    # MS = MatstractSearch()
-    #     # if material is not None:
-    #     #     filters = [("material", material)]
-    #     # else:
-    #     #     filters = None
+    sp = SimpleParser()
+    if material is not None:
+        material = sp.matgen_parser(material)
     db = AtlasConnection(db="production").db
     pipeline = list()
     pipeline.append({"$match": {"MAT": material}})
@@ -84,7 +77,7 @@ def display_trends_graph(material):
               "yaxis": dict(
                   title="Number of Publications"
               )}
-    fig = trends_app.generate_trends_graph(
+    fig = generate_trends_graph(
         material=material,
         layout=layout)
     fig["mode"] = "histogram"
