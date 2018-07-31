@@ -30,7 +30,6 @@ def bind(app):
                 for m_filter in valid_filters:
                     if m_filter[0] == "material":
                         materials.append(m_filter[1])
-                materials = materials if materials else None
                 print("Search Text: {}".format(text))
                 print("Valid filters: ", valid_filters)
                 return generate_table(search=text, filters=valid_filters)
