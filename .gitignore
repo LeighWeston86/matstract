@@ -52,3 +52,6 @@ abstracts.txt
 abstracts_*
 tokenize_abstracts.py
 generate_w2v_file.py
+
+matstract/nlp/embedding_vectors.npz
+matstract/nlp/normalized_embeddings.npy
