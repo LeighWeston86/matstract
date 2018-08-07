@@ -11,7 +11,6 @@ ii. The (`band gap`, NP) of ZnO is 3.4 eV
 
 iii. We calculated the (`band structure`, NP) using tight binding
 
-iv. The (`yield`, NN) of the reaction was 80%.
 
 &nbsp;
 
@@ -41,3 +40,30 @@ Definition (iv): Properties that include another species, e.g., `adsorption isot
 Definition (v): Growth directions and crystal orientations
 
 i. predominant (`orientation`, PRO) (`along (311) plane`, PVL)
+
+Phase diagram is a property.
+
+`Oxygen vacancy concentration` is a property
+
+`Grain boundary` and `domain wall` are properties, but `particle size` is not a property.
+
+We include device properties so long as it refelcts some intrinsic property of the material: `leakage currect` ok, `length` not ok.
+
+Strain is not a property.
+
+Stress is a property.
+
+Crystallographic orientation is a property.
+
+Intermetallic is a property
+
+`Metallic glass` and is a property
+
+in bulk `metallic glass` bulk is a decriptor.
+
+Dopant, defect, and carrier concentrations are properties.
+
+Only highlight `shape memory` in shape memory alloy
+
+Nothing to do with orientation is a property
+
