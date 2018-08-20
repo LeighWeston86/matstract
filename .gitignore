@@ -48,8 +48,10 @@ src/
 collect/logs/
 logs/
 
-abstracts.txt
+# w2v corpora
 abstracts_*
+relevant_*
+
 tokenize_abstracts.py
 generate_w2v_file.py
 
