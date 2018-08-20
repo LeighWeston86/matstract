@@ -51,4 +51,15 @@ logs/
 # w2v corpora
 abstracts_*
 relevant_*
+
 tokenize_abstracts.py
+generate_w2v_file.py
+
+matstract/nlp/embedding_vectors.npz
+matstract/nlp/normalized_embeddings.npy
+matstract/nlp/PRO.out
+matstract/nlp/w2v.p
+matstract/nlp/word2index.p
+matstract/nlp/words.txt
+matstract/web/static/docs/R-NR.md
+matstract/web/static/docs/general.md

@@ -23,3 +23,30 @@ This has to be a modifier for the material, and not a standalone reference to th
 *Poisitive example:* We sputterd Co (`thin films`, NN).
 
 *Negative example:* The **thin films** had a high conductivity. (here, thin films is a sample reference)
+
+
+Bulk and substrate are both good descriptors.
+
+Surface is a descriptor
+
+Stoichiometric is a descriptor. Stoichioometry is a property.
+
+Pure is a descriptor
+
+Buffer layer is a sample descriptor
+
+Heterostructure is a descriptor not a device.
+
+For doping:
+
+Mark `doped` if it acts as a modifier: Zn-`doped` GaN
+
+Do not mark for example: The Zn doping level was high
+
+Buffer layer is a descriptor, not a device.
+
+Stabilized is a descriptor: Yttria-`stabilized` zirconia
+
+C-plane, m-plane etc., are DSC
+
+Eutectic is a descriptor.

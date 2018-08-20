@@ -4,37 +4,11 @@ from matstract.models.database import AtlasConnection
 from matstract.extract.parsing import SimpleParser
 import os
 import pickle, _pickle
-from matstract.nlp.theme_extractor import analyze_themes
+# from matstract.nlp.theme_extractor import analyze_themes
 from matstract.web.view import trends_app
 import pandas as pd
 from math import trunc
 import nltk
-
-# load in the entity dictionaries
-cmt_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/cmt_dict.p')
-with open(cmt_location, 'rb') as f:
-    cmt_dict = _pickle.load(f)
-
-smt_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/smt_dict.p')
-with open(smt_location, 'rb') as f:
-    smt_dict = _pickle.load(f)
-
-pro_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/pro_dict.p')
-with open(pro_location, 'rb') as f:
-    pro_dict = _pickle.load(f)
-
-apl_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/apl_dict.p')
-with open(apl_location, 'rb') as f:
-    apl_dict = _pickle.load(f)
-
-dsc_location = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../nlp/dsc_dict.p')
-with open(dsc_location, 'rb') as f:
-    dsc_dict = _pickle.load(f)
 
 
 def generate_table(dataframe, max_rows=100):
@@ -74,9 +48,9 @@ def get_entities(mat, class_name="three columns"):
     material = parser.matgen_parser(mat)
 
     # Open connection and get NEs associated with the material
-    db = AtlasConnection(db="production").db
-    dois = db.ne_071018.find({'MAT': material}).distinct('doi')
-    entities = list(db.ne_071018.find({'doi': {'$in': dois}}))
+    db = AtlasConnection(db="test").db
+    entities = list(db.ne_norm.find({'MAT': material}))
+    #entities = list(db.ne_norm.find({'doi': {'$in': dois}}))
     num_entities = len(entities)
 
     # Extract the entities
@@ -87,6 +61,7 @@ def get_entities(mat, class_name="three columns"):
             pro.append(doc['PRO'])
             # Get the application
             apl.append(doc['APL'])
+            # Get the SPL
             spl.append(doc['SPL'])
             # Get the synthesis method
             smt.append(doc['SMT'])
@@ -95,19 +70,19 @@ def get_entities(mat, class_name="three columns"):
             # Get the characterization method
             dsc.append(doc['DSC'])
 
-        pro = [pro_dict[p] for pp in pro for p in pp if len(p) > 2 and p in pro_dict.keys()]
-        pro = nltk.FreqDist(pro).most_common(20)
-        apl = [apl_dict[p] for pp in apl for p in pp if len(p) > 2 and p in apl_dict.keys()]
-        apl = nltk.FreqDist(apl).most_common(12)
+        pro = [p for pp in pro for p in pp if len(p) > 2]
+        pro = nltk.FreqDist(pro).most_common(40)
+        apl = [p for pp in apl for p in pp if len(p) > 2]
+        apl = nltk.FreqDist(apl).most_common(20)
         apl = [(a, score) for a, score in apl if a not in ['coating', 'electrode']]
         spl = [p for pp in spl for p in pp if len(p) > 2]
         spl = nltk.FreqDist(spl).most_common(3)
-        smt = [smt_dict[p] for pp in smt for p in pp if len(p) > 2 and p in smt_dict.keys()]
-        smt = nltk.FreqDist(smt).most_common(10)
-        cmt = [cmt_dict[p] for pp in cmt for p in pp if len(p) > 2 and p in cmt_dict.keys()]
-        cmt = nltk.FreqDist(cmt).most_common(10)
-        dsc = [dsc_dict[p] for pp in dsc for p in pp if len(p) > 2 and p in dsc_dict.keys()]
-        dsc = nltk.FreqDist(dsc).most_common(10)
+        smt = [p for pp in smt for p in pp if len(p) > 2]
+        smt = nltk.FreqDist(smt).most_common(20)
+        cmt = [p for pp in cmt for p in pp if len(p) > 2]
+        cmt = nltk.FreqDist(cmt).most_common(20)
+        dsc = [p for pp in dsc for p in pp if len(p) > 2]
+        dsc = nltk.FreqDist(dsc).most_common(20)
 
         if class_name == "three columns":
             return html.Div([
