@@ -1,9 +1,9 @@
-dash
-dash-auth
-dash-core-components
-dash-html-components
-dash-table-experiments
-dash-renderer
+dash==0.20.0
+dash-auth=0.0.11
+dash-core-components==0.18.1
+dash-html-components=0.8.0
+dash-table-experiments=0.6.0
+dash-renderer=0.11.3
 elasticsearch
 elasticsearch-dsl
 elsapy
