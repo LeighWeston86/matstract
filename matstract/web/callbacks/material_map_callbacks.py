@@ -12,11 +12,14 @@ def bind(app):
         [Input('map_highlight_button', 'n_clicks')],
         [State('map_keyword', 'value')])
     def highlight_map(_, keywords):
+        # if n_clicks:
         plot_data = cp.get_plot_data(
             entity_type="materials",
             limit=-1,
             heatphrase=keywords,
             wordphrases=None)
-        fig["data"] = plot_data
+        fig["data"] = [plot_data]
         return fig
+        # else:
+        #     pass
 

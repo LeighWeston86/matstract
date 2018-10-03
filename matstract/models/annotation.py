@@ -100,11 +100,18 @@ class TokenAnnotation(Annotation):
         for iob_sentence in iob_list:
             self.tokens.append([])
             for iob in iob_sentence:
-                sub_tokens = iob[0].split("_")
-                pos_tags = iob[1].split("_")
-                if len(pos_tags) < len(sub_tokens):
-                    pos_tags = [pos_tags] * len(sub_tokens)
-                label = iob[2]
+                if len(iob) == 3: # pos tags are included and are the 2nd index
+                    sub_tokens = iob[0].split("_")
+                    pos_tags = iob[1].split("_")
+                    if len(pos_tags) < len(sub_tokens):
+                        pos_tags = [pos_tags] * len(sub_tokens)
+                    label = iob[2]
+                else:
+                    sub_tokens = iob[0].split("_")
+                    pos_tags = ["POS"]
+                    if len(pos_tags) < len(sub_tokens):
+                        pos_tags = [pos_tags] * len(sub_tokens)
+                    label = iob[1]
                 for i, tk in enumerate(sub_tokens):
                     token = dict()
                     token["text"] = sub_tokens[i]
