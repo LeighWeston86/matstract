@@ -28,14 +28,14 @@ class EmbeddingEngine:
         if emb_file is not None:
             self.embeddings = np.load(emb_file)
         else:
-            embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4.wv.vectors.npy"
+            embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4_float16.wv.vectors.npy"
             ds.open(embeddings_url)
             self.embeddings = np.load(ds.abspath(embeddings_url))
 
         if out_emb_file is not None:
             self.out_embeddings = np.load(out_emb_file)
         else:
-            out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4.trainables.syn1neg.npy"
+            out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4_float16.trainables.syn1neg.npy"
             ds.open(out_embeddings_url)
             self.out_embeddings = np.load(ds.abspath(out_embeddings_url))
 
