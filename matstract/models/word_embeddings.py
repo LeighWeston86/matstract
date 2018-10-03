@@ -20,7 +20,7 @@ class EmbeddingEngine:
             self,
             emb_file=None,
             out_emb_file=None,
-            dict_url="htt://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4.tsv",
+            dict_url="https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4.tsv",
             formulas_file=None):
         ds = np.DataSource()
 
