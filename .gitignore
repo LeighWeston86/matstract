@@ -41,6 +41,7 @@ matstract/config/db_creds.json
 dist/
 build/
 s3*/
+drive.google.com/
 .eggs/
 .cache/
 
