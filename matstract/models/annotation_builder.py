@@ -106,15 +106,22 @@ class AnnotationBuilder:
                 return self.get_random_abstract(only_relevant)
 
     def get_random_abstract(self, only_relevant=False):
-        if only_relevant:
-            the_abstract = getattr(self._db, self.RELEVANCE_COLLECTION).aggregate([
-                {"$match": {"relevant": True}},
-                {"$sample": {"size": 1}}
-            ]).next()
-            abs_id = the_abstract["abstract_id"]
-            return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"_id": abs_id})
-        else:
-            return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+        # if only_relevant:
+        #     the_abstract = getattr(self._db, self.RELEVANCE_COLLECTION).aggregate([
+        #         {"$match": {"relevant": True}},
+        #         {"$sample": {"size": 1}}
+        #     ]).next()
+        #     abs_id = the_abstract["abstract_id"]
+        #     return getattr(self._db, self.ABSTRACT_COLLECTION).find_one({"_id": abs_id})
+        # else:
+        #     return getattr(self._db, self.ABSTRACT_COLLECTION).aggregate([{"$sample": {"size": 1}}]).next()
+        the_abstract = self._db.annotations.aggregate([
+            {"$match": {"user": "leighmi6"}},
+            {"$sample": {"size": 1}}
+        ]).next()
+        abs_doi = the_abstract["doi"]
+        return self._db.abstracts.find_one({"doi": abs_doi})
+
 
     def get_tokens(self, paragraph, user_key, cems=False):
         try:
