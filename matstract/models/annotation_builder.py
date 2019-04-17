@@ -105,7 +105,7 @@ class AnnotationBuilder:
                 # return a random abstract (nobody is logged in)
                 return self.get_random_abstract(only_relevant)
 
-    def get_random_abstract(self, only_relevant=False):
+    def get_random_abstract(self, only_relevant=False): # Modified to only pull annotated abstracts; uncomment to get properly random abstracts
         # if only_relevant:
         #     the_abstract = getattr(self._db, self.RELEVANCE_COLLECTION).aggregate([
         #         {"$match": {"relevant": True}},
