@@ -4,7 +4,7 @@ from matstract.models.database import AtlasConnection
 from matstract.extract.parsing import SimpleParser
 import os
 import pickle, _pickle
-from matstract.nlp.theme_extractor import analyze_themes
+# from matstract.nlp.theme_extractor import analyze_themes
 from matstract.web.view import trends_app
 import pandas as pd
 from math import trunc

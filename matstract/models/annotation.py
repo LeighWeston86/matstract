@@ -78,6 +78,45 @@ class TokenAnnotation(Annotation):
             iob_str.append("\n")
         return iob, "".join(iob_str)
 
+    def from_iob(self, iob_list, doi):
+        """
+        Converts iob list of tuples to TokenAnnotation class
+        :param phrases:
+        :return:
+        """
+        Annotation.__init__(self, doi, self.BOT_USERNAME)
+        self.tags = None
+        self.tokens = []
+        self.labels = set()
+        start = 0
+        for iob_sentence in iob_list:
+            self.tokens.append([])
+            for iob in iob_sentence:
+                if len(iob) == 3: # pos tags are included and are the 2nd index
+                    sub_tokens = iob[0].split("_")
+                    pos_tags = iob[1].split("_")
+                    if len(pos_tags) < len(sub_tokens):
+                        pos_tags = [pos_tags] * len(sub_tokens)
+                    label = iob[2]
+                else:
+                    sub_tokens = iob[0].split("_")
+                    pos_tags = ["POS"]
+                    if len(pos_tags) < len(sub_tokens):
+                        pos_tags = [pos_tags] * len(sub_tokens)
+                    label = iob[1]
+                for i, tk in enumerate(sub_tokens):
+                    token = dict()
+                    token["text"] = sub_tokens[i]
+                    token["pos"] = pos_tags[i]
+                    token["annotation"] = None if (label[:2] != "I-" and label[:2] != "B-") else label[2:]
+                    self.labels.add(token["annotation"])
+                    token["start"] = start
+                    token["end"] = token["start"] + len(token["text"])
+                    token["id"] = "token-{}-{}".format(token["start"], token["end"])
+                    start = token["end"]
+                    self.tokens[-1].append(token)
+        self.labels = list(self.labels)
+
     def to_agr_list(self):
         """
         Returns a list of tuples to be used with nltk.metrics.agreement

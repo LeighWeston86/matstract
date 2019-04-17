@@ -30,7 +30,7 @@ def bind(app):
             most_similar = ee.find_similar_materials(
                 sentence=sentence,
                 n_sentence=n_sentence,
-                min_count=15,
+                min_count=8,
                 use_output_emb=False if ee.dp.is_simple_formula(sentence[0]) else True)
 
             # filtering the results by elements and returning top 50

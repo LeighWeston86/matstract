@@ -16,18 +16,29 @@ class EmbeddingEngine:
                  "CNS", "CP5", "AsFP", "EsOP", "NS", "NS2", "EsI", "BH", "PPmV", "PSe", "AsN", "OPV5",
                  "NSiW"]
 
-    def __init__(self):
+    def __init__(
+            self,
+            emb_file=None,
+            out_emb_file=None,
+            dict_url="https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4.tsv",
+            formulas_file=None):
         ds = np.DataSource()
 
         # loading pre-trained embeddings and the dictionary
-        embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_sg_w8_n10_a001_phrtsh20_pc20_pd3_exp.wv.vectors_float16.npy"
-        ds.open(embeddings_url)
-        self.embeddings = np.load(ds.abspath(embeddings_url))
+        if emb_file is not None:
+            self.embeddings = np.load(emb_file)
+        else:
+            embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4_float16.wv.vectors.npy"
+            ds.open(embeddings_url)
+            self.embeddings = np.load(ds.abspath(embeddings_url))
 
-        out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_sg_w8_n10_a001_phrtsh20_pc20_pd3_exp.trainables.syn1neg_float16.npy"
-        ds.open(out_embeddings_url)
-        self.out_embeddings = np.load(ds.abspath(out_embeddings_url))
-        dict_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_abs_sg_w8_n10_a001_phrtsh20_pc20_pd3_exp.tsv"
+        if out_emb_file is not None:
+            self.out_embeddings = np.load(out_emb_file)
+        else:
+            out_embeddings_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/model_rel3273k_sg_w8_n15_a001_phrtsh15_pc10_pd3_ss-4_float16.trainables.syn1neg.npy"
+            ds.open(out_embeddings_url)
+            self.out_embeddings = np.load(ds.abspath(out_embeddings_url))
+
         with ds.open(dict_url, encoding='utf-8') as f:
             self.reverse_dictionary = [x.strip('\n') for x in f.readlines()]
 
@@ -53,10 +64,14 @@ class EmbeddingEngine:
 
         self.dp = DataPreparation()
         # loading pre-trained embeddings and the dictionary
-        formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/abstracts_clean_valence_formula.pkl"
-        ds.open(formulas_url)
-        self.formulas = self.dp.load_obj(ds.abspath(formulas_url[:-4]))
-        self.formulas_full = self.dp.load_obj(ds.abspath(formulas_url[:-4]))
+        if formulas_file is not None:
+            self.formulas = self.dp.load_obj(formulas_file[:-4])
+            self.formulas_full = self.dp.load_obj(formulas_file[:-4])
+        else:
+            formulas_url = "https://s3-us-west-1.amazonaws.com/materialsintelligence/relevant_3273k_formula.pkl"
+            ds.open(formulas_url)
+            self.formulas = self.dp.load_obj(ds.abspath(formulas_url[:-4]))
+            self.formulas_full = self.dp.load_obj(ds.abspath(formulas_url[:-4]))
         for abbr in self.ABBR_LIST:
             self.formulas.pop(abbr, None)
 
@@ -65,6 +80,13 @@ class EmbeddingEngine:
             for writing in self.formulas[formula]:
                 self.formula_counts[i] += self.formulas[formula][writing]
         del ds
+
+        self.most_common_forms = dict()
+        for material in self.formulas_full:
+            if material in self.dp.ELEMENTS:
+                self.most_common_forms[material] = material
+            else:
+                self.most_common_forms[material] = max(self.formulas_full[material].items(), key=operator.itemgetter(1))[0]
 
     def close_words(self, word, top_k=8, exclude_self=True):
         """
@@ -110,7 +132,7 @@ class EmbeddingEngine:
         else:
             return None
 
-    def find_similar_materials(self, sentence, n_sentence=None, min_count=10, use_output_emb=False):
+    def find_similar_materials(self, sentence, n_sentence=None, min_count=10, use_output_emb=False, normout=True):
         """
         Finds materials that match the best with the context of the sentence
         :param sentence: a list of words
@@ -118,10 +140,13 @@ class EmbeddingEngine:
         :return:
         """
         similarities = dict()
-        avg_embedding = np.zeros(200)
+        avg_embedding = np.zeros(self.embeddings.shape[1])
         nr_words = 0
         normalized_embeddings = self.embeddings / self.norm
-        embs = (self.out_embeddings / self.out_norm) if use_output_emb else normalized_embeddings  # the embeddings to use for similarity
+        if normout:
+            embs = (self.out_embeddings / self.out_norm) if use_output_emb else normalized_embeddings  # the embeddings to use for similarity
+        else:
+            embs = self.out_embeddings if use_output_emb else normalized_embeddings
         # positive contribution
         for word in sentence:
             if word in self.word2index:
@@ -135,7 +160,7 @@ class EmbeddingEngine:
                     nr_words += 1
         avg_embedding = avg_embedding / nr_words
         for i, formla in enumerate(self.formulas):
-            if self.formula_counts[i] > min_count:
+            if self.formula_counts[i] > min_count and formla in self.word2index:
                 similarities[formla] = np.dot(avg_embedding, embs[self.word2index[formla]])
         return sorted(similarities.items(), key=lambda x: x[1], reverse=True)
 
@@ -195,5 +220,8 @@ class EmbeddingEngine:
         return matched_formula
 
 
-def number_to_substring(text):
-    return regex.sub("(\d*\.?\d+)", r'<sub>\1</sub>', text)
+def number_to_substring(text, latex=False):
+    if not latex:
+        return regex.sub("(\d*\.?\d+)", r'<sub>\1</sub>', text)
+    else:
+        return regex.sub("(\d*\.?\d+)", r'_\1', text)

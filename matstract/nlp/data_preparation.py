@@ -11,6 +11,7 @@ import pickle
 from pymatgen.core.composition import Composition
 from monty.fractions import gcd_float
 from multiprocessing import Pool
+import pymongo
 
 
 class DataPreparation:
@@ -107,15 +108,23 @@ class DataPreparation:
     Provides tools for converting the data in the database to suitable
     format for machine learning tasks
     """
-    def to_word2vec_zip(self, filepath=None, limit=None, newlines=False, line_per_abstract=False, doi=None,
-                        only_relevant=False, exclude_punct=False):
+    def to_word2vec_zip(self, filename="abstracts", limit=None, newlines=False, line_per_abstract=True, doi=None,
+                        only_relevant=False, exclude_punct=False, year_max=None, split_years=False):
         """
         Coverts the tokenized abstracts in the database to a zip file with a single vocabulary line.
         :param limit: number of abstracts to use. If not specified, all data will be considered
         :return: a 2d list of words from the abstract / titles, with each abstract on a separate line
         """
-        abstracts = self._get_abstracts(limit=limit, col=self.TOK_ABSTRACT_COL, doi=doi)
-        # txt = ""
+        if limit:
+            sample = True
+        else:
+            sample = False
+        abstracts = self._get_abstracts(
+            sample=sample,
+            col=self.TOK_ABSTRACT_COL,
+            doi=doi,
+            year_max=year_max)
+
         if line_per_abstract:
             nl_tok = ""
         elif newlines:
@@ -123,50 +132,44 @@ class DataPreparation:
         else:
             nl_tok = ""
 
-        try:
+        if not limit:
             total = abstracts.count()
-        except:
-            total = None
-        with open("abstracts.txt", "w+") as abstract_file:
-            for abstract in tqdm(abstracts, total=total):
-                abs_txt = ""
-                # print("processing abstract {}".format(i), end="\r")
-                ttl = abstract[self.TTL_FILED]
-                abs = abstract[self.ABS_FIELD]
-                if ttl is not None and abs is not None:
+        else:
+            total = limit
+        i = 0
+        pbar = tqdm(total=total)
+        for abstract in abstracts:
+            if split_years and abstract["year"]:
+                writefile = filename+"_"+str(abstract["year"])
+            else:
+                writefile = filename
+            with open(writefile, "a+") as abstract_file:
+                if i < total:
+                    # processesed_abs = {"doi": abstract["doi"], "title": [], "abstract": []}
+                    abs_txt = ""
+                    ttl = abstract[self.TTL_FILED]
+                    abs = abstract[self.ABS_FIELD]
                     if not only_relevant or self.is_relevant(abs):
-                        processed_ttl = []
-                        for sentence in ttl:
-                            processed_sentence = self.process_sentence(sentence, exclude_punct)[0]
-                            processed_ttl.append(processed_sentence)
-                            abs_txt += " ".join(processed_sentence + [nl_tok])
-                        processed_abs = []
-                        for sentence in abs:
-                            processed_sentence = self.process_sentence(sentence, exclude_punct)[0]
-                            processed_abs.append(processed_sentence)
-                            abs_txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
+                        if ttl:
+                            for sentence in ttl:
+                                abs_txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
+                                # processesed_abs["title"].append(self.process_sentence(sentence, exclude_punct)[0])
+                        if abs:
+                            for sentence in abs:
+                                abs_txt += " ".join(self.process_sentence(sentence, exclude_punct)[0] + [nl_tok])
+                                # processesed_abs["abstract"].append(self.process_sentence(sentence, exclude_punct)[0])
                         if line_per_abstract:
                             abs_txt += "\n"
-                # abstract_file.write(abs_txt)
-                        self._db.abstract_tokens_processed.insert_one(
-                            {"doi": abstract["doi"], "title": processed_ttl, "abstract": processed_abs})
+                        abstract_file.write(abs_txt)
+                        # getattr(self._db, self.TOK_ABSTRACT_COL+"_processed").insert_one(processesed_abs)
+                        i += 1
+                        pbar.update(1)
+                else:
+                    break
+        pbar.close()
+        DataPreparation.save_obj(self.material_counts(), filename+"_formula")
 
-        # text = txt
-
-        # if filepath is None:
-        #     zip_path = os.getcwd()
-        # else:
-        #     zip_path = filepath
-        # filename = "abstracts.zip"
-
-        # print("%s created at %s" % (filename, zip_path))
-        # zf = zipfile.ZipFile(os.path.join(zip_path, "abstracts.zip"), "w")
-        # zf.writestr("/abstracts", text)
-        DataPreparation.save_obj(self.material_counts(), "formula")
-        # zf.write("formula.pkl")
-        # os.remove("formula.pkl")
-
-    def tokenize_abstracts(self, limit=None, override=False):
+    def tokenize_abstracts(self, limit=None, override=False, sample=False):
         def tokenize(text):
             """
             Returns a 1d list of tokens using chemdataextractor tokenizer. Removes all punctuation but
@@ -182,7 +185,7 @@ class DataPreparation:
             return toks
 
         # get the abstracts
-        abstracts = self._get_abstracts(limit=limit)
+        abstracts = self._get_abstracts(limit=limit, sample=sample)
         existing_dois = [abstr[self.DOI_FIELD] for abstr in self._get_abstracts(col=self.TOK_ABSTRACT_COL)]
 
         count = abstracts.count() if limit is None else limit
@@ -226,7 +229,7 @@ class DataPreparation:
         # with Pool() as p:
         #     list(tqdm(p.imap(insert_abstract, abstracts), total=count))
 
-    def _get_abstracts(self, limit=None, col=None, doi=None):
+    def _get_abstracts(self, limit=None, col=None, doi=None, year_max=None, sample=True):
         """
         Returns a cursor of abstracts form mongodb
         :param limit:
@@ -235,12 +238,45 @@ class DataPreparation:
         conditions = dict()
         if doi is not None:
             conditions["doi"] = {"$in": doi}
+        if year_max is not None:
+            conditions["year"] = {"$lt": year_max + 1}
         if col is None:
             col = self.RAW_ABSTRACT_COL
+
+        # pipeline = []
+        # if only_relevant:
+        #     conditions["relevance.relevant"] = True
+        #     pipeline.append({
+        #         "$lookup":
+        #         {
+        #             "from": "{}_relevance".format(col),
+        #             "localField": "_id",
+        #             "foreignField": "abstract_w2v_id",
+        #             "as": "relevance"
+        #         }})
+        # pipeline.append({"$match": conditions})
+        # if limit is not None:
+        #     pipeline.append({"$sample": {"size": limit}})
+        # return getattr(self._db, col).aggregate(pipeline, allowDiskUse=True)
         if limit is not None:
-            abstracts = getattr(self._db, col).aggregate([{"$sample": {"size": limit}}], allowDiskUse=True)
+            if sample:
+                pipeline = [
+                    {"$match": conditions},
+                    {"$sample": {"size": limit}}
+                ]
+                abstracts = getattr(self._db, col).aggregate(pipeline, allowDiskUse=True)
+            else:
+                abstracts = getattr(self._db, col).find(conditions).limit(limit)
         else:
-            abstracts = getattr(self._db, col).find(conditions)
+            if sample:
+                size = getattr(self._db, col).find(conditions).count()
+                pipeline = [
+                    {"$match": conditions},
+                    {"$sample": {"size": size}}
+                ]
+                abstracts = getattr(self._db, col).aggregate(pipeline, allowDiskUse=True)
+            else:
+                abstracts = getattr(self._db, col).find(conditions)
         return abstracts
 
     def is_number(self, t):
@@ -353,17 +389,17 @@ class DataPreparation:
         for k in sorted(d):
             if d[k] > 1:
                 formula += k + str(d[k])
-            else:
+            elif d[k] != 0:
                 formula += k
         return formula
 
-    def get_norm_formula(self, text):
+    def get_norm_formula(self, text, max_denominator=1000):
         try:
             # using Olga's parser
             formula_dict = dict(self.parser.parse_formula(text))
             for key in formula_dict:
                 formula_dict[key] = float(formula_dict[key])
-            integer_formula = self.get_ordered_integer_formula(formula_dict)
+            integer_formula = self.get_ordered_integer_formula(formula_dict, max_denominator)
             return integer_formula
         except Exception:
             return text

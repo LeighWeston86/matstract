@@ -54,6 +54,7 @@ nav = html.Nav(
             dcc.Link("Material Search", href="/matsearch"),
             html.Span(u" \u2022 "),
             html.A("Materials Map", href="https://plot.ly/~vtshitoyan/6/markers-and-text/#/"),
+            # dcc.Link("Materials Map", href="/material_map"),
         ],
         id="nav_bar")
 
@@ -73,9 +74,11 @@ def display_page(path):
     if path.startswith("/search"):
         return new_search_app.serve_layout(path)
     elif path == "/summary":
-         return summary_app.layout
+        return summary_app.layout
     elif path == "/matsearch":
-         return matsearch_app.serve_layout(db)
+        return matsearch_app.serve_layout(db)
+    # elif path == "/material_map":
+    #     return material_map_app.layout
     else:
         return new_search_app.serve_layout()
 
@@ -90,3 +93,4 @@ def get_stylesheet(path):
 new_search_callbacks.bind(app)
 summary_callbacks.bind(app)
 matsearch_callbacks.bind(app)
+# material_map_callbacks.bind(app)
